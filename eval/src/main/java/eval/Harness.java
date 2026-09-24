@@ -93,6 +93,11 @@ public final class Harness {
         }
         List<CheckOutcome> outcomes = new ArrayList<>();
         boolean passed = true;
+        // Checks.registered() (eval/checks/Checks.java) is the single list of every check the harness runs, in run order.
+        // A check is a small class implementing Check: it takes the eval case and the assistant's answer and returns
+        // pass/fail plus a reason (today only RefusalCheck: hallucination, over-refusal, contract violation).
+        // Each entry is wrapped in Registered with a gating flag: a failing gating check fails the case, an advisory
+        // one is only reported. Nothing here names a specific check, so adding one is a new class plus one line in Checks.
         for (Registered r : Checks.registered()) {
             CheckResult res = r.check().run(c, answer);
             outcomes.add(new CheckOutcome(r.check().name(), r.gating(), res.passed(), res.reason()));
