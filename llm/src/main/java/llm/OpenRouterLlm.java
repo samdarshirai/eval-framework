@@ -44,6 +44,9 @@ public final class OpenRouterLlm implements Llm {
         n.put("model", model);
         n.put("max_tokens", 1024);
         n.put("temperature", 0);
+        // Default routing silently ignores parameters a provider does not support; this makes the call fail
+        // instead of quietly running at the provider's default temperature (D14).
+        n.putObject("provider").put("require_parameters", true);
         ArrayNode messages = n.putArray("messages");
         messages.addObject().put("role", "system").put("content", system);
         messages.addObject().put("role", "user").put("content", user);
