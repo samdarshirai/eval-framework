@@ -1,0 +1,22 @@
+# Traps for the Coverage judge (D24). The judge must not be fooled by a claim that a keyword filter would let through.
+#
+# Agree pairs (keyword-confirm prompt): does the claim state the fact?
+#   agree: true  = a correct paraphrase, the judge must say YES
+#   agree: false = a trap, the judge must say NO
+- {name: all-except-14,           fact: "Safari 14 or later is supported", claim: "All Safari versions except 14 are supported",            agree: false}
+- {name: safari-13-not-14,        fact: "Safari 14 or later is supported", claim: "Safari 13 is supported, but not Safari 14",             agree: false}
+- {name: safari-14-not-supported, fact: "Safari 14 or later is supported", claim: "Safari 14 is not supported",                            agree: false}
+- {name: paraphrase-onward,       fact: "Safari 14 or later is supported", claim: "The script works on Safari 14 and any newer version",  agree: true}
+- {name: paraphrase-from,         fact: "Safari 14 or later is supported", claim: "Support for Safari starts at version 14",               agree: true}
+
+# Covering pairs (keyword-less prompt): given the numbered claims, the judge must return exactly the claims marked states: true.
+- name: covering-negated-and-different-value
+  fact: "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants"
+  claims:
+    - {text: "The variants are not evenly distributed; you can choose any ratio", states: false}
+    - {text: "Internal A/B testing shows the variants in a 70:30 split", states: false}
+- name: covering-picks-only-the-real-one
+  fact: "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants"
+  claims:
+    - {text: "Two variants are always shown to half of the visitors each", states: true}
+    - {text: "The variants are evenly distributed except when the first layer is a wall", states: false}
