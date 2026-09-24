@@ -1,13 +1,10 @@
 package eval;
 
-import com.fasterxml.jackson.databind.*;
 import eval.checks.*;
 import eval.knowledge.KnowledgeSources;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.*;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import llm.*;
@@ -84,10 +81,7 @@ public final class Harness {
       return 2;
     }
 
-    String runId =
-        DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
-            .withZone(ZoneOffset.UTC)
-            .format(Instant.now());
+    String runId = ReportWriter.newRunId();
     CaseRunner runner = new CaseRunner(client, checks);
     List<CaseResult> caseResults = new ArrayList<>();
     for (EvalCase evalCase : cases) {
@@ -95,11 +89,8 @@ public final class Harness {
     }
     SuiteReport report = new SuiteReport(runId, endpoint, floor, checkInfos(checks), caseResults);
 
-    print(report, out);
-    Files.createDirectories(root.resolve("caseResults"));
-    new ObjectMapper()
-        .writerWithDefaultPrettyPrinter()
-        .writeValue(root.resolve("caseResults/" + runId + ".json").toFile(), report);
+    ConsoleReport.print(report, out);
+    ReportWriter.write(root, report);
     out.println("Report: caseResults/" + runId + ".json");
     return report.exitCode();
   }
@@ -126,35 +117,5 @@ public final class Harness {
     return checks.stream()
         .map(registered -> new CheckInfo(registered.check().name(), registered.gating()))
         .toList();
-  }
-
-  private static void print(SuiteReport report, PrintStream out) {
-    out.println("Endpoint: " + report.endpoint() + "  Run: " + report.runId());
-    for (CaseResult caseResult : report.cases()) {
-      out.printf(
-          "%-4s %-22s %-14s%n",
-          caseResult.passed() ? "PASS" : "FAIL", caseResult.id(), caseResult.category());
-      if (caseResult.error() != null) {
-        out.println("       assistant error: " + caseResult.error());
-      }
-      for (CheckOutcome outcome : caseResult.checks()) {
-        if (!outcome.passed()) {
-          out.println(
-              "       "
-                  + outcome.check()
-                  + (report.isGating(outcome.check()) ? "" : " (advisory)")
-                  + ": "
-                  + outcome.reason());
-        }
-      }
-    }
-    out.printf(
-        "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
-        report.passed(), report.cases().size(), report.passRate() * 100, report.passFloor() * 100);
-    if (report.exitCode() == 0) {
-      out.println("RESULT: OK");
-    } else {
-      report.exitReasons().forEach(reason -> out.println("RESULT: FAIL - " + reason));
-    }
   }
 }
