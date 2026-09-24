@@ -90,9 +90,9 @@ public final class Harness {
     }
 
     /** The case's expectation in the assistant's response shape, for the report. */
-    private static Answer expected(EvalCase c) {
-        return new Answer(c.expectedBehavior().equals("refuse"),
-            c.facts().stream().map(f -> new Claim(f.fact(), f.chunks())).toList());
+    private static Expected expected(EvalCase c) {
+        return new Expected(c.expectedBehavior().equals("refuse"),
+            c.facts().stream().map(f -> new Expected.ExpectedClaim(f.fact(), f.chunks(), f.keywords())).toList());
     }
 
     private static CaseResult runCase(EvalCase c, AssistantClient client, String runId) {

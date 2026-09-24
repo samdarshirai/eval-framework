@@ -10,7 +10,7 @@ class SuiteReportTest {
         List<CaseResult> cs = new ArrayList<>();
         for (int i = 0; i < n; i++)
             cs.add(new CaseResult((oos.contains(i) ? "oos-" : "c-") + i, "q", oos.contains(i) ? "out-of-scope" : "single-source",
-                null, new Answer(false, List.of()), !failing.contains(i), null, null, List.of()));
+                null, new Expected(false, List.of()), !failing.contains(i), null, null, List.of()));
         return new SuiteReport("r", "http://x", 0.90, List.of(), cs);
     }
 
