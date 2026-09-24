@@ -50,13 +50,13 @@ class EvalCaseLoaderTest {
     }
 
     @Test void badInputsGiveOneClearError() throws Exception {
-        String base = "- id: c1\n  question: Q?\n  category: x\n";
+        String base = "- id: c1\n  question: Q?\n  category: edge-case\n";
         write("a.yaml", base + "  expected_behavior: maybe\n" + META);
         assertTrue(err(() -> load()).contains("expected_behavior"));
         write("a.yaml", base + "  expected_behavior: answer\n" + META);          // answer with no facts
         assertTrue(err(() -> load()).contains("c1"));
-        write("a.yaml", "- id: c1\n  question: Q?\n  category: x\n  expected_behavior: refuse\n" + META
-            + "- id: c1\n  question: Q2?\n  category: x\n  expected_behavior: refuse\n" + META);
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: edge-case\n  expected_behavior: refuse\n" + META
+            + "- id: c1\n  question: Q2?\n  category: edge-case\n  expected_behavior: refuse\n" + META);
         assertTrue(err(() -> load()).contains("duplicate"));
         write("a.yaml", "- id: [unclosed\n");
         assertTrue(err(() -> load()).contains("a.yaml"));
@@ -65,7 +65,7 @@ class EvalCaseLoaderTest {
     }
 
     @Test void wrongTypedFieldsGiveClearErrorsNotCrashesOrSilentDrops() throws Exception {
-        String head = "- id: c1\n  question: Q?\n  category: x\n  expected_behavior: answer\n";
+        String head = "- id: c1\n  question: Q?\n  category: edge-case\n  expected_behavior: answer\n";
         write("a.yaml", head + "  facts:\n    - some fact text\n" + META);
         String m = err(() -> load());
         assertTrue(m.contains("c1") && m.contains("fact"), m);
@@ -78,9 +78,21 @@ class EvalCaseLoaderTest {
         write("a.yaml", head + "  facts:\n    - {fact: F, chunks: d#a}\n" + META);
         m = err(() -> load());
         assertTrue(m.contains("c1") && m.contains("chunks") && m.contains("list"), m);
-        write("a.yaml", "- id: c1\n  question: Q?\n  category: x\n  expected_behavior: refuse\n  facts: {fact: F}\n" + META);
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: edge-case\n  expected_behavior: refuse\n  facts: {fact: F}\n" + META);
         m = err(() -> load());
         assertTrue(m.contains("c1") && m.contains("facts") && m.contains("list"), m);
+    }
+
+    @Test void categoryTypoIsRejectedListingAllowedValues() throws Exception {
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: Out-of-scope\n  expected_behavior: refuse\n" + META);
+        String m = err(() -> load());
+        assertTrue(m.contains("c1") && m.contains("a.yaml") && m.contains("'Out-of-scope'")
+            && m.contains("single-source, multi-source, false-premise, out-of-scope, edge-case"), m);
+    }
+
+    @Test void ymlFilesAreLoadedToo() throws Exception {
+        write("a.yml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  expected_behavior: refuse\n" + META);
+        assertEquals("c1", EvalCaseLoader.load(dir, kb).get(0).id());
     }
 
     private void load() { try { EvalCaseLoader.load(dir, kb); } catch (java.io.IOException e) { throw new RuntimeException(e); } }

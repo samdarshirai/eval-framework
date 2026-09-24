@@ -8,9 +8,12 @@ import java.time.ZoneOffset;
 import java.util.*;
 
 public final class EvalCaseLoader {
+    // Single source of truth; SuiteReport's never-cut rule matches "out-of-scope" exactly.
+    private static final List<String> CATEGORIES = List.of("single-source", "multi-source", "false-premise", "out-of-scope", "edge-case");
+
     public static List<EvalCase> load(Path dir, KnowledgeBase kb) throws IOException {
         List<Path> files;
-        try (var s = Files.list(dir)) { files = s.filter(p -> p.toString().endsWith(".yaml")).sorted().toList(); }
+        try (var s = Files.list(dir)) { files = s.filter(p -> p.toString().endsWith(".yaml") || p.toString().endsWith(".yml")).sorted().toList(); }
         List<EvalCase> cases = new ArrayList<>();
         Set<String> ids = new HashSet<>();
         for (Path f : files) {
@@ -52,9 +55,12 @@ public final class EvalCaseLoader {
         }
         if (behavior.equals("answer") && facts.isEmpty())
             throw new IllegalArgumentException(where + ": an 'answer' case needs at least one expected fact");
+        String category = str(m, "category", file, id, true);
+        if (!CATEGORIES.contains(category))
+            throw new IllegalArgumentException(where + ": category '" + category + "' is not one of: " + String.join(", ", CATEGORIES));
         Object added = m.get("added");
         String addedStr = added instanceof Date d ? d.toInstant().atZone(ZoneOffset.UTC).toLocalDate().toString() : str(m, "added", file, id, true);
-        return new EvalCase(id, str(m, "question", file, id, true), str(m, "category", file, id, true),
+        return new EvalCase(id, str(m, "question", file, id, true), category,
             str(m, "subtype", file, id, false), behavior, facts,
             str(m, "source", file, id, true), str(m, "owner", file, id, true), addedStr);
     }
