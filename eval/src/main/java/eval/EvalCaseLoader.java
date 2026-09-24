@@ -8,75 +8,112 @@ import java.time.ZoneOffset;
 import java.util.*;
 
 public final class EvalCaseLoader {
-    // Single source of truth; SuiteReport's never-cut rule matches "out-of-scope" exactly.
-    private static final List<String> CATEGORIES = List.of("single-source", "multi-source", "false-premise", "out-of-scope", "edge-case");
-
-    public static List<EvalCase> load(Path dir, KnowledgeBase kb) throws IOException {
-        List<Path> files;
-        try (var s = Files.list(dir)) { files = s.filter(p -> p.toString().endsWith(".yaml") || p.toString().endsWith(".yml")).sorted().toList(); }
+    /**
+     * Loads every case file in {@code casesDir} and validates all of it before the harness contacts the assistant.
+     * Any problem throws an IllegalArgumentException naming the file, case and field.
+     *
+     * @param allowedCategories the categories this app accepts (eval/config.yaml), so a service can add or remove its own
+     */
+    public static List<EvalCase> load(Path casesDir, KnowledgeBase kb, List<String> allowedCategories) throws IOException {
+        List<Path> caseFiles;
+        try (var fileStream = Files.list(casesDir)) {
+            caseFiles = fileStream.filter(p -> p.toString().endsWith(".yaml") || p.toString().endsWith(".yml")).sorted().toList();
+        }
         List<EvalCase> cases = new ArrayList<>();
-        Set<String> ids = new HashSet<>();
-        for (Path f : files) {
-            Object root;
-            try { root = new Yaml().load(Files.readString(f)); }
-            catch (YAMLException e) { throw new IllegalArgumentException(f.getFileName() + ": invalid YAML: " + e.getMessage().lines().findFirst().orElse("")); }
-            if (!(root instanceof List<?> list)) throw new IllegalArgumentException(f.getFileName() + ": expected a list of cases");
-            for (Object o : list) {
-                EvalCase c = parse(f.getFileName().toString(), o, kb);
-                if (!ids.add(c.id())) throw new IllegalArgumentException(f.getFileName() + ": duplicate case id '" + c.id() + "'");
-                cases.add(c);
+        Set<String> seenCaseIds = new HashSet<>();
+        for (Path caseFile : caseFiles) {
+            String fileName = caseFile.getFileName().toString();
+            for (Object entry : readCaseEntries(caseFile)) {
+                EvalCase evalCase = parseCase(fileName, entry, kb, allowedCategories);
+                if (!seenCaseIds.add(evalCase.id())) throw new IllegalArgumentException(fileName + ": duplicate case id '" + evalCase.id() + "'");
+                cases.add(evalCase);
             }
         }
-        if (cases.isEmpty()) throw new IllegalArgumentException("no cases found in " + dir);
+        if (cases.isEmpty()) throw new IllegalArgumentException("no cases found in " + casesDir);
         return cases;
     }
 
-    private static EvalCase parse(String file, Object o, KnowledgeBase kb) {
-        if (!(o instanceof Map<?, ?> m)) throw new IllegalArgumentException(file + ": each case must be a map");
-        String id = str(m, "id", file, "?", true);
-        String where = file + " case '" + id + "'";
-        String behavior = str(m, "expected_behavior", file, id, true);
-        if (!behavior.equals("answer") && !behavior.equals("refuse"))
-            throw new IllegalArgumentException(where + ": expected_behavior must be 'answer' or 'refuse', got '" + behavior + "'");
-        List<ExpectedFact> facts = new ArrayList<>();
-        Object factsRaw = m.get("facts");
-        if (factsRaw != null && !(factsRaw instanceof List<?>))
-            throw new IllegalArgumentException(where + ": 'facts' must be a list");
-        if (factsRaw instanceof List<?> fl) {
-            for (Object fo : fl) {
-                if (!(fo instanceof Map<?, ?> fm))
-                    throw new IllegalArgumentException(where + ": each fact must be a map with 'fact' and 'chunks'");
-                List<String> chunks = strList(fm.get("chunks"), "chunks", where);
-                if (chunks.isEmpty()) throw new IllegalArgumentException(where + ": fact needs at least one gold chunk");
-                for (String ch : chunks)
-                    if (!kb.has(ch)) throw new IllegalArgumentException(where + ": gold chunk '" + ch + "' does not exist in the knowledge base");
-                facts.add(new ExpectedFact(str(fm, "fact", file, id, true), chunks, strList(fm.get("keywords"), "keywords", where)));
-            }
+    /** Reads one case file and returns its top-level list; the file must be valid YAML holding a list of cases. */
+    private static List<?> readCaseEntries(Path caseFile) throws IOException {
+        String fileName = caseFile.getFileName().toString();
+        Object parsedYaml;
+        try {
+            parsedYaml = new Yaml().load(Files.readString(caseFile));
+        } catch (YAMLException e) {
+            throw new IllegalArgumentException(fileName + ": invalid YAML: " + e.getMessage().lines().findFirst().orElse(""));
         }
-        if (behavior.equals("answer") && facts.isEmpty())
-            throw new IllegalArgumentException(where + ": an 'answer' case needs at least one expected fact");
-        String category = str(m, "category", file, id, true);
-        if (!CATEGORIES.contains(category))
-            throw new IllegalArgumentException(where + ": category '" + category + "' is not one of: " + String.join(", ", CATEGORIES));
-        Object added = m.get("added");
-        String addedStr = added instanceof Date d ? d.toInstant().atZone(ZoneOffset.UTC).toLocalDate().toString() : str(m, "added", file, id, true);
-        return new EvalCase(id, str(m, "question", file, id, true), category,
-            str(m, "subtype", file, id, false), behavior, facts,
-            str(m, "source", file, id, true), str(m, "owner", file, id, true), addedStr);
+        if (!(parsedYaml instanceof List<?> entries)) throw new IllegalArgumentException(fileName + ": expected a list of cases");
+        return entries;
     }
 
-    private static String str(Map<?, ?> m, String key, String file, String id, boolean required) {
-        Object v = m.get(key);
-        if (v == null || v.toString().isBlank()) {
+    /**
+     * Turns one YAML entry into an EvalCase. SnakeYAML gives untyped maps and lists, so every field is
+     * type-checked here by hand. Order of checks:
+     * id, expected_behavior, facts (with gold-chunk lookup), the answer-needs-facts rule, category, then metadata.
+     */
+    private static EvalCase parseCase(String file, Object entry, KnowledgeBase kb, List<String> allowedCategories) {
+        // A case must be a YAML map; a bare string or list in the file is a mistake.
+        if (!(entry instanceof Map<?, ?> caseMap)) throw new IllegalArgumentException(file + ": each case must be a map");
+        // The id comes first so every later error can name the case ("file case 'id'").
+        String id = str(caseMap, "id", file, "?", true);
+        String where = file + " case '" + id + "'";
+
+        // expected_behavior is set per case (D2) and only has two legal values.
+        String expectedBehavior = str(caseMap, "expected_behavior", file, id, true);
+        if (!expectedBehavior.equals("answer") && !expectedBehavior.equals("refuse"))
+            throw new IllegalArgumentException(where + ": expected_behavior must be 'answer' or 'refuse', got '" + expectedBehavior + "'");
+
+        // Facts are optional in the YAML (a 'refuse' case has none), but when present must be a list of maps.
+        List<ExpectedFact> facts = new ArrayList<>();
+        Object factsRaw = caseMap.get("facts");
+        if (factsRaw != null && !(factsRaw instanceof List<?>))
+            throw new IllegalArgumentException(where + ": 'facts' must be a list");
+        if (factsRaw instanceof List<?> factEntries) {
+            for (Object factEntry : factEntries) {
+                if (!(factEntry instanceof Map<?, ?> factMap))
+                    throw new IllegalArgumentException(where + ": each fact must be a map with 'fact' and 'chunks'");
+                // Gold chunks are any-of alternatives (D5): at least one, and each must exist in the docs (D6).
+                // Checking here, before any assistant call, is what makes a stale chunk ID fail loudly and early.
+                List<String> goldChunkIds = strList(factMap.get("chunks"), "chunks", where);
+                if (goldChunkIds.isEmpty()) throw new IllegalArgumentException(where + ": fact needs at least one gold chunk");
+                for (String goldChunkId : goldChunkIds)
+                    if (!kb.has(goldChunkId)) throw new IllegalArgumentException(where + ": gold chunk '" + goldChunkId + "' does not exist in the knowledge base");
+                facts.add(new ExpectedFact(str(factMap, "fact", file, id, true), goldChunkIds, strList(factMap.get("keywords"), "keywords", where)));
+            }
+        }
+        // An 'answer' case with no expected facts could never fail Coverage, so it is rejected.
+        if (expectedBehavior.equals("answer") && facts.isEmpty())
+            throw new IllegalArgumentException(where + ": an 'answer' case needs at least one expected fact");
+
+        // A typo'd category would silently drop the case out of its rules (e.g. the out-of-scope exit rule), so reject it.
+        String category = str(caseMap, "category", file, id, true);
+        if (!allowedCategories.contains(category))
+            throw new IllegalArgumentException(where + ": category '" + category + "' is not one of: " + String.join(", ", allowedCategories));
+
+        // Unquoted YAML dates (added: 2026-09-24) arrive as java.util.Date; normalise them to ISO text.
+        Object addedRaw = caseMap.get("added");
+        String added = addedRaw instanceof Date addedDate
+            ? addedDate.toInstant().atZone(ZoneOffset.UTC).toLocalDate().toString()
+            : str(caseMap, "added", file, id, true);
+        return new EvalCase(id, str(caseMap, "question", file, id, true), category,
+            str(caseMap, "subtype", file, id, false), expectedBehavior, facts,
+            str(caseMap, "source", file, id, true), str(caseMap, "owner", file, id, true), added);
+    }
+
+    /** Reads a scalar field as text; a missing or blank required field is an error, an optional one is null. */
+    private static String str(Map<?, ?> map, String key, String file, String id, boolean required) {
+        Object value = map.get(key);
+        if (value == null || value.toString().isBlank()) {
             if (required) throw new IllegalArgumentException(file + " case '" + id + "': missing '" + key + "'");
             return null;
         }
-        return v.toString();
+        return value.toString();
     }
 
-    private static List<String> strList(Object o, String field, String where) {
-        if (o == null) return List.of();
-        if (!(o instanceof List<?> l)) throw new IllegalArgumentException(where + ": '" + field + "' must be a list");
-        return l.stream().map(String::valueOf).toList();
+    /** Reads an optional list field as a list of text; absent means empty, a non-list is an error. */
+    private static List<String> strList(Object value, String field, String where) {
+        if (value == null) return List.of();
+        if (!(value instanceof List<?> items)) throw new IllegalArgumentException(where + ": '" + field + "' must be a list");
+        return items.stream().map(String::valueOf).toList();
     }
 }

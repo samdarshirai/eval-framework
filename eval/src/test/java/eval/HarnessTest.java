@@ -30,7 +30,7 @@ class HarnessTest {
             ex.close();
         });
         server.start();
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\n");
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
     }
     @AfterEach void tearDown() { server.stop(0); }
     private String url() { return "http://localhost:" + server.getAddress().getPort() + "/answer"; }
@@ -94,7 +94,7 @@ class HarnessTest {
 
     @Test void endpointFlagOverridesConfig() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: http://localhost:1/answer\npassFloor: 0.90\n");
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: http://localhost:1/answer\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
         int[] code = new int[1];
         out(code, "--endpoint", url());
         assertEquals(0, code[0]);
@@ -118,11 +118,30 @@ class HarnessTest {
 
     @Test void configWithoutPassFloorExitsTwoWithError() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\n");
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\ncategories: [out-of-scope]\n");
         int[] code = new int[1];
         String o = out(code)[0];
         assertEquals(2, code[0], o);
         assertTrue(o.contains("ERROR"), o);
+    }
+
+    @Test void configWithoutOutOfScopeCategoryExitsTwoBecauseTheExitRuleNeedsIt() throws Exception {
+        cases(OOS);
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source]\n");
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("out-of-scope"), o);
+        assertEquals(0, requests.get());
+    }
+
+    @Test void configWithoutCategoriesExitsTwo() throws Exception {
+        cases(OOS);
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\n");
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("categories"), o);
     }
 
     @Test void unknownArgExitsTwoWithUsageBeforeTouchingNetwork() throws Exception {
