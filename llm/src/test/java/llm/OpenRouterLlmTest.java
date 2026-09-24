@@ -11,6 +11,7 @@ class OpenRouterLlmTest {
         JsonNode n = M.readTree(OpenRouterLlm.requestBody("m-1", "sys", "hi"));
         assertEquals("m-1", n.get("model").asText());
         assertEquals(0, n.get("temperature").asInt());
+        assertTrue(n.get("provider").get("require_parameters").asBoolean(), "an unsupported temperature must fail, not be ignored");
         assertEquals("system", n.get("messages").get(0).get("role").asText());
         assertEquals("sys", n.get("messages").get(0).get("content").asText());
         assertEquals("user", n.get("messages").get(1).get("role").asText());
