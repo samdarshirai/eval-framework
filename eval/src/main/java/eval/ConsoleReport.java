@@ -1,5 +1,6 @@
 package eval;
 
+import eval.calibration.LabeledSample;
 import eval.calibration.TrapPairs.TrapResult;
 import java.io.PrintStream;
 
@@ -56,5 +57,22 @@ final class ConsoleReport {
             + "/"
             + calibration.pairs().size()
             + " trap pairs ok");
+    LabeledSample.Result sample = calibration.groundedness();
+    if (sample.pairs().isEmpty()) {
+      return;
+    }
+    out.println("Groundedness calibration");
+    for (LabeledSample.PairResult pair : sample.pairs()) {
+      if (!pair.agreed()) {
+        out.println("  MISS " + pair.name() + " (" + pair.detail() + ")");
+      }
+    }
+    out.printf(
+        "  agreement %d/%d (%.0f%%), target 90%%%n",
+        sample.agreed(), sample.pairs().size(), sample.agreement() * 100);
+    out.printf(
+        "  unsupported judged supported: %d of %d (target 0)%n",
+        sample.falseSupported(), sample.unsupportedPairs());
+    out.printf("  supported judged unsupported: %d (no target)%n", sample.falseUnsupported());
   }
 }

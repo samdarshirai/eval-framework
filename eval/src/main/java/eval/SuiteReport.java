@@ -1,13 +1,18 @@
 package eval;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eval.calibration.LabeledSample;
 import eval.calibration.TrapPairs.TrapResult;
 import java.util.*;
 
 public record SuiteReport(String runId, String endpoint, double passFloor, List<CheckInfo> checks, Calibration calibration, List<CaseResult> cases) {
-    /** Judge trap pairs: {@code ran} false means --skip-calibration. */
-    public record Calibration(boolean ran, List<TrapResult> pairs) {
-        public static final Calibration SKIPPED = new Calibration(false, List.of());
+    /** Judge trap pairs and the Groundedness sample: {@code ran} false means --skip-calibration. */
+    public record Calibration(boolean ran, List<TrapResult> pairs, LabeledSample.Result groundedness) {
+        public static final Calibration SKIPPED = new Calibration(false, List.of(), LabeledSample.Result.NONE);
+
+        public Calibration(boolean ran, List<TrapResult> pairs) {
+            this(ran, pairs, LabeledSample.Result.NONE);
+        }
 
         @JsonProperty("misses")
         public long misses() { return pairs.stream().filter(pair -> !pair.passed()).count(); }
@@ -34,6 +39,13 @@ public record SuiteReport(String runId, String endpoint, double passFloor, List<
         if (!oos.isEmpty()) reasons.add("out-of-scope case failed: " + String.join(", ", oos));
         if (calibration.misses() > 0)
             reasons.add("judge calibration: " + calibration.misses() + " trap pair miss(es)");
+        LabeledSample.Result sample = calibration.groundedness();
+        if (sample.falseSupported() > 0) {
+            reasons.add("groundedness calibration: " + sample.falseSupported() + " of " + sample.unsupportedPairs() + " unsupported pair(s) judged supported");
+        }
+        if (!sample.agreementMet()) {
+            reasons.add(String.format("groundedness calibration: agreement %.1f%% is below the 90%% target", sample.agreement() * 100));
+        }
         return reasons;
     }
 

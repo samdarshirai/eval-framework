@@ -1,6 +1,7 @@
 package eval;
 
 import org.junit.jupiter.api.Test;
+import eval.calibration.LabeledSample;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,4 +41,46 @@ class SuiteReportTest {
         assertTrue(r.exitReasons().contains("judge calibration: 1 trap pair miss(es)"));
         assertEquals(1, r.exitCode());
     }
+
+  @Test
+  void anUnsupportedPairJudgedSupportedFailsTheRun() {
+    var missed =
+        new LabeledSample.PairResult(
+            "u1", "unsupported", false, true, "labeled UNSUPPORTED, judge said SUPPORTED");
+    var report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(),
+            new SuiteReport.Calibration(true, List.of(), new LabeledSample.Result(List.of(missed))),
+            List.of());
+    assertTrue(
+        report.exitReasons().stream()
+            .anyMatch(reason -> reason.contains("groundedness calibration: 1 of 1 unsupported pair(s) judged supported")),
+        report.exitReasons().toString());
+  }
+
+  @Test
+  void agreementBelowNinetyPercentFailsTheRun() {
+    var agreeing = new LabeledSample.PairResult("a", "supported", true, true, null);
+    var disagreeing = new LabeledSample.PairResult("b", "supported", true, false, "labeled SUPPORTED, judge said UNSUPPORTED");
+    var report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(),
+            new SuiteReport.Calibration(true, List.of(), new LabeledSample.Result(List.of(agreeing, disagreeing))),
+            List.of());
+    assertTrue(
+        report.exitReasons().stream().anyMatch(reason -> reason.contains("groundedness calibration: agreement 50.0%")),
+        report.exitReasons().toString());
+  }
+
+  @Test
+  void aSkippedOrEmptyGroundednessSampleAddsNoExitReason() {
+    var report = new SuiteReport("r", "http://x", 0.90, List.of(), SuiteReport.Calibration.SKIPPED, List.of());
+    assertTrue(report.exitReasons().stream().noneMatch(reason -> reason.contains("groundedness")));
+  }
 }

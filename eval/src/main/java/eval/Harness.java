@@ -1,5 +1,6 @@
 package eval;
 
+import eval.calibration.LabeledSample;
 import eval.calibration.TrapPairs;
 import eval.checks.*;
 import eval.knowledge.KnowledgeSources;
@@ -72,6 +73,12 @@ public final class Harness {
       out.println("Restore the file, or pass --skip-calibration to run without them.");
       return 2;
     }
+    Path sampleFile = config.labeledSampleFile(); // null: use the sample bundled in the jar
+    if (!skipCalibration && sampleFile != null && !Files.isReadable(sampleFile)) {
+      out.println("ERROR: cannot read the labeled Groundedness sample at " + sampleFile);
+      out.println("Restore the file, or pass --skip-calibration to run without it.");
+      return 2;
+    }
 
     // Validate cases against the docs BEFORE contacting the assistant.
     KnowledgeBase kb = getKnowledgeBase(out, config);
@@ -91,12 +98,14 @@ public final class Harness {
       return 2;
     }
 
-    SuiteReport.Calibration calibration =
-        skipCalibration
-            ? SuiteReport.Calibration.SKIPPED
-            : new SuiteReport.Calibration(
-                true,
-                trapFile == null ? TrapPairs.runBundled(judge) : TrapPairs.run(trapFile, judge));
+    SuiteReport.Calibration calibration = SuiteReport.Calibration.SKIPPED;
+    if (!skipCalibration) {
+      List<TrapPairs.TrapResult> trapResults =
+          trapFile == null ? TrapPairs.runBundled(judge) : TrapPairs.run(trapFile, judge);
+      LabeledSample.Result groundedness =
+          sampleFile == null ? LabeledSample.runBundled(judge) : LabeledSample.run(sampleFile, judge);
+      calibration = new SuiteReport.Calibration(true, trapResults, groundedness);
+    }
 
     String runId = ReportWriter.newRunId();
     CaseRunner runner = new CaseRunner(client, checks);
