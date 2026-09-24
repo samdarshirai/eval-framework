@@ -1,0 +1,154 @@
+# Groundedness calibration (D16): does the judge agree with a hand label on whether the passage
+# supports the claim? 10 subtly unsupported, 5 plain supported, 5 hard-supported.
+# Passages are copied from docs/ so the file works without the knowledge base. Labels are ground
+# truth: if the judge disagrees, change the judge prompt, never the label.
+
+# ---- 10 subtly unsupported (target: the judge calls none of them supported) ----
+- name: wrong-safari-version
+  kind: unsupported
+  supported: false
+  passage: &bundle |
+    Former versions of our standard script tags, bundle.js and bundle_legacy.js, are still supported. These are the starting browser versions that we support for each script:
+    * bundle.js
+      * Chrome: 69
+      * Edge: 79
+      * Firefox: 67
+      * Opera: 51
+      * Safari: 14
+  claim: "bundle.js supports Safari starting from version 13."
+
+- name: wrong-zonejs-version
+  kind: unsupported
+  supported: false
+  passage: &libraries |
+    All our script tags (loader, bundle and bundle_legacy) only support the following libraries starting on the version displayed:
+    * zone.js: 0.11.4
+    * prototype.js: 1.7.3
+  claim: "All script tags support zone.js starting from version 0.12.0."
+
+- name: swapped-chrome-version
+  kind: unsupported
+  supported: false
+  passage: &loader |
+    Loader.js is our standard script tag. It supports browsers starting from these versions:
+    * Chrome: 43
+    * Edge: 77
+    * Firefox: 49
+    * Opera: 31
+    * Safari: 11
+    * Yandex: 17.6
+  claim: "Loader.js supports Chrome starting from version 49."
+
+- name: custom-ab-split
+  kind: unsupported
+  supported: false
+  passage: &internal |
+    You can enable the internal A/B testing by selecting the "Activate with Usercentrics" option in the Admin Interface under Implementation / A/B Testing. When using Usercentrics to display your variants, they are always **evenly distributed** (e.g. 50:50 in case of two variants).
+  claim: "With Usercentrics internal A/B testing you can choose a custom traffic split, such as 80:20."
+
+- name: variant-set-after-cmp
+  kind: unsupported
+  supported: false
+  passage: &thirdparty |
+    * **UC_AB_VARIANT**: This variable defines what A/B variant you will be testing on. As this variable will be delivered by the Usercentrics Consent Management Platform to the A/B testing tool to display the different variants, it needs to be set before the Consent Management Platform is loaded.
+
+    * **Script Order**: We recommend that you add your **A/B testing tool** script in the `<head>` section of your code before the Usercentrics Consent Management Platform, since the A/B testing tool needs to be loaded before the Consent Management Platform to do the **splitting** properly.
+  claim: "The UC_AB_VARIANT variable must be set after the Usercentrics CMP has loaded."
+
+- name: tool-after-cmp
+  kind: unsupported
+  supported: false
+  passage: *thirdparty
+  claim: "The A/B testing tool script should be placed after the Usercentrics CMP in the body of the page."
+
+- name: default-for-all-customers
+  kind: unsupported
+  supported: false
+  passage: &default |
+    For new customers, Google Consent Mode is enabled by default.
+  claim: "Google Consent Mode is enabled by default for all customers."
+
+- name: added-exception
+  kind: unsupported
+  supported: false
+  passage: &constraints |
+    -   Configurations belonging to a ruleset cannot be unassigned from the company or permanently deleted
+    -   Companies having rulesets cannot be deleted. You need to delete the ruleset first
+    -   Configurations supporting TCF 2.2 should belong to a single ruleset and need to be implemented with the respective TCF Script Tag. Example - Do not combine GDPR and TCF configuration in one rule. It will not always work as expected **(not applicable to In-App SDK)**
+  claim: "A company that has rulesets can be deleted as long as its configurations are unassigned first."
+
+- name: extra-analytics-js
+  kind: unsupported
+  supported: false
+  passage: &prereq |
+    Consent Mode requires that you use gtag.js or Google Tag Manager. If you use older tags versions (like ga.js or analytics.js) you need to update to the latest tag versions first.
+  claim: "Consent Mode requires gtag.js, Google Tag Manager or analytics.js."
+
+- name: wrong-consent-signal
+  kind: unsupported
+  supported: false
+  passage: &advertiser |
+    When using Consent Mode, it's also possible to manage Advertiser Consent Mode. When enabled, Google will deduce the consent signals for ad_storage, ad_user_data and ad_personalisation from the TC String. It's recommended to enable the Advertiser Consent Mode when enabling Google Consent Mode.
+  claim: "When Advertiser Consent Mode is enabled, Google deduces the analytics_storage consent signal from the TC String."
+
+# ---- 5 plain supported ----
+- name: plain-chrome-version
+  kind: supported
+  supported: true
+  passage: *loader
+  claim: "Loader.js supports Chrome starting from version 43."
+
+- name: plain-even-split
+  kind: supported
+  supported: true
+  passage: *internal
+  claim: "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants."
+
+- name: plain-ruleset-delete
+  kind: supported
+  supported: true
+  passage: *constraints
+  claim: "A company that has rulesets cannot be deleted until the ruleset is deleted first."
+
+- name: plain-variant-before-cmp
+  kind: supported
+  supported: true
+  passage: *thirdparty
+  claim: "The UC_AB_VARIANT variable must be set before the Usercentrics CMP is loaded."
+
+- name: plain-default-for-new-customers
+  kind: supported
+  supported: true
+  passage: *default
+  claim: "Google Consent Mode is enabled by default for new customers."
+
+# ---- 5 hard-supported: paraphrase, split across sentences, equivalent numbers ----
+- name: hard-oldest-safari
+  kind: hard-supported
+  supported: true
+  passage: *bundle
+  claim: "The oldest Safari version that bundle.js supports is 14."
+
+- name: hard-split-across-sentences
+  kind: hard-supported
+  supported: true
+  passage: *advertiser
+  claim: "Enabling Advertiser Consent Mode is recommended, and it lets Google derive the ad_user_data signal from the TC String."
+
+- name: hard-half-of-visitors
+  kind: hard-supported
+  supported: true
+  passage: *internal
+  claim: "With two variants in the internal A/B test, each variant is shown to half of the visitors."
+
+- name: hard-gdpr-and-tcf
+  kind: hard-supported
+  supported: true
+  passage: *constraints
+  claim: "A GDPR configuration and a TCF configuration should not be put in the same ruleset."
+
+- name: hard-update-analytics-js
+  kind: hard-supported
+  supported: true
+  passage: *prereq
+  claim: "Sites that still use analytics.js must move to a newer tag version before they can use Consent Mode."
