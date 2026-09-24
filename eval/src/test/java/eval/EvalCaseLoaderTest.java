@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EvalCaseLoaderTest {
     @TempDir Path dir;
+    private static final List<String> CATEGORIES = List.of("single-source", "multi-source", "false-premise", "out-of-scope", "edge-case");
     private final KnowledgeBase kb = new KnowledgeBase(List.of(new Chunk("d#a", "d", "x"), new Chunk("d#b", "d", "y")));
 
     private void write(String name, String yaml) throws Exception { Files.writeString(dir.resolve(name), yaml); }
@@ -26,27 +27,27 @@ class EvalCaseLoaderTest {
                   chunks: [d#a, d#b]
                   keywords: [Safari, "14"]
             """ + META);
-        var c = EvalCaseLoader.load(dir, kb).get(0);
+        var c = EvalCaseLoader.load(dir, kb, CATEGORIES).get(0);
         assertEquals(List.of("d#a", "d#b"), c.facts().get(0).chunks());
         assertEquals(List.of("Safari", "14"), c.facts().get(0).keywords());
     }
 
     @Test void refuseCaseNeedsNoFacts() throws Exception {
         write("a.yaml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  subtype: unrelated\n  expected_behavior: refuse\n" + META);
-        var c = EvalCaseLoader.load(dir, kb).get(0);
+        var c = EvalCaseLoader.load(dir, kb, CATEGORIES).get(0);
         assertTrue(c.facts().isEmpty());
         assertEquals("unrelated", c.subtype());
     }
 
     @Test void missingGoldChunkIsHardErrorNamingCaseAndChunk() throws Exception {
         write("a.yaml", "- id: c1\n  question: Q?\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: F, chunks: [d#nope]}\n" + META);
-        String m = err(() -> { try { EvalCaseLoader.load(dir, kb); } catch (java.io.IOException e) { throw new RuntimeException(e); } });
+        String m = err(() -> { try { EvalCaseLoader.load(dir, kb, CATEGORIES); } catch (java.io.IOException e) { throw new RuntimeException(e); } });
         assertTrue(m.contains("c1") && m.contains("d#nope"), m);
     }
 
     @Test void unquotedYamlDateIsAccepted() throws Exception {
         write("a.yaml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  expected_behavior: refuse\n  source: authored\n  owner: platform\n  added: 2026-09-24\n");
-        assertEquals("2026-09-24", EvalCaseLoader.load(dir, kb).get(0).added());
+        assertEquals("2026-09-24", EvalCaseLoader.load(dir, kb, CATEGORIES).get(0).added());
     }
 
     @Test void badInputsGiveOneClearError() throws Exception {
@@ -90,10 +91,16 @@ class EvalCaseLoaderTest {
             && m.contains("single-source, multi-source, false-premise, out-of-scope, edge-case"), m);
     }
 
-    @Test void ymlFilesAreLoadedToo() throws Exception {
-        write("a.yml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  expected_behavior: refuse\n" + META);
-        assertEquals("c1", EvalCaseLoader.load(dir, kb).get(0).id());
+    @Test void allowedCategoriesComeFromTheCallerNotAHardcodedList() throws Exception {
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: billing\n  expected_behavior: refuse\n" + META);
+        assertEquals("billing", EvalCaseLoader.load(dir, kb, List.of("billing", "out-of-scope")).get(0).category());
+        assertTrue(err(() -> load()).contains("'billing'"));
     }
 
-    private void load() { try { EvalCaseLoader.load(dir, kb); } catch (java.io.IOException e) { throw new RuntimeException(e); } }
+    @Test void ymlFilesAreLoadedToo() throws Exception {
+        write("a.yml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  expected_behavior: refuse\n" + META);
+        assertEquals("c1", EvalCaseLoader.load(dir, kb, CATEGORIES).get(0).id());
+    }
+
+    private void load() { try { EvalCaseLoader.load(dir, kb, CATEGORIES); } catch (java.io.IOException e) { throw new RuntimeException(e); } }
 }

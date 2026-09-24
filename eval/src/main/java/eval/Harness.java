@@ -38,10 +38,12 @@ public final class Harness {
         String endpoint = endpointArg != null ? endpointArg : (String) cfg.get("endpoint");
         double floor = ((Number) cfg.get("passFloor")).doubleValue();
 
+        List<String> categories = categoriesFrom(cfg);
+
         // Validate cases against the docs BEFORE contacting the assistant.
         List<EvalCase> cases;
         try {
-            cases = EvalCaseLoader.load(root.resolve("eval/cases"), new KnowledgeBase(root.resolve("docs")));
+            cases = EvalCaseLoader.load(root.resolve("eval/cases"), new KnowledgeBase(root.resolve("docs")), categories);
         } catch (IllegalArgumentException e) {
             out.println("ERROR: " + e.getMessage());
             return 2;
@@ -67,6 +69,16 @@ public final class Harness {
         new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(root.resolve("results/" + runId + ".json").toFile(), report);
         out.println("Report: results/" + runId + ".json");
         return report.exitCode();
+    }
+
+    /** The allowed case categories from config; 'out-of-scope' must stay because the exit rule depends on it. */
+    private static List<String> categoriesFrom(Map<String, Object> cfg) {
+        if (!(cfg.get("categories") instanceof List<?> raw) || raw.isEmpty())
+            throw new IllegalArgumentException("eval/config.yaml: 'categories' must be a non-empty list");
+        List<String> categories = raw.stream().map(String::valueOf).toList();
+        if (!categories.contains(SuiteReport.OUT_OF_SCOPE))
+            throw new IllegalArgumentException("eval/config.yaml: 'categories' must include '" + SuiteReport.OUT_OF_SCOPE + "' (the out-of-scope exit rule depends on it)");
+        return categories;
     }
 
     private static CaseResult runCase(EvalCase c, AssistantClient client, String runId) {
