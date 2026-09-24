@@ -103,7 +103,9 @@ public final class Harness {
       List<TrapPairs.TrapResult> trapResults =
           trapFile == null ? TrapPairs.runBundled(judge) : TrapPairs.run(trapFile, judge);
       LabeledSample.Result groundedness =
-          sampleFile == null ? LabeledSample.runBundled(judge) : LabeledSample.run(sampleFile, judge);
+          sampleFile == null
+              ? LabeledSample.runBundled(judge)
+              : LabeledSample.run(sampleFile, judge);
       calibration = new SuiteReport.Calibration(true, trapResults, groundedness);
     }
 

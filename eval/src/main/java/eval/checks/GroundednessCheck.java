@@ -40,7 +40,8 @@ public final class GroundednessCheck implements Check {
       }
       List<Chunk> cited = citedChunks(claim);
       if (cited.isEmpty()) {
-        notes.add("skipped, no existing citation (see Citation integrity): \"" + claim.claim() + "\"");
+        notes.add(
+            "skipped, no existing citation (see Citation integrity): \"" + claim.claim() + "\"");
       } else if (anyChunkSupports(claim, cited)) {
         notes.add("grounded (judge): \"" + claim.claim() + "\"");
       } else {
@@ -57,7 +58,8 @@ public final class GroundednessCheck implements Check {
     Set<Claim> grounded = new HashSet<>();
     for (ExpectedFact fact : evalCase.facts()) {
       for (Claim claim : state.covering(fact)) {
-        if (claim.citations() != null && claim.citations().stream().anyMatch(fact.chunks()::contains)) {
+        if (claim.citations() != null
+            && claim.citations().stream().anyMatch(fact.chunks()::contains)) {
           grounded.add(claim);
         }
       }
@@ -91,7 +93,8 @@ public final class GroundednessCheck implements Check {
     List<String> parts = new ArrayList<>();
     for (Chunk chunk : cited) {
       String text = chunk.text().replaceAll("\\s+", " ");
-      String excerpt = text.length() <= EXCERPT_LENGTH ? text : text.substring(0, EXCERPT_LENGTH) + "...";
+      String excerpt =
+          text.length() <= EXCERPT_LENGTH ? text : text.substring(0, EXCERPT_LENGTH) + "...";
       parts.add(chunk.id() + ": \"" + excerpt + "\"");
     }
     return String.join(", ", parts);

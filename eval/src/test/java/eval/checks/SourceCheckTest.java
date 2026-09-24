@@ -19,8 +19,7 @@ class SourceCheckTest {
           List.of("gtag.js"));
 
   private static EvalCase caseWith(ExpectedFact... facts) {
-    return new EvalCase(
-        "c", "q", "multi-source", null, "answer", List.of(facts), null, null, null);
+    return new EvalCase("c", "q", "multi-source", null, "answer", List.of(facts), null, null, null);
   }
 
   private static CheckResult run(EvalCase evalCase, CaseState state) {
@@ -70,8 +69,7 @@ class SourceCheckTest {
     var state =
         covered(
             GEO,
-            new Claim(
-                "c", List.of("consent-mode#prerequisites", "geolocation-rules#constraints")));
+            new Claim("c", List.of("consent-mode#prerequisites", "geolocation-rules#constraints")));
     assertTrue(run(caseWith(GEO), state).passed());
   }
 

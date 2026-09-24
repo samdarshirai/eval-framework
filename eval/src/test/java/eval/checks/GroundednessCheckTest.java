@@ -131,7 +131,6 @@ class GroundednessCheckTest {
     var check = new GroundednessCheck(KB, new Judge((system, user) -> "Maybe"));
     var answer = new Answer(false, List.of(new Claim("x", List.of("d#chrome"))));
     assertThrows(
-        IllegalStateException.class,
-        () -> check.run(caseWith(SAFARI), answer, new CaseState()));
+        IllegalStateException.class, () -> check.run(caseWith(SAFARI), answer, new CaseState()));
   }
 }

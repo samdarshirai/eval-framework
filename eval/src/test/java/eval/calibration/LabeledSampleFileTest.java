@@ -27,7 +27,8 @@ class LabeledSampleFileTest {
   @Test
   void holdsTenUnsupportedFivePlainAndFiveHardSupportedPairs() throws Exception {
     Map<Object, Long> byKind =
-        sample().stream().collect(Collectors.groupingBy(pair -> pair.get("kind"), Collectors.counting()));
+        sample().stream()
+            .collect(Collectors.groupingBy(pair -> pair.get("kind"), Collectors.counting()));
     assertEquals(Map.of("unsupported", 10L, "supported", 5L, "hard-supported", 5L), byKind);
   }
 

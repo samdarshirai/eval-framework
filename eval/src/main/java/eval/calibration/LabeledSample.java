@@ -66,7 +66,8 @@ public final class LabeledSample {
   /** Runs the sample shipped inside the jar. */
   public static Result runBundled(Judge judge) throws IOException {
     try (Reader reader =
-        new InputStreamReader(LabeledSample.class.getResourceAsStream(BUNDLED), StandardCharsets.UTF_8)) {
+        new InputStreamReader(
+            LabeledSample.class.getResourceAsStream(BUNDLED), StandardCharsets.UTF_8)) {
       return run(reader, judge);
     }
   }

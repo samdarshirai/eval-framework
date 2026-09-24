@@ -68,7 +68,8 @@ class EvalConfigTest {
     Path plain = Files.writeString(dir.resolve("plain.yaml"), base);
     assertNull(EvalConfig.loadFile(plain, null).labeledSampleFile());
     Path custom =
-        Files.writeString(dir.resolve("custom.yaml"), base + "calibration:\n  labeledSample: pairs.yaml\n");
+        Files.writeString(
+            dir.resolve("custom.yaml"), base + "calibration:\n  labeledSample: pairs.yaml\n");
     assertEquals(dir.resolve("pairs.yaml"), EvalConfig.loadFile(custom, null).labeledSampleFile());
   }
 }

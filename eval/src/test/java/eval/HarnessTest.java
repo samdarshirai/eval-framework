@@ -57,7 +57,9 @@ class HarnessTest {
         root.resolve("eval/config.yaml"),
         body
             + "judgeModel: test/judge\n"
-            + "calibration:\n  trapPairs: calibration/trap-pairs.yaml\n  labeledSample: calibration/labeled-sample.yaml\n");
+            + "calibration:\n"
+            + "  trapPairs: calibration/trap-pairs.yaml\n"
+            + "  labeledSample: calibration/labeled-sample.yaml\n");
   }
 
   private void labeledSampleFile(String yaml) throws IOException {
@@ -435,7 +437,9 @@ class HarnessTest {
                 });
     assertEquals(1, code, buf.toString());
     assertTrue(buf.toString().contains("Coverage: not covered"), buf.toString());
-    assertEquals(2, judgeCalls[0]); // Coverage's confirm call plus Groundedness's call on the uncovered claim
+    assertEquals(
+        2,
+        judgeCalls[0]); // Coverage's confirm call plus Groundedness's call on the uncovered claim
   }
 
   @Test
@@ -500,7 +504,9 @@ class HarnessTest {
     String output = out(code)[0]; // the fake judge says YES to everything
     assertEquals(1, code[0], output);
     assertTrue(output.contains("MISS u1 (labeled UNSUPPORTED, judge said SUPPORTED)"), output);
-    assertTrue(output.contains("groundedness calibration: 1 of 1 unsupported pair(s) judged supported"), output);
+    assertTrue(
+        output.contains("groundedness calibration: 1 of 1 unsupported pair(s) judged supported"),
+        output);
     assertTrue(output.contains("PASS") && output.contains("oos-1"), output);
     var reportMatcher = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(output);
     assertTrue(reportMatcher.find(), output);
@@ -508,7 +514,8 @@ class HarnessTest {
         new com.fasterxml.jackson.databind.ObjectMapper()
             .readTree(root.resolve(reportMatcher.group(1)).toFile());
     assertEquals(1, json.get("calibration").get("groundedness").get("falseSupported").asInt());
-    assertEquals("u1", json.get("calibration").get("groundedness").get("pairs").get(0).get("name").asText());
+    assertEquals(
+        "u1", json.get("calibration").get("groundedness").get("pairs").get(0).get("name").asText());
   }
 
   @Test
@@ -538,7 +545,8 @@ class HarnessTest {
     int[] code = new int[1];
     String output = out(code)[0];
     assertEquals(2, code[0], output);
-    assertTrue(output.contains("labeled-sample.yaml") && output.contains("--skip-calibration"), output);
+    assertTrue(
+        output.contains("labeled-sample.yaml") && output.contains("--skip-calibration"), output);
     assertEquals(0, requests.get());
   }
 }

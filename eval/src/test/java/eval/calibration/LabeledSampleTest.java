@@ -62,7 +62,8 @@ class LabeledSampleTest {
 
   @Test
   void anEmptySampleHasNoTargetToMiss() {
-    assertTrue(LabeledSample.run(new StringReader("[]\n"), new Judge((s, u) -> "YES")).agreementMet());
+    assertTrue(
+        LabeledSample.run(new StringReader("[]\n"), new Judge((s, u) -> "YES")).agreementMet());
     assertTrue(LabeledSample.Result.NONE.agreementMet());
     assertEquals(0, LabeledSample.Result.NONE.falseSupported());
   }
