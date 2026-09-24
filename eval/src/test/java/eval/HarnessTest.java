@@ -50,7 +50,7 @@ class HarnessTest {
         String o = out(code)[0];
         assertEquals(0, code[0], o);
         assertTrue(o.contains("PASS") && o.contains("oos-1"));
-        try (var s = Files.list(root.resolve("results"))) { assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count()); }
+        try (var s = Files.list(root.resolve("caseResults"))) { assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count()); }
     }
 
     @Test void reportHasQuestionAndExpectedNextToActualAndListsChecksOnce() throws Exception {
@@ -92,7 +92,7 @@ class HarnessTest {
         String o = out(code)[0];
         assertEquals(1, code[0]);
         assertTrue(o.contains("HTTP 500"), o);
-        assertTrue(Files.exists(root.resolve("results")));
+        assertTrue(Files.exists(root.resolve("caseResults")));
     }
 
     @Test void missingGoldChunkStopsBeforeAnyAssistantCall() throws Exception {

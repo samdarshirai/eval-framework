@@ -30,7 +30,7 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 
 ## Repo structure
 
-**Module layout (D37, supersedes the paths in the tree below):** `kb/` (Chunk, Chunker), `llm/` (Llm, OpenRouterLlm), `assistant/` (Spring Boot: Assistant, BM25Index, StubServer, AnswerController), `eval/` (harness sources under `eval/src`, plus `eval/config.yaml` and `eval/cases/`). `docs/`, `config/application.yaml` and `results/` stay at the repo root. `Chunk` and `Chunker` are in package `kb`, not `assistant`.
+**Module layout (D37, supersedes the paths in the tree below):** `kb/` (Chunk, Chunker), `llm/` (Llm, OpenRouterLlm), `assistant/` (Spring Boot: Assistant, BM25Index, StubServer, AnswerController), `eval/` (harness sources under `eval/src`, plus `eval/config.yaml` and `eval/cases/`). `docs/`, `config/application.yaml` and `caseResults/` stay at the repo root. `Chunk` and `Chunker` are in package `kb`, not `assistant`.
 
 ```
 usercentrics-eval-harness/
@@ -93,7 +93,7 @@ usercentrics-eval-harness/
 │   ├── trap-pairs.yaml             # ~5 negation traps for the Coverage confirm step
 │   └── calibration-notes.md        # agreement rate, false-"supported" count, what you adjusted
 │
-├── results/
+├── caseResults/
 │   ├── .gitkeep                    # harness writes timestamped JSON reports here
 │   └── baseline.json               # a previous report promoted by copying it (the known-good run)
 │
@@ -107,5 +107,5 @@ usercentrics-eval-harness/
 - `assistant/` and `eval/` are kept as separate Maven modules on purpose — it's the physical expression of the "contract" framing from the plan doc (application vs. evaluation layer), and it's a good thing to point at directly during the code walkthrough. **`eval/` must not depend on `assistant/`**: it only talks to the app through `AssistantClient` over HTTP. The shared `Chunk` and `Chunker` live in the small `kb` module, used by both sides, so the harness can look up chunk IDs and text without pulling in Spring.
 - `checks/` being one class per check behind one `Check` interface, with one registration list in `Checks.java`, is what makes "add a new check" a small, explainable diff if they ask for a live change there. No check is wired into `Harness` by name. The gating flag lives in the same list, so "make Relevance gating" is a one-word change.
 - The other two rehearsed live changes: flip the pass floor (`eval/config.yaml`), and add a case (a YAML entry, no code).
-- `results/` writing timestamped JSON (not overwriting a single file) is what makes regression diffing possible: promote a report by copying it to `baseline.json`, and pass `--baseline`.
+- `caseResults/` writing timestamped JSON (not overwriting a single file) is what makes regression diffing possible: promote a report by copying it to `baseline.json`, and pass `--baseline`.
 - **Not built in v1:** the per-app `checks` list and risk-tier config, which are described in the pattern doc and scale plan as the onboarding design. The doc-hash staleness warning is built only if time allows. See the cut order in the plan.
