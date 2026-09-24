@@ -73,6 +73,10 @@ Status: **in progress**. Not final until confirmed.
 
 37. **Multi-module Maven, Spring Boot stub** (PR #1 review). Modules: `kb` (Chunk, Chunker), `llm` (Llm, AnthropicLlm), `assistant` (Spring Boot app), `eval` (harness). `eval` depends on `kb` and never on `assistant`, so D28 is enforced by the build instead of an import test. Supersedes the JDK `HttpServer` choice in the tech-stack doc. Config lives in `config/application.yaml` (Spring reads `./config`), keeps `server.address: 127.0.0.1`. Both apps ship as jars: `assistant/target/assistant.jar`, `eval/target/eval.jar`.
 
+38. **Pluggable knowledge source** (PR #1 review discussion). The harness only needs the same chunks the assistant has, so where it gets them is configurable: `knowledgeBase.type` in `eval/config.yaml`, default `docs` (chunk `./docs` with `kb.Chunker`). `http` (GET `[{id, text}]` from the app) and `manifest` (JSON file) exist as placeholders that fail with a clear message. New source = one `KnowledgeSource` class plus one case in `KnowledgeSources`. When `http` is built, D8's ordering changes (the app must be up before cases are validated); amend D8 then.
+
+    **For the scale plan / pattern doc (onboarding of other apps):** the contract is HTTP and JSON plus the chunk-ID scheme (D6, D33). `kb` is the reference implementation of that scheme, not something other apps must depend on. An app onboards by choosing a source: `http` (it serves the chunks it indexed, so the harness sees exactly what the app has and no ID rules are reimplemented, best fit for any language), `manifest` (its build exports `[{id, text}]`), or its own `KnowledgeSource` class (Java). Apps not grounded in documents get a shorter `checks` list (D23). Open items to state: the app and harness must see the same doc version (guard: D21 doc-hash warning, optionally a `hash` in the chunk payload); `http` changes D8's ordering.
+
 ## Open
 
 (none right now)

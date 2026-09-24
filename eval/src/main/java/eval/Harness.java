@@ -2,6 +2,7 @@ package eval;
 
 import com.fasterxml.jackson.databind.*;
 import eval.checks.*;
+import eval.knowledge.KnowledgeSources;
 import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -43,7 +44,7 @@ public final class Harness {
         // Validate cases against the docs BEFORE contacting the assistant.
         List<EvalCase> cases;
         try {
-            cases = EvalCaseLoader.load(root.resolve("eval/cases"), new KnowledgeBase(root.resolve("docs")), categories);
+            cases = EvalCaseLoader.load(root.resolve("eval/cases"), new KnowledgeBase(KnowledgeSources.from(cfg, root)), categories);
         } catch (IllegalArgumentException e) {
             out.println("ERROR: " + e.getMessage());
             return 2;
