@@ -33,9 +33,10 @@ public final class OpenRouterLlm implements Llm {
    */
   public static OpenRouterLlm fromEnv(String model, String effort) {
     String key = System.getenv("OPENROUTER_API_KEY");
-    if (key == null || key.isBlank())
+    if (key == null || key.isBlank()) {
       throw new IllegalStateException(
           "OPENROUTER_API_KEY is not set. Run: export OPENROUTER_API_KEY=...");
+    }
     return new OpenRouterLlm(model, key, effort);
   }
 
@@ -50,8 +51,9 @@ public final class OpenRouterLlm implements Llm {
               .POST(HttpRequest.BodyPublishers.ofString(requestBody(model, system, user, effort)))
               .build();
       var res = http.send(req, HttpResponse.BodyHandlers.ofString());
-      if (res.statusCode() != 200)
+      if (res.statusCode() != 200) {
         throw new IllegalStateException("OpenRouter API " + res.statusCode() + ": " + res.body());
+      }
       return parseText(res.body());
     } catch (java.io.IOException e) {
       throw new IllegalStateException("OpenRouter API call failed: " + e.getMessage(), e);
@@ -75,7 +77,9 @@ public final class OpenRouterLlm implements Llm {
     // fail
     // instead of quietly running at the provider's default temperature (D14).
     n.putObject("provider").put("require_parameters", true);
-    if (effort != null) n.putObject("reasoning").put("effort", effort);
+    if (effort != null) {
+      n.putObject("reasoning").put("effort", effort);
+    }
     ArrayNode messages = n.putArray("messages");
     messages.addObject().put("role", "system").put("content", system);
     messages.addObject().put("role", "user").put("content", user);
@@ -86,8 +90,9 @@ public final class OpenRouterLlm implements Llm {
     try {
       JsonNode root = M.readTree(json);
       // OpenRouter can answer HTTP 200 with an error object instead of choices.
-      if (root.has("error"))
+      if (root.has("error")) {
         throw new IllegalStateException("OpenRouter API error: " + root.get("error"));
+      }
       return root.get("choices").get(0).get("message").get("content").asText();
     } catch (IllegalStateException e) {
       throw e;

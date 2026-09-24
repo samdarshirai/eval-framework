@@ -50,13 +50,16 @@ class SeedCasesTest {
    */
   @Test
   void everyKeywordAppearsInAGoldChunkOfItsFact() {
-    for (EvalCase c : cases)
-      for (ExpectedFact f : c.facts())
-        for (String keyword : f.keywords())
+    for (EvalCase c : cases) {
+      for (ExpectedFact f : c.facts()) {
+        for (String keyword : f.keywords()) {
           assertTrue(
               f.chunks().stream()
                   .anyMatch(
                       id -> knowledge.get(id).text().toLowerCase().contains(keyword.toLowerCase())),
               c.id() + ": keyword '" + keyword + "' is in none of the gold chunks " + f.chunks());
+        }
+      }
+    }
   }
 }

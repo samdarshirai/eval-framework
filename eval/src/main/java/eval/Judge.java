@@ -42,8 +42,9 @@ Reply with a JSON array of numbers only, for example [1, 3]. Reply [] if no clai
   public boolean agree(String fact, String claim) {
     String reply = llm.complete(AGREE_SYSTEM, "Fact: " + fact + "\nClaim: " + claim);
     Matcher m = FIRST_WORD.matcher(reply == null ? "" : reply);
-    if (!m.find())
+    if (!m.find()) {
       throw new IllegalStateException("judge returned neither YES nor NO: \"" + reply + "\"");
+    }
     return m.group(1).equalsIgnoreCase("yes");
   }
 
@@ -55,19 +56,24 @@ Reply with a JSON array of numbers only, for example [1, 3]. Reply [] if no clai
     }
     String reply = llm.complete(COVERING_SYSTEM, "Fact: " + fact + "\nClaims:\n" + numbered);
     Matcher m = ARRAY.matcher(reply == null ? "" : reply);
-    if (!m.find())
+    if (!m.find()) {
       throw new IllegalStateException("judge returned no JSON array: \"" + reply + "\"");
+    }
     String array = m.group();
-    if (m.find())
+    if (m.find()) {
       throw new IllegalStateException("judge returned more than one array: \"" + reply + "\"");
+    }
     try {
       int[] numbers = M.readValue(array, int[].class);
       List<Integer> indices = new ArrayList<>();
       for (int n : numbers) {
-        if (n < 1 || n > claims.size())
+        if (n < 1 || n > claims.size()) {
           throw new IllegalStateException(
               "judge returned claim number " + n + " but there are " + claims.size() + " claims");
-        if (!indices.contains(n - 1)) indices.add(n - 1);
+        }
+        if (!indices.contains(n - 1)) {
+          indices.add(n - 1);
+        }
       }
       return indices;
     } catch (java.io.IOException e) {

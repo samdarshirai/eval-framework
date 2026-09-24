@@ -37,9 +37,9 @@ public final class Harness {
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
     String endpointArg = null;
     for (int i = 0; i < args.length; i++) {
-      if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--"))
+      if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
         endpointArg = args[++i];
-      else {
+      } else {
         out.println(
             "ERROR: "
                 + (args[i].equals("--endpoint")
@@ -66,9 +66,10 @@ public final class Harness {
       return 2;
     }
 
-    if (!(cfg.get("judgeModel") instanceof String judgeModel) || judgeModel.isBlank())
+    if (!(cfg.get("judgeModel") instanceof String judgeModel) || judgeModel.isBlank()) {
       throw new IllegalArgumentException(
           "eval/config.yaml: 'judgeModel' is required (an OpenRouter model slug)");
+    }
     Judge judge =
         new Judge(
             judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
@@ -107,14 +108,16 @@ public final class Harness {
    * on it.
    */
   private static List<String> categoriesFrom(Map<String, Object> cfg) {
-    if (!(cfg.get("categories") instanceof List<?> raw) || raw.isEmpty())
+    if (!(cfg.get("categories") instanceof List<?> raw) || raw.isEmpty()) {
       throw new IllegalArgumentException("eval/config.yaml: 'categories' must be a non-empty list");
+    }
     List<String> categories = raw.stream().map(String::valueOf).toList();
-    if (!categories.contains(SuiteReport.OUT_OF_SCOPE))
+    if (!categories.contains(SuiteReport.OUT_OF_SCOPE)) {
       throw new IllegalArgumentException(
           "eval/config.yaml: 'categories' must include '"
               + SuiteReport.OUT_OF_SCOPE
               + "' (the out-of-scope exit rule depends on it)");
+    }
     return categories;
   }
 
@@ -183,7 +186,9 @@ public final class Harness {
                 "check error: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
       }
       outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
-      if (r.gating() && !res.passed()) passed = false;
+      if (r.gating() && !res.passed()) {
+        passed = false;
+      }
     }
     return new CaseResult(
         c.id(),
@@ -201,20 +206,27 @@ public final class Harness {
     out.println("Endpoint: " + r.endpoint() + "  Run: " + r.runId());
     for (CaseResult c : r.cases()) {
       out.printf("%-4s %-22s %-14s%n", c.passed() ? "PASS" : "FAIL", c.id(), c.category());
-      if (c.error() != null) out.println("       assistant error: " + c.error());
-      for (CheckOutcome o : c.checks())
-        if (!o.passed())
+      if (c.error() != null) {
+        out.println("       assistant error: " + c.error());
+      }
+      for (CheckOutcome o : c.checks()) {
+        if (!o.passed()) {
           out.println(
               "       "
                   + o.check()
                   + (r.isGating(o.check()) ? "" : " (advisory)")
                   + ": "
                   + o.reason());
+        }
+      }
     }
     out.printf(
         "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
         r.passed(), r.cases().size(), r.passRate() * 100, r.passFloor() * 100);
-    if (r.exitCode() == 0) out.println("RESULT: OK");
-    else r.exitReasons().forEach(x -> out.println("RESULT: FAIL - " + x));
+    if (r.exitCode() == 0) {
+      out.println("RESULT: OK");
+    } else {
+      r.exitReasons().forEach(x -> out.println("RESULT: FAIL - " + x));
+    }
   }
 }

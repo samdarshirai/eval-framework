@@ -33,7 +33,9 @@ public final class TrapPairs {
       } catch (IllegalStateException e) {
         problem = "error: " + e.getMessage();
       }
-      if (problem != null) misses++;
+      if (problem != null) {
+        misses++;
+      }
       out.println(
           problem == null
               ? "ok   " + p.get("name")
@@ -57,10 +59,15 @@ public final class TrapPairs {
             .map(c -> new Claim((String) c.get("text"), List.of("x#y")))
             .toList(); // citations are unused by the judge
     Set<Integer> expected = new TreeSet<>();
-    for (int i = 0; i < raw.size(); i++)
-      if ((Boolean) raw.get(i).get("states")) expected.add(i + 1);
+    for (int i = 0; i < raw.size(); i++) {
+      if ((Boolean) raw.get(i).get("states")) {
+        expected.add(i + 1);
+      }
+    }
     Set<Integer> actual = new TreeSet<>();
-    for (int index : judge.covering((String) p.get("fact"), claims)) actual.add(index + 1);
+    for (int index : judge.covering((String) p.get("fact"), claims)) {
+      actual.add(index + 1);
+    }
     return expected.equals(actual)
         ? null
         : "expected claims " + expected + ", judge said " + actual;

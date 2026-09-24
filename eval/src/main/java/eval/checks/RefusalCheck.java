@@ -13,12 +13,15 @@ public final class RefusalCheck implements Check {
   @Override
   public CheckResult run(EvalCase c, Answer a, CaseState state) {
     int n = a.claims() == null ? 0 : a.claims().size();
-    if (a.refused() && n > 0)
+    if (a.refused() && n > 0) {
       return CheckResult.fail("contract violation: refused=true but response has " + n + " claims");
-    if (c.expectedBehavior().equals("refuse") && !a.refused())
+    }
+    if (c.expectedBehavior().equals("refuse") && !a.refused()) {
       return CheckResult.fail("hallucination: assistant answered where it should have refused");
-    if (c.expectedBehavior().equals("answer") && a.refused())
+    }
+    if (c.expectedBehavior().equals("answer") && a.refused()) {
       return CheckResult.fail("over-refusal: assistant refused a question the docs cover");
+    }
     return CheckResult.ok();
   }
 }

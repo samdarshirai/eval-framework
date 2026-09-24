@@ -27,22 +27,33 @@ public final class CoverageCheck implements Check {
     List<String> uncovered = new ArrayList<>();
     for (ExpectedFact fact : c.facts()) {
       List<Claim> covering = coveringClaims(fact, claims);
-      if (covering.isEmpty()) uncovered.add(fact.fact());
-      else state.setCovering(fact, covering);
+      if (covering.isEmpty()) {
+        uncovered.add(fact.fact());
+      } else {
+        state.setCovering(fact, covering);
+      }
     }
-    if (uncovered.isEmpty()) return CheckResult.ok();
+    if (uncovered.isEmpty()) {
+      return CheckResult.ok();
+    }
     return CheckResult.fail(
         "not covered: " + String.join("; ", uncovered.stream().map(f -> "\"" + f + "\"").toList()));
   }
 
   private List<Claim> coveringClaims(ExpectedFact fact, List<Claim> claims) {
-    if (claims.isEmpty()) return List.of();
-    if (fact.keywords().isEmpty())
+    if (claims.isEmpty()) {
+      return List.of();
+    }
+    if (fact.keywords().isEmpty()) {
       return judge.covering(fact.fact(), claims).stream().map(claims::get).toList();
+    }
     List<Claim> covering = new ArrayList<>();
-    for (Claim candidate : claims)
+    for (Claim candidate : claims) {
       if (containsAll(candidate.claim(), fact.keywords())
-          && judge.agree(fact.fact(), candidate.claim())) covering.add(candidate);
+          && judge.agree(fact.fact(), candidate.claim())) {
+        covering.add(candidate);
+      }
+    }
     return covering;
   }
 

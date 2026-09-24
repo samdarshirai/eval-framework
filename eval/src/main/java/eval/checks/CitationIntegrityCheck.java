@@ -27,9 +27,11 @@ public final class CitationIntegrityCheck implements Check {
         problems.add("no citation for claim: \"" + claim.claim() + "\"");
         continue;
       }
-      for (String id : claim.citations())
-        if (!kb.has(id))
+      for (String id : claim.citations()) {
+        if (!kb.has(id)) {
           problems.add("fabricated citation: " + id + " (claim: \"" + claim.claim() + "\")");
+        }
+      }
     }
     return problems.isEmpty() ? CheckResult.ok() : CheckResult.fail(String.join("; ", problems));
   }
