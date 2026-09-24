@@ -26,7 +26,9 @@ final class EvalConfig {
     this.categories = categories;
   }
 
-  /** Loads eval/config.yaml under root; a non-null endpointOverride wins over the file's endpoint. */
+  /**
+   * Loads eval/config.yaml under root; a non-null endpointOverride wins over the file's endpoint.
+   */
   static EvalConfig load(Path root, String endpointOverride) throws IOException {
     Map<String, Object> raw = new Yaml().load(Files.readString(root.resolve("eval/config.yaml")));
     String endpoint = endpointOverride != null ? endpointOverride : (String) raw.get("endpoint");

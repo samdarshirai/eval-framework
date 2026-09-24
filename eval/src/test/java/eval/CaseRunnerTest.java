@@ -87,7 +87,8 @@ class CaseRunnerTest {
     var result = runner.run(evalCase("a"), "run");
     assertFalse(result.passed());
     assertEquals(
-        List.of(new CheckOutcome("boom", false, "check error: kaput"),
+        List.of(
+            new CheckOutcome("boom", false, "check error: kaput"),
             new CheckOutcome("after", true, null)),
         result.checks());
   }

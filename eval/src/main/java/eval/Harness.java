@@ -80,7 +80,9 @@ public final class Harness {
     for (EvalCase evalCase : cases) {
       caseResults.add(runner.run(evalCase, runId));
     }
-    SuiteReport report = new SuiteReport(runId, config.endpoint(), config.passFloor(), checkInfos(checks), caseResults);
+    SuiteReport report =
+        new SuiteReport(
+            runId, config.endpoint(), config.passFloor(), checkInfos(checks), caseResults);
 
     ConsoleReport.print(report, out);
     ReportWriter.write(root, report);
