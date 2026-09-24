@@ -1,5 +1,7 @@
 # Eval Harness — Units 1–8 Implementation Plan
 
+> Continued in 2026-09-24-eval-harness-plan-a-units-9-12.md (units 9–12); plans B–F follow.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
 > **Revised after PR #1 review.** The code was restructured into Maven modules and the stub moved to Spring Boot. The header, Global Constraints, File Structure and Verification below describe the current layout. **The code blocks inside Tasks 1-8 are the original single-module code as first executed**; read "Revision after PR review" (right after this header) before using them, because paths, packages and a few signatures differ.
