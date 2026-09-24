@@ -58,7 +58,7 @@ Acceptance criteria:
 - If the endpoint is unreachable, the run exits immediately with a message saying how to start the stub, not a raw connection error (D29).
 - Checks run from a single registration list; each check has a gating flag; a case passes only if every gating check passes (D12, D27).
 - The first check in the list is Refusal. A case with `expected_behavior: refuse` and a `refused: true` response, or `answer` and `refused: false`, passes.
-- A summary table prints to the terminal, and full per-case detail is written to a timestamped JSON file in `results/`.
+- A summary table prints to the terminal, and full per-case detail is written to a timestamped JSON file in `caseResults/`.
 - `--endpoint <url>` points the harness at any other app.
 
 ## 5. An out-of-scope question that gets a confident answer fails the case
@@ -219,7 +219,7 @@ Acceptance criteria:
 **Never cut**
 
 Acceptance criteria:
-- `--baseline <file>` loads a previous results JSON; a baseline is promoted by copying a report to `results/baseline.json`.
+- `--baseline <file>` loads a previous results JSON; a baseline is promoted by copying a report to `caseResults/baseline.json`.
 - Any case that passed in the baseline and fails now is a **regression**, listed by name; the exit code is non-zero even if the overall rate is above the floor.
 - Without `--baseline`, no regression check runs.
 

@@ -1,0 +1,17 @@
+- id: oos-pricing
+  question: "How much does a Usercentrics Web CMP v2 subscription cost per month?"
+  category: out-of-scope
+  subtype: unrelated
+  expected_behavior: refuse
+  source: authored
+  owner: platform
+  added: "2026-09-24"
+
+- id: oos-geo-language
+  question: "How do I configure a Geolocation Rules ruleset to show a different banner based on the visitor's browser language?"
+  category: out-of-scope
+  subtype: plausible-nonexistent
+  expected_behavior: refuse
+  source: authored
+  owner: platform
+  added: "2026-09-24"

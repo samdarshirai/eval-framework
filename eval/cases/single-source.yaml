@@ -1,0 +1,23 @@
+- id: ss-safari-bundle
+  question: "Which Safari version does bundle.js support?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "bundle.js supports Safari starting from version 14"
+      chunks: [browser-support#browser-support]
+      keywords: ["Safari", "14"]
+  source: authored
+  owner: platform
+  added: "2026-09-24"
+
+- id: ss-zonejs
+  question: "From which zone.js version do the Usercentrics script tags work?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "The script tags support zone.js starting from version 0.11.4"
+      chunks: [browser-support#libraries-support]
+      keywords: ["zone.js", "0.11.4"]
+  source: authored
+  owner: platform
+  added: "2026-09-24"

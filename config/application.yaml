@@ -1,0 +1,11 @@
+# Spring Boot picks this up from ./config when the assistant is started from the repo root.
+server:
+  port: 8080
+  address: 127.0.0.1   # loopback only: the stub holds an API key
+spring:
+  main:
+    banner-mode: "off"
+assistant:
+  model: anthropic/claude-haiku-4.5
+  topK: 3
+  docs: docs
