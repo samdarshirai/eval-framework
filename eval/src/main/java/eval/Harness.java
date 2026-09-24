@@ -43,14 +43,17 @@ public final class Harness {
         List<String> categories = categoriesFrom(cfg);
 
         // Validate cases against the docs BEFORE contacting the assistant.
+        KnowledgeBase kb;
         List<EvalCase> cases;
         try {
-            cases = EvalCaseLoader.load(root.resolve("eval/cases"), new KnowledgeBase(KnowledgeSources.from(cfg, root)), categories);
+            kb = new KnowledgeBase(KnowledgeSources.from(cfg, root));
+            cases = EvalCaseLoader.load(root.resolve("eval/cases"), kb, categories);
         } catch (IllegalArgumentException e) {
             out.println("ERROR: " + e.getMessage());
             return 2;
         }
 
+        List<Registered> checks = Checks.registered(kb);
         AssistantClient client = new AssistantClient(endpoint);
         if (!client.reachable()) {
             out.println("ERROR: cannot reach the assistant at " + endpoint);
@@ -64,9 +67,9 @@ public final class Harness {
         String runId = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC).format(Instant.now());
         List<CaseResult> caseResults = new ArrayList<>();
         for (EvalCase c : cases) {
-            caseResults.add(runCase(c, client, runId));
+            caseResults.add(runCase(c, client, runId, checks));
         }
-        SuiteReport report = new SuiteReport(runId, endpoint, floor, checkInfos(), caseResults);
+        SuiteReport report = new SuiteReport(runId, endpoint, floor, checkInfos(checks), caseResults);
 
         print(report, out);
         Files.createDirectories(root.resolve("caseResults"));
@@ -85,8 +88,8 @@ public final class Harness {
         return categories;
     }
 
-    private static List<CheckInfo> checkInfos() {
-        return Checks.registered().stream().map(r -> new CheckInfo(r.check().name(), r.gating())).toList();
+    private static List<CheckInfo> checkInfos(List<Registered> checks) {
+        return checks.stream().map(r -> new CheckInfo(r.check().name(), r.gating())).toList();
     }
 
     /** The case's expectation in the assistant's response shape, for the report. */
@@ -95,7 +98,7 @@ public final class Harness {
             c.facts().stream().map(f -> new Expected.ExpectedClaim(f.fact(), f.chunks(), f.keywords())).toList());
     }
 
-    private static CaseResult runCase(EvalCase c, AssistantClient client, String runId) {
+    private static CaseResult runCase(EvalCase c, AssistantClient client, String runId, List<Registered> checks) {
         Answer answer;
         try {
             answer = client.ask(c.question(), runId);
@@ -113,7 +116,7 @@ public final class Harness {
         // Each entry is wrapped in Registered with a gating flag: a failing gating check fails the case, an advisory
         // one is only reported. Nothing here names a specific check, so adding one is a new class plus one line in Checks.
         CaseState state = new CaseState();
-        for (Registered r : Checks.registered()) {
+        for (Registered r : checks) {
             CheckResult res = r.check().run(c, answer, state);
             outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
             if (r.gating() && !res.passed()) passed = false;

@@ -1,11 +1,13 @@
 package eval.checks;
 
+import eval.KnowledgeBase;
 import java.util.List;
 
 /** The single registration list. Add a check: one class plus one line here. Order is run order. */
 public final class Checks {
-    public static List<Registered> registered() {
+    public static List<Registered> registered(KnowledgeBase kb) {
         return List.of(
-            new Registered(new RefusalCheck(), true));
+            new Registered(new RefusalCheck(), true),
+            new Registered(new CitationIntegrityCheck(kb), true));
     }
 }

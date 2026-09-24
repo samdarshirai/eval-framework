@@ -210,4 +210,13 @@ class HarnessTest {
         String o = out(code)[0];
         assertTrue(o.contains("Endpoint: " + url() + "  Run: "), o);
     }
+
+    @Test void fabricatedCitationFailsTheCaseEndToEndAndTheReasonIsPrinted() throws Exception {
+        cases("- id: c1\n  question: q\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
+        replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#nope\"]}]}";
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(1, code[0], o);
+        assertTrue(o.contains("Citation integrity: fabricated citation: d#nope"), o);
+    }
 }
