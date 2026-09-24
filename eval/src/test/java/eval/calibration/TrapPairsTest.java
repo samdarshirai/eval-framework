@@ -67,8 +67,7 @@ class TrapPairsTest {
     // A judge that says YES to everything misses the 3 agree=false traps and both covering pairs
     // (5), and passes the 2 correct paraphrases.
     var results =
-        TrapPairs.run(
-            Path.of("calibration/trap-pairs.yaml"),
+        TrapPairs.runBundled(
             new Judge((system, user) -> isCoveringCall(system) ? "[1, 2]" : "YES"));
     assertEquals(7, results.size());
     assertEquals(5, misses(results));
