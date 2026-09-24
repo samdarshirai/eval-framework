@@ -2,30 +2,19 @@ package eval.calibration;
 
 import eval.Claim;
 import eval.Judge;
-import java.io.PrintStream;
 import java.nio.file.*;
 import java.util.*;
-import llm.OpenRouterLlm;
 import org.yaml.snakeyaml.Yaml;
 
-/**
- * Runs the negation traps against the judge and reports every miss (D24). Run: java -cp
- * eval/target/eval.jar eval.calibration.TrapPairs
- */
+/** Runs the negation traps against the judge (D24) and returns one result per pair. */
 public final class TrapPairs {
-  public static void main(String[] args) throws Exception {
-    Map<String, Object> cfg = new Yaml().load(Files.readString(Path.of("eval/config.yaml")));
-    Judge judge = new Judge(OpenRouterLlm.fromEnv((String) cfg.get("judgeModel"), "low"));
-    System.exit(run(Path.of("calibration/trap-pairs.yaml"), judge, System.out) == 0 ? 0 : 1);
-  }
+  /** {@code detail} is null when the judge got the pair right. */
+  public record TrapResult(String name, boolean passed, String detail) {}
 
-  /**
-   * Returns the number of pairs the judge got wrong; a judge that throws on a pair counts as wrong
-   * on it.
-   */
-  public static int run(Path file, Judge judge, PrintStream out) throws java.io.IOException {
+  /** A judge that throws on a pair counts as wrong on it. */
+  public static List<TrapResult> run(Path file, Judge judge) throws java.io.IOException {
     List<Map<String, Object>> pairs = new Yaml().load(Files.readString(file));
-    int misses = 0;
+    List<TrapResult> results = new ArrayList<>();
     for (Map<String, Object> pair : pairs) {
       String problem; // null means the judge got it right
       try {
@@ -33,16 +22,9 @@ public final class TrapPairs {
       } catch (IllegalStateException e) {
         problem = "error: " + e.getMessage();
       }
-      if (problem != null) {
-        misses++;
-      }
-      out.println(
-          problem == null
-              ? "ok   " + pair.get("name")
-              : "MISS " + pair.get("name") + " (" + problem + ")");
+      results.add(new TrapResult((String) pair.get("name"), problem == null, problem));
     }
-    out.println(misses + " miss(es) out of " + pairs.size());
-    return misses;
+    return results;
   }
 
   private static String checkAgree(Map<String, Object> pair, Judge judge) {
