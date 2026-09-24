@@ -24,4 +24,4 @@ knowledgeBase:
 #
 # knowledgeBase:
 #   type: manifest                             # a JSON file exported by the app's build
-#   path: kb/manifest.json                     # same [{"id": ..., "text": ...}] array, relative to the repo root
+#   path: kb/manifest.json                     # same [{"id": ..., "text": ...}] array, relative to the config directory
