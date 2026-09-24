@@ -9,7 +9,7 @@ import java.time.Duration;
 import java.util.Map;
 
 public final class AssistantClient implements Assistant {
-  private static final ObjectMapper M =
+  private static final ObjectMapper mapper =
       new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
@@ -43,13 +43,13 @@ public final class AssistantClient implements Assistant {
             .header("X-Eval-Run", runId)
             .POST(
                 HttpRequest.BodyPublishers.ofString(
-                    M.writeValueAsString(Map.of("question", question))))
+                    mapper.writeValueAsString(Map.of("question", question))))
             .build();
     var res = http.send(req, HttpResponse.BodyHandlers.ofString());
     if (res.statusCode() != 200)
       throw new IOException("HTTP " + res.statusCode() + ": " + res.body());
     try {
-      JsonNode n = M.readTree(res.body());
+      JsonNode n = mapper.readTree(res.body());
       if (n == null
           || !n.isObject()
           || !n.path("refused").isBoolean()
@@ -57,7 +57,7 @@ public final class AssistantClient implements Assistant {
               || n.path("claims").isNull()
               || n.path("claims").isArray()))
         throw new IOException("response is not valid claims JSON: " + res.body());
-      return M.treeToValue(n, Answer.class);
+      return mapper.treeToValue(n, Answer.class);
     } catch (JsonProcessingException e) {
       throw new IOException("response is not valid claims JSON: " + res.body(), e);
     }
