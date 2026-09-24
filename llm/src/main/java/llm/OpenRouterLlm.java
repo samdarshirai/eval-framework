@@ -9,6 +9,10 @@ import java.time.Duration;
 public final class OpenRouterLlm implements Llm {
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final URI URL = URI.create("https://openrouter.ai/api/v1/chat/completions");
+  private static final int MAX_ATTEMPTS = 4;
+  private static final long DEFAULT_RETRY_DELAY_MILLIS = 15000;
+  private static final long MIN_RETRY_DELAY_MILLIS = 1000;
+  private static final long MAX_RETRY_DELAY_MILLIS = 65000;
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
   private final String model, apiKey, effort;
@@ -51,6 +55,16 @@ public final class OpenRouterLlm implements Llm {
               .POST(HttpRequest.BodyPublishers.ofString(requestBody(model, system, user, effort)))
               .build();
       var response = http.send(request, HttpResponse.BodyHandlers.ofString());
+      // A 429 is the account's rate limit, not a judge answer: wait it out and try again.
+      for (int attempt = 1; attempt < MAX_ATTEMPTS && response.statusCode() == 429; attempt++) {
+        long delayMillis =
+            retryDelayMillis(
+                response.headers().firstValue("retry-after").orElse(null),
+                response.headers().firstValue("x-ratelimit-reset").orElse(null),
+                System.currentTimeMillis());
+        Thread.sleep(delayMillis);
+        response = http.send(request, HttpResponse.BodyHandlers.ofString());
+      }
       if (response.statusCode() != 200) {
         throw new IllegalStateException(
             "OpenRouter API " + response.statusCode() + ": " + response.body());
@@ -61,6 +75,30 @@ public final class OpenRouterLlm implements Llm {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("OpenRouter API call interrupted", e);
+    }
+  }
+
+  /** Seconds from retry-after, else epoch-ms X-RateLimit-Reset minus now, else 15s; 1s to 65s. */
+  static long retryDelayMillis(String retryAfterSeconds, String resetEpochMillis, long nowMillis) {
+    long delayMillis = DEFAULT_RETRY_DELAY_MILLIS;
+    Long seconds = parseLong(retryAfterSeconds);
+    Long resetEpoch = parseLong(resetEpochMillis);
+    if (seconds != null) {
+      delayMillis = seconds * 1000;
+    } else if (resetEpoch != null) {
+      delayMillis = resetEpoch - nowMillis;
+    }
+    return Math.max(MIN_RETRY_DELAY_MILLIS, Math.min(MAX_RETRY_DELAY_MILLIS, delayMillis));
+  }
+
+  private static Long parseLong(String text) {
+    if (text == null) {
+      return null;
+    }
+    try {
+      return Long.parseLong(text.trim());
+    } catch (NumberFormatException e) {
+      return null;
     }
   }
 
