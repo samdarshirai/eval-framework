@@ -34,36 +34,51 @@ public final class Harness {
   private static int runInner(
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
     String endpointArg = null;
+    String configArg = null;
     boolean skipCalibration = false;
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
         endpointArg = args[++i];
+      } else if (args[i].equals("--config")
+          && i + 1 < args.length
+          && !args[i + 1].startsWith("--")) {
+        configArg = args[++i];
       } else if (args[i].equals("--skip-calibration")) {
         skipCalibration = true;
       } else {
         out.println(
             "ERROR: "
-                + (args[i].equals("--endpoint")
-                    ? "--endpoint needs a value"
+                + (args[i].equals("--endpoint") || args[i].equals("--config")
+                    ? args[i] + " needs a value"
                     : "unknown argument '" + args[i] + "'"));
-        out.println("Usage: Harness [--endpoint <url>] [--skip-calibration]");
+        out.println("Usage: Harness [--config <file>] [--endpoint <url>] [--skip-calibration]");
         return 2;
       }
     }
-    EvalConfig config = EvalConfig.load(root, endpointArg);
-    Path trapFile = root.resolve("calibration/trap-pairs.yaml");
-    if (!skipCalibration && !Files.isReadable(trapFile)) {
+    EvalConfig config;
+    if (configArg == null) {
+      config = EvalConfig.load(root, endpointArg);
+    } else {
+      Path configFile = root.resolve(configArg);
+      if (!Files.isRegularFile(configFile)) {
+        out.println("ERROR: config file not found: " + configArg);
+        return 2;
+      }
+      config = EvalConfig.loadFile(configFile, endpointArg);
+    }
+    Path trapFile = config.trapPairsFile(); // null: use the trap pairs bundled in the jar
+    if (!skipCalibration && trapFile != null && !Files.isReadable(trapFile)) {
       out.println("ERROR: cannot read the judge trap pairs at " + trapFile);
       out.println("Restore the file, or pass --skip-calibration to run without them.");
       return 2;
     }
 
     // Validate cases against the docs BEFORE contacting the assistant.
-    KnowledgeBase kb = getKnowledgeBase(root, out, config);
+    KnowledgeBase kb = getKnowledgeBase(out, config);
     if (kb == null) {
       return 2;
     }
-    List<EvalCase> cases = getEvalCases(root, kb, config);
+    List<EvalCase> cases = getEvalCases(kb, config);
 
     String judgeModel = config.requireJudgeModel();
     Judge judge =
@@ -79,7 +94,9 @@ public final class Harness {
     SuiteReport.Calibration calibration =
         skipCalibration
             ? SuiteReport.Calibration.SKIPPED
-            : new SuiteReport.Calibration(true, TrapPairs.run(trapFile, judge));
+            : new SuiteReport.Calibration(
+                true,
+                trapFile == null ? TrapPairs.runBundled(judge) : TrapPairs.run(trapFile, judge));
 
     String runId = ReportWriter.newRunId();
     CaseRunner runner = new CaseRunner(client, checks);
@@ -97,21 +114,26 @@ public final class Harness {
             caseResults);
 
     ConsoleReport.print(report, out);
-    ReportWriter.write(root, report);
-    out.println("Report: caseResults/" + runId + ".json");
+    Path reportFile = ReportWriter.write(config.outputDir(), report).normalize();
+    Path rootDir = root.normalize();
+    out.println(
+        "Report: "
+            + (reportFile.startsWith(rootDir) ? rootDir.relativize(reportFile) : reportFile));
     return report.exitCode();
   }
 
-  private static List<EvalCase> getEvalCases(Path root, KnowledgeBase kb, EvalConfig config)
+  private static List<EvalCase> getEvalCases(KnowledgeBase kb, EvalConfig config)
       throws IOException {
-    return EvalCaseLoader.load(root.resolve("eval/cases"), kb, config.categories());
+    return EvalCaseLoader.load(config.casesDir(), kb, config.categories());
   }
 
-  private static KnowledgeBase getKnowledgeBase(Path root, PrintStream out, EvalConfig config)
+  private static KnowledgeBase getKnowledgeBase(PrintStream out, EvalConfig config)
       throws IOException {
     KnowledgeBase kb;
     try {
-      kb = new KnowledgeBase(KnowledgeSources.from(config.raw(), root));
+      kb =
+          new KnowledgeBase(
+              KnowledgeSources.from(config.raw(), config.baseDir(), config.fileName()));
 
     } catch (IllegalArgumentException e) {
       out.println("ERROR: " + e.getMessage());
