@@ -124,4 +124,38 @@ class HarnessTest {
         assertEquals(2, code[0], o);
         assertTrue(o.contains("ERROR"), o);
     }
+
+    @Test void unknownArgExitsTwoWithUsageBeforeTouchingNetwork() throws Exception {
+        cases(OOS);
+        int[] code = new int[1];
+        String o = out(code, "--endpiont", url())[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("ERROR") && o.contains("Usage"), o);
+        assertEquals(0, requests.get());
+    }
+
+    @Test void endpointWithoutValueExitsTwo() throws Exception {
+        cases(OOS);
+        int[] code = new int[1];
+        String o = out(code, "--endpoint")[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("ERROR") && o.contains("Usage"), o);
+        o = out(code, "--endpoint", "--other")[0];
+        assertEquals(2, code[0], o);
+    }
+
+    @Test void endpointEqualsFormExitsTwo() throws Exception {
+        cases(OOS);
+        int[] code = new int[1];
+        String o = out(code, "--endpoint=http://x")[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("ERROR") && o.contains("Usage"), o);
+    }
+
+    @Test void outputShowsWhichEndpointAndRunRan() throws Exception {
+        cases(OOS);
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertTrue(o.contains("Endpoint: " + url() + "  Run: "), o);
+    }
 }
