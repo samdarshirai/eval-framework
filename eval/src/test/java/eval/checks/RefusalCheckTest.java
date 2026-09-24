@@ -32,12 +32,12 @@ class RefusalCheckTest {
         assertTrue(r.reason().startsWith("contract violation"));
     }
     @Test void refusalIsFirstAndGatingInTheRegistrationList() {
-        var first = Checks.registered(new KnowledgeBase(List.of())).get(0);
+        var first = Checks.registered(new KnowledgeBase(List.of()), null).get(0);
         assertEquals("Refusal", first.check().name());
         assertTrue(first.gating());
     }
     @Test void citationIntegrityIsSecondAndGating() {
-        var second = Checks.registered(new KnowledgeBase(List.of())).get(1);
+        var second = Checks.registered(new KnowledgeBase(List.of()), null).get(1);
         assertEquals("Citation integrity", second.check().name());
         assertTrue(second.gating());
     }

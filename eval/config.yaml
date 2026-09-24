@@ -1,5 +1,7 @@
 endpoint: http://localhost:8080/answer
 passFloor: 0.90
+# Judge model for Coverage and, later, Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
+judgeModel: anthropic/claude-opus-4.8
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.
 categories: [single-source, multi-source, false-premise, out-of-scope, edge-case]
 # Where the harness gets the chunks the assistant was built on. Default: docs from ./docs.

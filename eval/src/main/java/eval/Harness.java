@@ -10,6 +10,8 @@ import java.nio.file.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
+import llm.*;
 
 public final class Harness {
 
@@ -18,15 +20,19 @@ public final class Harness {
     }
 
     static int run(String[] args, Path root, PrintStream out) throws Exception {
+        return run(args, root, out, model -> OpenRouterLlm.fromEnv(model, "low"));
+    }
+
+    static int run(String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
         try {
-            return runInner(args, root, out);
+            return runInner(args, root, out, judgeLlm);
         } catch (IOException | RuntimeException e) {
             out.println("ERROR: " + (e.getMessage() != null ? e.getMessage() : e));
             return 2;
         }
     }
 
-    private static int runInner(String[] args, Path root, PrintStream out) throws Exception {
+    private static int runInner(String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
         String endpointArg = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) endpointArg = args[++i];
@@ -53,7 +59,10 @@ public final class Harness {
             return 2;
         }
 
-        List<Registered> checks = Checks.registered(kb);
+        if (!(cfg.get("judgeModel") instanceof String judgeModel) || judgeModel.isBlank())
+            throw new IllegalArgumentException("eval/config.yaml: 'judgeModel' is required (an OpenRouter model slug)");
+        Judge judge = new Judge(judgeLlm.apply(judgeModel));   // throws with the export hint if the API key is missing
+        List<Registered> checks = Checks.registered(kb, judge);
         AssistantClient client = new AssistantClient(endpoint);
         if (!client.reachable()) {
             out.println("ERROR: cannot reach the assistant at " + endpoint);
@@ -117,7 +126,12 @@ public final class Harness {
         // one is only reported. Nothing here names a specific check, so adding one is a new class plus one line in Checks.
         CaseState state = new CaseState();
         for (Registered r : checks) {
-            CheckResult res = r.check().run(c, answer, state);
+            CheckResult res;
+            try {
+                res = r.check().run(c, answer, state);
+            } catch (RuntimeException e) {
+                res = CheckResult.fail("check error: " + e.getMessage());
+            }
             outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
             if (r.gating() && !res.passed()) passed = false;
         }

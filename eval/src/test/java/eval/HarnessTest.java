@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.file.*;
+import org.junit.jupiter.api.Disabled;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,17 +31,22 @@ class HarnessTest {
             ex.close();
         });
         server.start();
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
+        config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
     }
     @AfterEach void tearDown() { server.stop(0); }
     private String url() { return "http://localhost:" + server.getAddress().getPort() + "/answer"; }
+
+    /** Writes eval/config.yaml with the given body plus a judgeModel, so tests that vary other keys stay valid. */
+    private void config(String body) throws IOException {
+        Files.writeString(root.resolve("eval/config.yaml"), body + "judgeModel: test/judge\n");
+    }
 
     private void cases(String yaml) throws Exception { Files.writeString(root.resolve("eval/cases/c.yaml"), yaml); }
     private static final String OOS = "- id: oos-1\n  question: How much?\n  category: out-of-scope\n  subtype: unrelated\n  expected_behavior: refuse\n  source: authored\n  owner: p\n  added: \"2026-09-24\"\n";
 
     private String[] out(int[] code, String... args) throws Exception {
         var buf = new ByteArrayOutputStream();
-        code[0] = Harness.run(args, root, new PrintStream(buf));
+        code[0] = Harness.run(args, root, new PrintStream(buf), model -> (s, u) -> "YES");
         return new String[]{buf.toString()};
     }
 
@@ -116,7 +122,7 @@ class HarnessTest {
 
     @Test void endpointFlagOverridesConfig() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: http://localhost:1/answer\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
+        config("endpoint: http://localhost:1/answer\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
         int[] code = new int[1];
         out(code, "--endpoint", url());
         assertEquals(0, code[0]);
@@ -140,7 +146,7 @@ class HarnessTest {
 
     @Test void configWithoutPassFloorExitsTwoWithError() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\ncategories: [out-of-scope]\n");
+        config("endpoint: " + url() + "\ncategories: [out-of-scope]\n");
         int[] code = new int[1];
         String o = out(code)[0];
         assertEquals(2, code[0], o);
@@ -149,7 +155,7 @@ class HarnessTest {
 
     @Test void configWithoutOutOfScopeCategoryExitsTwoBecauseTheExitRuleNeedsIt() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source]\n");
+        config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source]\n");
         int[] code = new int[1];
         String o = out(code)[0];
         assertEquals(2, code[0], o);
@@ -159,7 +165,7 @@ class HarnessTest {
 
     @Test void configWithoutCategoriesExitsTwo() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\n");
+        config("endpoint: " + url() + "\npassFloor: 0.90\n");
         int[] code = new int[1];
         String o = out(code)[0];
         assertEquals(2, code[0], o);
@@ -168,7 +174,7 @@ class HarnessTest {
 
     @Test void unimplementedKnowledgeSourceExitsTwoBeforeAnyAssistantCall() throws Exception {
         cases(OOS);
-        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [out-of-scope]\n"
+        config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [out-of-scope]\n"
             + "knowledgeBase:\n  type: http\n  url: http://localhost:1/chunks\n");
         int[] code = new int[1];
         String o = out(code)[0];
@@ -218,5 +224,36 @@ class HarnessTest {
         String o = out(code)[0];
         assertEquals(1, code[0], o);
         assertTrue(o.contains("Citation integrity: fabricated citation: d#nope"), o);
+    }
+
+    @Test void missingJudgeModelExitsTwoBeforeCallingTheAssistant() throws Exception {
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
+        cases(OOS);
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0]);
+        assertTrue(o.contains("judgeModel"), o);
+        assertEquals(0, requests.get());
+    }
+
+    @Test void missingApiKeyExitsTwoWithTheExportHintBeforeCallingTheAssistant() throws Exception {
+        cases(OOS);
+        var buf = new ByteArrayOutputStream();
+        int code = Harness.run(new String[0], root, new PrintStream(buf), model -> { throw new IllegalStateException("OPENROUTER_API_KEY is not set. Run: export OPENROUTER_API_KEY=..."); });
+        assertEquals(2, code, buf.toString());
+        assertTrue(buf.toString().contains("OPENROUTER_API_KEY"), buf.toString());
+        assertFalse(buf.toString().contains("\tat "), buf.toString());
+        assertEquals(0, requests.get());
+    }
+
+    @Disabled("enabled in Task 5")
+    @Test void judgeFailureFailsTheCaseWithCheckErrorAndTheRunStillWritesAReport() throws Exception {
+        cases("- id: c1\n  question: q\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
+        replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
+        var buf = new ByteArrayOutputStream();
+        int code = Harness.run(new String[0], root, new PrintStream(buf), model -> (s, u) -> { throw new IllegalStateException("boom"); });
+        assertEquals(1, code, buf.toString());
+        assertTrue(buf.toString().contains("check error: boom"), buf.toString());
+        try (var s = Files.list(root.resolve("caseResults"))) { assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count()); }
     }
 }
