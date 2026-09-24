@@ -21,3 +21,30 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+
+- id: ss-ab-internal-split
+  question: "When Usercentrics runs the A/B test itself, how are visitors split between the variants?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    # no keywords on purpose: exercises the one-call judge path (unit 12)
+    - fact: "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants"
+      chunks: [ab-test#usercentrics-internal-a-b-testing]
+  source: authored
+  owner: platform
+  added: "2026-09-24"
+
+- id: ss-ab-third-party-events
+  question: "I use a third-party A/B testing tool with Usercentrics. Which variable must be set before the CMP loads, and which custom event can the tool listen to in order to track how users interact with the variants?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "The UC_AB_VARIANT variable must be set before the Usercentrics CMP is loaded"
+      chunks: [ab-test#a-b-testing-with-third-party-tool]
+      keywords: ["UC_AB_VARIANT"]
+    # keyword-less, with two alternative gold chunks (D5 any-of: citing either one is enough)
+    - fact: "The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP (for example ACCEPT_ALL or SAVE), so the tool can track them"
+      chunks: [ab-test#a-b-testing-with-third-party-tool, ab-test#available-ui-events]
+  source: authored
+  owner: platform
+  added: "2026-09-24"

@@ -11,7 +11,7 @@ class SuiteReportTest {
         for (int i = 0; i < n; i++)
             cs.add(new CaseResult((oos.contains(i) ? "oos-" : "c-") + i, "q", oos.contains(i) ? "out-of-scope" : "single-source",
                 null, new Expected(false, List.of()), !failing.contains(i), null, null, List.of()));
-        return new SuiteReport("r", "http://x", 0.90, List.of(), cs);
+        return new SuiteReport("r", "http://x", 0.90, List.of(), SuiteReport.Calibration.SKIPPED, cs);
     }
 
     @Test void twentySixOfTwentyEightMeetsFloor() {
@@ -32,5 +32,12 @@ class SuiteReportTest {
     }
     @Test void nonOutOfScopeFailuresAloneDoNotTriggerTheOutOfScopeRule() {
         assertEquals(List.of(), report(28, Set.of(5), Set.of(27)).exitReasons());
+    }
+
+    @Test void calibrationMissesFailTheRunEvenWhenAllCasesPass() {
+        var miss = new eval.calibration.TrapPairs.TrapResult("t", false, "expected NO");
+        var r = new SuiteReport("r", "http://x", 0.90, List.of(), new SuiteReport.Calibration(true, List.of(miss)), List.of());
+        assertTrue(r.exitReasons().contains("judge calibration: 1 trap pair miss(es)"));
+        assertEquals(1, r.exitCode());
     }
 }

@@ -1,9 +1,18 @@
 package eval;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eval.calibration.TrapPairs.TrapResult;
 import java.util.*;
 
-public record SuiteReport(String runId, String endpoint, double passFloor, List<CheckInfo> checks, List<CaseResult> cases) {
+public record SuiteReport(String runId, String endpoint, double passFloor, List<CheckInfo> checks, Calibration calibration, List<CaseResult> cases) {
+    /** Judge trap pairs: {@code ran} false means --skip-calibration. */
+    public record Calibration(boolean ran, List<TrapResult> pairs) {
+        public static final Calibration SKIPPED = new Calibration(false, List.of());
+
+        @JsonProperty("misses")
+        public long misses() { return pairs.stream().filter(pair -> !pair.passed()).count(); }
+    }
+
     public static final String OUT_OF_SCOPE = "out-of-scope";
 
     /** Whether the named check gates a case; unknown names count as gating. */
@@ -23,6 +32,8 @@ public record SuiteReport(String runId, String endpoint, double passFloor, List<
             reasons.add(String.format("pass rate %.1f%% is below floor %.1f%%", passRate() * 100, passFloor * 100));
         List<String> oos = cases.stream().filter(c -> !c.passed() && OUT_OF_SCOPE.equals(c.category())).map(CaseResult::id).toList();
         if (!oos.isEmpty()) reasons.add("out-of-scope case failed: " + String.join(", ", oos));
+        if (calibration.misses() > 0)
+            reasons.add("judge calibration: " + calibration.misses() + " trap pair miss(es)");
         return reasons;
     }
 
