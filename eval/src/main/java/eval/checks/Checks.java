@@ -11,6 +11,7 @@ public final class Checks {
         new Registered(new RefusalCheck(), true),
         new Registered(new CitationIntegrityCheck(kb), true),
         new Registered(new CoverageCheck(judge), true),
-        new Registered(new GroundednessCheck(kb, judge), true));
+        new Registered(new GroundednessCheck(kb, judge), true),
+        new Registered(new SourceCheck(), true));
   }
 }

@@ -21,4 +21,10 @@ class ChecksTest {
     assertTrue(names.indexOf("Citation integrity") < names.indexOf("Coverage"));
     assertTrue(names.indexOf("Coverage") < names.indexOf("Groundedness"));
   }
+
+  @Test
+  void sourceRunsAfterGroundedness() {
+    List<String> names = names();
+    assertTrue(names.indexOf("Groundedness") < names.indexOf("Source"));
+  }
 }

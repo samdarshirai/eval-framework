@@ -68,4 +68,20 @@ class SeedCasesTest {
       }
     }
   }
+
+  @Test
+  void aMultiSourceSeedHasFactsInDifferentDocuments() {
+    assertTrue(
+        cases.stream()
+            .filter(evalCase -> evalCase.category().equals("multi-source"))
+            .anyMatch(
+                evalCase ->
+                    evalCase.facts().stream()
+                            .flatMap(fact -> fact.chunks().stream())
+                            .map(chunkId -> chunkId.substring(0, chunkId.indexOf('#')))
+                            .distinct()
+                            .count()
+                        > 1),
+        "need a multi-source case whose facts live in two documents (Source check)");
+  }
 }
