@@ -1,5 +1,6 @@
 package eval;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import java.io.IOException;
 import java.net.URI;
@@ -35,8 +36,12 @@ public final class AssistantClient {
         var res = http.send(req, HttpResponse.BodyHandlers.ofString());
         if (res.statusCode() != 200) throw new IOException("HTTP " + res.statusCode() + ": " + res.body());
         try {
-            return M.readValue(res.body(), Answer.class);
-        } catch (IOException e) {
+            JsonNode n = M.readTree(res.body());
+            if (n == null || !n.isObject() || !n.path("refused").isBoolean()
+                || !(n.path("claims").isMissingNode() || n.path("claims").isNull() || n.path("claims").isArray()))
+                throw new IOException("response is not valid claims JSON: " + res.body());
+            return M.treeToValue(n, Answer.class);
+        } catch (JsonProcessingException e) {
             throw new IOException("response is not valid claims JSON: " + res.body(), e);
         }
     }
