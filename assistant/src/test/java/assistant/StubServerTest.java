@@ -53,9 +53,9 @@ class StubServerTest {
     }
 
     @Test void failedLlmCallIs500() throws Exception {
-        when(llm.complete(any(), any())).thenThrow(new IllegalStateException("Anthropic API 529"));
+        when(llm.complete(any(), any())).thenThrow(new IllegalStateException("OpenRouter API 529"));
         var res = send("POST", "{\"question\":\"q\"}");
         assertEquals(500, res.statusCode());
-        assertTrue(res.body().contains("Anthropic API 529"), res.body());
+        assertTrue(res.body().contains("OpenRouter API 529"), res.body());
     }
 }

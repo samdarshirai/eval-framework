@@ -1,7 +1,7 @@
 package assistant;
 
 import kb.Chunker;
-import llm.AnthropicLlm;
+import llm.OpenRouterLlm;
 import llm.Llm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -20,7 +20,7 @@ public class StubServer {
         return new BM25Index(Chunker.chunkDir(Path.of(docs)));
     }
 
-    @Bean Llm llm(@Value("${assistant.model}") String model) { return AnthropicLlm.fromEnv(model); }
+    @Bean Llm llm(@Value("${assistant.model}") String model) { return OpenRouterLlm.fromEnv(model); }
 
     @Bean Assistant assistant(BM25Index index, Llm llm, @Value("${assistant.topK}") int topK) {
         return new Assistant(index, llm, topK);
