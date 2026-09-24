@@ -1,6 +1,7 @@
 package assistant;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import llm.Llm;
 import java.util.List;
@@ -34,7 +35,11 @@ public final class Assistant {
     static AssistantResponse parse(String raw) {
         String s = raw.strip().replaceFirst("^```(?:json)?\\s*", "").replaceFirst("\\s*```$", "");
         try {
-            AssistantResponse r = M.readValue(s, AssistantResponse.class);
+            JsonNode n = M.readTree(s);
+            if (!n.isObject() || !n.path("refused").isBoolean()
+                || !(n.path("refused").asBoolean() || n.path("claims").isArray()))
+                throw new IllegalArgumentException("missing refused/claims");
+            AssistantResponse r = M.treeToValue(n, AssistantResponse.class);
             List<Claim> claims = r.refused() || r.claims() == null ? List.of() : r.claims();
             return new AssistantResponse(r.refused(), claims);
         } catch (Exception e) {
