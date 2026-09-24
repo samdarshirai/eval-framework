@@ -53,6 +53,24 @@ class HarnessTest {
         try (var s = Files.list(root.resolve("results"))) { assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count()); }
     }
 
+    @Test void reportHasQuestionAndExpectedNextToActualAndListsChecksOnce() throws Exception {
+        cases("- id: c1\n  question: What is A?\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
+        replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(0, code[0], o);
+        var m = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(o);
+        assertTrue(m.find(), o);
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(root.resolve(m.group(1)).toFile());
+        var c = json.get("cases").get(0);
+        assertEquals("What is A?", c.get("question").asText());
+        assertEquals("d#a", c.get("expectedFacts").get(0).get("chunks").get(0).asText());
+        assertEquals("d#a", c.get("answer").get("claims").get(0).get("citations").get(0).asText());
+        assertEquals("Refusal", json.get("checks").get(0).get("name").asText());
+        assertTrue(json.get("checks").get(0).get("gating").asBoolean());
+        assertFalse(c.get("checks").get(0).has("gating"), "gating is listed once at the top, not per case");
+    }
+
     @Test void confidentAnswerToOutOfScopeFailsRunAndSaysHallucination() throws Exception {
         cases(OOS);
         replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"It costs 5 EUR\",\"citations\":[\"d#a\"]}]}";
