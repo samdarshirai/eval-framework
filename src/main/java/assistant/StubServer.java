@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.*;
 import com.sun.net.httpserver.HttpServer;
 import llm.AnthropicLlm;
 import org.yaml.snakeyaml.Yaml;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -13,7 +14,7 @@ public final class StubServer {
     private static final ObjectMapper M = new ObjectMapper();
 
     public static HttpServer create(int port, Assistant assistant) throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port), 0);
         server.createContext("/answer", ex -> {
             int status; byte[] body;
             try {

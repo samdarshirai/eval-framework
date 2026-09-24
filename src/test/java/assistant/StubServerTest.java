@@ -36,6 +36,8 @@ class StubServerTest {
         assertEquals("bs#a", n.get("claims").get(0).get("citations").get(0).asText());
     }
 
+    @Test void listensOnLoopbackOnly() { assertTrue(server.getAddress().getAddress().isLoopbackAddress(), server.getAddress().toString()); }
+
     @Test void blankQuestionIs400() throws Exception { assertEquals(400, send("POST", "{\"question\":\" \"}").statusCode()); }
     @Test void nonJsonRequestBodyIs400() throws Exception { assertEquals(400, send("POST", "not json").statusCode()); }
     @Test void getIs405() throws Exception { assertEquals(405, send("GET", null).statusCode()); }
