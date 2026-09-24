@@ -22,13 +22,13 @@ Status: **in progress**. Not final until confirmed.
 12. **Relevance is advisory** (reported, never fails a case). All other checks gate.
 13. **Exit code:** non-zero if the pass rate is below the floor, OR any regression vs the baseline (pass to fail flip), OR any out-of-scope case fails.
 14. **Non-determinism:** temperature 0 everywhere. A suspected regression is re-run once and only counts if it fails again. The report notes which cases needed a re-run.
-15. **Judge model** is stronger than the assistant model. Both are separate config values, same provider.
+15. **Judge model** is stronger than the assistant model. Both are separate config values, both routed through OpenRouter (D39). Judge model chosen in D40.
 16. **Judge calibration (Groundedness only; Refusal has no judge, see 25):** 20 hand-labeled pairs = 10 subtly unsupported + 5 plain supported + 5 hard-supported (paraphrase, split across sentences, equivalent numbers). Targets: overall agreement >= 90% and **0 of 10** unsupported pairs judged "supported". False-"unsupported" is counted but has no target (annoying but safe). Only Groundedness is calibrated in v1.
 17. **Measured cost and time:** the LLM client records calls and tokens by role and check. The report prints totals, estimated cost and wall-clock time. The scale plan extrapolates from measured numbers, not the "~3 judge calls" guess (real number is closer to ~10 per case).
 
 ## Eval-set growth
 
-18. Every case records `source`, `owner` and `added`.
+18. A case may record `source`, `owner` and `added` (optional, PR #1 review; the loader does not require them). `subtype` stays, since out-of-scope reporting is by subtype.
 19. Hard cap per category. Adding a case means retiring or merging one.
 20. A candidate is admitted only if it adds a distinct failure. Otherwise it becomes a note on an existing case.
 21. Loader flags stale cases: missing gold chunk = hard error. Doc content hash changed since the case was last confirmed = warning (design now, build if time).
@@ -70,6 +70,16 @@ Status: **in progress**. Not final until confirmed.
 35. **The per-category cap is an authoring rule only.** The loader does not enforce it (decision 19).
 
 36. **The stub decides "not covered" by prompt only.** BM25 always returns the top chunks and the model is told to refuse if they don't cover the question. There is no retrieval score cutoff. Reason: the assistant isn't the point, and a weaker stub gives Refusal and the out-of-scope hard rule something real to catch. A score cutoff goes on the "what I'd add next" list.
+
+37. **Multi-module Maven, Spring Boot stub** (PR #1 review). Modules: `kb` (Chunk, Chunker), `llm` (Llm, OpenRouterLlm), `assistant` (Spring Boot app), `eval` (harness). `eval` depends on `kb` and never on `assistant`, so D28 is enforced by the build instead of an import test. Supersedes the JDK `HttpServer` choice in the tech-stack doc. Config lives in `config/application.yaml` (Spring reads `./config`), keeps `server.address: 127.0.0.1`. Both apps ship as jars: `assistant/target/assistant.jar`, `eval/target/eval.jar`.
+
+38. **Pluggable knowledge source** (PR #1 review discussion). The harness only needs the same chunks the assistant has, so where it gets them is configurable: `knowledgeBase.type` in `eval/config.yaml`, default `docs` (chunk `./docs` with `kb.Chunker`). `http` (GET `[{id, text}]` from the app) and `manifest` (JSON file) exist as placeholders that fail with a clear message. New source = one `KnowledgeSource` class plus one case in `KnowledgeSources`. When `http` is built, D8's ordering changes (the app must be up before cases are validated); amend D8 then.
+
+    **For the scale plan / pattern doc (onboarding of other apps):** the contract is HTTP and JSON plus the chunk-ID scheme (D6, D33). `kb` is the reference implementation of that scheme, not something other apps must depend on. An app onboards by choosing a source: `http` (it serves the chunks it indexed, so the harness sees exactly what the app has and no ID rules are reimplemented, best fit for any language), `manifest` (its build exports `[{id, text}]`), or its own `KnowledgeSource` class (Java). Apps not grounded in documents get a shorter `checks` list (D23). Open items to state: the app and harness must see the same doc version (guard: D21 doc-hash warning, optionally a `hash` in the chunk payload); `http` changes D8's ordering.
+
+39. **LLM calls go through OpenRouter** (replaces the direct Anthropic client). One `OpenRouterLlm` behind the `Llm` interface: OpenAI-compatible `POST https://openrouter.ai/api/v1/chat/completions`, `Authorization: Bearer $OPENROUTER_API_KEY`, system prompt as the first message, reply in `choices[0].message.content`. Models are provider-prefixed slugs in config (`assistant.model: anthropic/claude-haiku-4.5`), so the judge model (D15) can be a different provider under the same key. D14 still holds: `temperature: 0` is sent with `provider.require_parameters: true`. By default OpenRouter routes to providers that silently ignore parameters they do not support (OpenRouter docs, provider routing); `require_parameters` makes the call fail instead, so a model or route without `temperature` support is caught rather than running at the provider default of 1.0. Checked 2026-09-24: every route for `anthropic/claude-haiku-4.5` lists `temperature` as supported (`GET /api/v1/models/{author}/{slug}/endpoints`), and repeated harness runs gave identical answers. `seed` is not listed for that model. The judge model (D15) must be checked the same way when it is chosen.
+
+40. **Judge model is `anthropic/claude-opus-4.8`** (OpenRouter slug), at temperature 0 (D14, D15, D39). Chosen over Sonnet 4.6 for judge strength. Checked 2026-09-24 against OpenRouter's endpoints list: only the Azure routes (`azure/global`, `azure/us`) list `temperature` for this model; the Anthropic, Bedrock and Vertex routes do not. With `require_parameters: true` (D39) the judge is therefore served by Azure only, and the call fails rather than running at the default temperature if Azure is unavailable. Cost: $5 / $25 per million input / output tokens on `azure/global`, about 5x Haiku 4.5, acceptable because the judge only runs on the calls the checks need. The config key (`judgeModel` in `eval/config.yaml`) is added with the judge in unit 11; not yet called live.
 
 ## Open
 

@@ -36,5 +36,10 @@ build/
 .vscode/
 
 ### Mac OS ###
-.DS_Store.idea/
+.DS_Store
+.idea/
 Case_Study__*.pdf
+
+### Eval results ###
+caseResults/*.json
+!caseResults/baseline.json
