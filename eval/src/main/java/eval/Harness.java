@@ -127,15 +127,6 @@ public final class Harness {
         .toList();
   }
 
-  /** The case's expectation in the assistant's response shape, for the report. */
-  private static Expected expected(EvalCase evalCase) {
-    return new Expected(
-        evalCase.expectedBehavior().equals("refuse"),
-        evalCase.facts().stream()
-            .map(fact -> new Expected.ExpectedClaim(fact.fact(), fact.chunks(), fact.keywords()))
-            .toList());
-  }
-
   private static CaseResult runCase(
       EvalCase evalCase, AssistantClient client, String runId, List<Registered> checks) {
     Answer answer;
@@ -143,27 +134,9 @@ public final class Harness {
       answer = client.ask(evalCase.question(), runId);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return new CaseResult(
-          evalCase.id(),
-          evalCase.question(),
-          evalCase.category(),
-          evalCase.subtype(),
-          expected(evalCase),
-          false,
-          "interrupted",
-          null,
-          List.of());
+      return CaseResult.failed(evalCase, "interrupted");
     } catch (Exception e) {
-      return new CaseResult(
-          evalCase.id(),
-          evalCase.question(),
-          evalCase.category(),
-          evalCase.subtype(),
-          expected(evalCase),
-          false,
-          e.getMessage(),
-          null,
-          List.of());
+      return CaseResult.failed(evalCase, e.getMessage());
     }
     List<CheckOutcome> outcomes = new ArrayList<>();
     boolean passed = true;
@@ -193,16 +166,7 @@ public final class Harness {
         passed = false;
       }
     }
-    return new CaseResult(
-        evalCase.id(),
-        evalCase.question(),
-        evalCase.category(),
-        evalCase.subtype(),
-        expected(evalCase),
-        passed,
-        null,
-        answer,
-        outcomes);
+    return CaseResult.answered(evalCase, passed, answer, outcomes);
   }
 
   private static void print(SuiteReport report, PrintStream out) {

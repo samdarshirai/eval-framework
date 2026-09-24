@@ -8,7 +8,7 @@ import java.net.http.*;
 import java.time.Duration;
 import java.util.Map;
 
-public final class AssistantClient {
+public final class AssistantClient implements Assistant {
     private static final ObjectMapper M = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
     private final URI endpoint;
@@ -28,6 +28,7 @@ public final class AssistantClient {
         }
     }
 
+    @Override
     public Answer ask(String question, String runId) throws IOException, InterruptedException {
         var req = HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(60))
             .header("content-type", "application/json")
