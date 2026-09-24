@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public final class Harness {
+
     public static void main(String[] args) throws Exception {
         System.exit(run(args, Path.of("."), System.out));
     }
@@ -61,14 +62,16 @@ public final class Harness {
         }
 
         String runId = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC).format(Instant.now());
-        List<CaseResult> results = new ArrayList<>();
-        for (EvalCase c : cases) results.add(runCase(c, client, runId));
-        SuiteReport report = new SuiteReport(runId, endpoint, floor, results);
+        List<CaseResult> caseResults = new ArrayList<>();
+        for (EvalCase c : cases) {
+            caseResults.add(runCase(c, client, runId));
+        }
+        SuiteReport report = new SuiteReport(runId, endpoint, floor, caseResults);
 
         print(report, out);
-        Files.createDirectories(root.resolve("results"));
-        new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(root.resolve("results/" + runId + ".json").toFile(), report);
-        out.println("Report: results/" + runId + ".json");
+        Files.createDirectories(root.resolve("caseResults"));
+        new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(root.resolve("caseResults/" + runId + ".json").toFile(), report);
+        out.println("Report: caseResults/" + runId + ".json");
         return report.exitCode();
     }
 
