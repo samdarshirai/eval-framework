@@ -71,6 +71,8 @@ Status: **in progress**. Not final until confirmed.
 
 36. **The stub decides "not covered" by prompt only.** BM25 always returns the top chunks and the model is told to refuse if they don't cover the question. There is no retrieval score cutoff. Reason: the assistant isn't the point, and a weaker stub gives Refusal and the out-of-scope hard rule something real to catch. A score cutoff goes on the "what I'd add next" list.
 
+37. **Multi-module Maven, Spring Boot stub** (PR #1 review). Modules: `kb` (Chunk, Chunker), `llm` (Llm, AnthropicLlm), `assistant` (Spring Boot app), `eval` (harness). `eval` depends on `kb` and never on `assistant`, so D28 is enforced by the build instead of an import test. Supersedes the JDK `HttpServer` choice in the tech-stack doc. Config lives in `config/application.yaml` (Spring reads `./config`), keeps `server.address: 127.0.0.1`. Both apps ship as jars: `assistant/target/assistant.jar`, `eval/target/eval.jar`.
+
 ## Open
 
 (none right now)
