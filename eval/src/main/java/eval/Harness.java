@@ -1,5 +1,6 @@
 package eval;
 
+import eval.calibration.TrapPairs;
 import eval.checks.*;
 import eval.knowledge.KnowledgeSources;
 import java.io.IOException;
@@ -33,20 +34,29 @@ public final class Harness {
   private static int runInner(
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
     String endpointArg = null;
+    boolean skipCalibration = false;
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
         endpointArg = args[++i];
+      } else if (args[i].equals("--skip-calibration")) {
+        skipCalibration = true;
       } else {
         out.println(
             "ERROR: "
                 + (args[i].equals("--endpoint")
                     ? "--endpoint needs a value"
                     : "unknown argument '" + args[i] + "'"));
-        out.println("Usage: Harness [--endpoint <url>]");
+        out.println("Usage: Harness [--endpoint <url>] [--skip-calibration]");
         return 2;
       }
     }
     EvalConfig config = EvalConfig.load(root, endpointArg);
+    Path trapFile = root.resolve("calibration/trap-pairs.yaml");
+    if (!skipCalibration && !Files.isReadable(trapFile)) {
+      out.println("ERROR: cannot read the judge trap pairs at " + trapFile);
+      out.println("Restore the file, or pass --skip-calibration to run without them.");
+      return 2;
+    }
 
     // Validate cases against the docs BEFORE contacting the assistant.
     KnowledgeBase kb = getKnowledgeBase(root, out, config);
@@ -56,13 +66,20 @@ public final class Harness {
     List<EvalCase> cases = getEvalCases(root, kb, config);
 
     String judgeModel = config.requireJudgeModel();
-    Judge judge = new Judge(judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
+    Judge judge =
+        new Judge(
+            judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
     List<Registered> checks = Checks.registered(kb, judge);
     AssistantClient client = new AssistantClient(config.endpoint());
     if (!client.reachable()) {
       logErrorBeforeExit(out, config);
       return 2;
     }
+
+    SuiteReport.Calibration calibration =
+        skipCalibration
+            ? SuiteReport.Calibration.SKIPPED
+            : new SuiteReport.Calibration(true, TrapPairs.run(trapFile, judge));
 
     String runId = ReportWriter.newRunId();
     CaseRunner runner = new CaseRunner(client, checks);
@@ -72,7 +89,12 @@ public final class Harness {
     }
     SuiteReport report =
         new SuiteReport(
-            runId, config.endpoint(), config.passFloor(), checkInfos(checks), caseResults);
+            runId,
+            config.endpoint(),
+            config.passFloor(),
+            checkInfos(checks),
+            calibration,
+            caseResults);
 
     ConsoleReport.print(report, out);
     ReportWriter.write(root, report);
@@ -80,11 +102,13 @@ public final class Harness {
     return report.exitCode();
   }
 
-  private static List<EvalCase> getEvalCases(Path root, KnowledgeBase kb, EvalConfig config) throws IOException {
+  private static List<EvalCase> getEvalCases(Path root, KnowledgeBase kb, EvalConfig config)
+      throws IOException {
     return EvalCaseLoader.load(root.resolve("eval/cases"), kb, config.categories());
   }
 
-  private static KnowledgeBase getKnowledgeBase(Path root, PrintStream out, EvalConfig config) throws IOException {
+  private static KnowledgeBase getKnowledgeBase(Path root, PrintStream out, EvalConfig config)
+      throws IOException {
     KnowledgeBase kb;
     try {
       kb = new KnowledgeBase(KnowledgeSources.from(config.raw(), root));

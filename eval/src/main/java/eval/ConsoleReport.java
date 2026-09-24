@@ -1,5 +1,6 @@
 package eval;
 
+import eval.calibration.TrapPairs.TrapResult;
 import java.io.PrintStream;
 
 /** Prints a finished suite report to the console. */
@@ -8,6 +9,7 @@ final class ConsoleReport {
 
   static void print(SuiteReport report, PrintStream out) {
     out.println("Endpoint: " + report.endpoint() + "  Run: " + report.runId());
+    printCalibration(report.calibration(), out);
     for (CaseResult caseResult : report.cases()) {
       out.printf(
           "%-4s %-22s %-14s%n",
@@ -34,5 +36,25 @@ final class ConsoleReport {
     } else {
       report.exitReasons().forEach(reason -> out.println("RESULT: FAIL - " + reason));
     }
+  }
+
+  private static void printCalibration(SuiteReport.Calibration calibration, PrintStream out) {
+    if (!calibration.ran()) {
+      out.println("Judge calibration: skipped");
+      return;
+    }
+    out.println("Judge calibration");
+    for (TrapResult pair : calibration.pairs()) {
+      out.println(
+          pair.passed()
+              ? "  ok   " + pair.name()
+              : "  MISS " + pair.name() + " (" + pair.detail() + ")");
+    }
+    out.println(
+        "  "
+            + (calibration.pairs().size() - calibration.misses())
+            + "/"
+            + calibration.pairs().size()
+            + " trap pairs ok");
   }
 }

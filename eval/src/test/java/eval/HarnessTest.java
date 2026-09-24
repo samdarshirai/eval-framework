@@ -34,6 +34,7 @@ class HarnessTest {
           exchange.close();
         });
     server.start();
+    trapFile("- {name: same, fact: F, claim: F, agree: true}\n");
     config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
   }
 
@@ -52,6 +53,11 @@ class HarnessTest {
    */
   private void config(String body) throws IOException {
     Files.writeString(root.resolve("eval/config.yaml"), body + "judgeModel: test/judge\n");
+  }
+
+  private void trapFile(String yaml) throws IOException {
+    Files.createDirectories(root.resolve("calibration"));
+    Files.writeString(root.resolve("calibration/trap-pairs.yaml"), yaml);
   }
 
   private void cases(String yaml) throws Exception {
@@ -394,6 +400,7 @@ class HarnessTest {
 
   @Test
   void negatedClaimWithAllKeywordsFailsCoverageEndToEnd() throws Exception {
+    trapFile("[]\n"); // no trap pairs, so the judge calls counted below are Coverage's alone
     cases(
         "- id: c1\n"
             + "  question: q\n"
@@ -419,5 +426,59 @@ class HarnessTest {
     assertEquals(1, code, buf.toString());
     assertTrue(buf.toString().contains("Coverage: not covered"), buf.toString());
     assertEquals(1, judgeCalls[0]);
+  }
+
+  @Test
+  void missedTrapPairIsReportedButAllCasesStillRunAndExitCodeIsOne() throws Exception {
+    cases(OOS);
+    trapFile("- {name: negated, fact: F, claim: not F, agree: false}\n");
+    int[] code = new int[1];
+    String output = out(code)[0]; // the fake judge says YES to everything
+    assertEquals(1, code[0], output);
+    assertTrue(output.contains("MISS negated (expected NO)"), output);
+    assertTrue(output.contains("judge calibration: 1 trap pair miss(es)"), output);
+    assertTrue(output.contains("PASS") && output.contains("oos-1"), output);
+    var reportMatcher = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(output);
+    assertTrue(reportMatcher.find(), output);
+    var json =
+        new com.fasterxml.jackson.databind.ObjectMapper()
+            .readTree(root.resolve(reportMatcher.group(1)).toFile());
+    assertTrue(json.get("calibration").get("ran").asBoolean());
+    assertEquals(1, json.get("calibration").get("misses").asInt());
+    assertEquals("negated", json.get("calibration").get("pairs").get(0).get("name").asText());
+    assertFalse(json.get("calibration").get("pairs").get(0).get("passed").asBoolean());
+  }
+
+  @Test
+  void skipCalibrationNeedsNoTrapFileAndMakesNoTrapJudgeCalls() throws Exception {
+    cases(OOS);
+    Files.delete(root.resolve("calibration/trap-pairs.yaml"));
+    var judgeCalls = new int[1];
+    var buf = new ByteArrayOutputStream();
+    int code =
+        Harness.run(
+            new String[] {"--skip-calibration"},
+            root,
+            new PrintStream(buf),
+            model ->
+                (system, user) -> {
+                  judgeCalls[0]++;
+                  return "YES";
+                });
+    assertEquals(0, code, buf.toString());
+    assertTrue(buf.toString().contains("Judge calibration: skipped"), buf.toString());
+    assertEquals(0, judgeCalls[0]);
+  }
+
+  @Test
+  void missingTrapFileWithoutTheFlagExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    Files.delete(root.resolve("calibration/trap-pairs.yaml"));
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("trap-pairs.yaml"), output);
+    assertTrue(output.contains("--skip-calibration"), output);
+    assertEquals(0, requests.get());
   }
 }

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import eval.Judge;
 import java.io.*;
 import java.nio.file.*;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,13 +30,19 @@ class TrapPairsTest {
     return system.contains("JSON array");
   }
 
+  private static long misses(List<TrapPairs.TrapResult> results) {
+    return results.stream().filter(result -> !result.passed()).count();
+  }
+
   @Test
   void countsAJudgeThatAgreesWithEverythingAsMissesOnBothKinds() throws Exception {
-    var out = new ByteArrayOutputStream();
     var judge = new Judge((system, user) -> isCoveringCall(system) ? "[1, 2]" : "YES");
-    assertEquals(2, TrapPairs.run(file(), judge, new PrintStream(out)));
-    assertTrue(out.toString().contains("MISS negated"), out.toString());
-    assertTrue(out.toString().contains("MISS covering"), out.toString());
+    var results = TrapPairs.run(file(), judge);
+    assertEquals(2, misses(results));
+    assertEquals("negated", results.get(0).name());
+    assertFalse(results.get(0).passed());
+    assertEquals("covering", results.get(2).name());
+    assertFalse(results.get(2).passed());
   }
 
   @Test
@@ -44,34 +51,26 @@ class TrapPairsTest {
         new Judge(
             (system, user) ->
                 isCoveringCall(system) ? "[2]" : (user.contains("except") ? "NO" : "YES"));
-    assertEquals(0, TrapPairs.run(file(), judge, new PrintStream(new ByteArrayOutputStream())));
+    assertEquals(0, misses(TrapPairs.run(file(), judge)));
   }
 
   @Test
   void unusableJudgeReplyIsAMissNotACrashAndTheRunContinues() throws Exception {
-    var out = new ByteArrayOutputStream();
-    assertEquals(
-        3,
-        TrapPairs.run(file(), new Judge((system, user) -> "the first one"), new PrintStream(out)));
-    assertTrue(out.toString().contains("(error:"), out.toString());
-    assertTrue(out.toString().contains("3 miss(es) out of 3"), out.toString());
+    var results = TrapPairs.run(file(), new Judge((system, user) -> "the first one"));
+    assertEquals(3, results.size());
+    assertEquals(3, misses(results));
+    assertTrue(results.get(0).detail().startsWith("error:"), results.get(0).detail());
   }
 
   @Test
   void theShippedTrapFileHasFiveAgreePairsAndTwoCoveringPairs() throws Exception {
-    var out = new ByteArrayOutputStream();
-    // A judge that agrees with everything and returns every claim number misses all 3 agree traps
-    // and both covering traps.
-    TrapPairs.run(
-        Path.of("calibration/trap-pairs.yaml"),
-        new Judge((system, user) -> isCoveringCall(system) ? "[1, 2]" : "YES"),
-        new PrintStream(out));
-    assertEquals(
-        7,
-        out.toString()
-            .lines()
-            .filter(line -> line.startsWith("ok ") || line.startsWith("MISS "))
-            .count());
-    assertEquals(5, out.toString().lines().filter(line -> line.startsWith("MISS ")).count());
+    // A judge that says YES to everything misses the 3 agree=false traps and both covering pairs
+    // (5), and passes the 2 correct paraphrases.
+    var results =
+        TrapPairs.run(
+            Path.of("calibration/trap-pairs.yaml"),
+            new Judge((system, user) -> isCoveringCall(system) ? "[1, 2]" : "YES"));
+    assertEquals(7, results.size());
+    assertEquals(5, misses(results));
   }
 }
