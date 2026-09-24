@@ -48,6 +48,23 @@ class AssistantClientTest {
         assertThrows(IOException.class, () -> new AssistantClient(url()).ask("q", "r"));
     }
 
+    private void assertRejected(String json) {
+        reply = json;
+        var e = assertThrows(IOException.class, () -> new AssistantClient(url()).ask("q", "r"));
+        assertTrue(e.getMessage().contains("not valid claims JSON"), e.getMessage());
+    }
+
+    @Test void emptyObjectIsRejected() { assertRejected("{}"); }
+    @Test void errorObjectWith200IsRejected() { assertRejected("{\"error\":\"x\"}"); }
+    @Test void literalNullIsRejected() { assertRejected("null"); }
+    @Test void nonBooleanRefusedIsRejected() { assertRejected("{\"refused\":\"yes\",\"claims\":[]}"); }
+    @Test void nonArrayClaimsIsRejected() { assertRejected("{\"refused\":false,\"claims\":\"x\"}"); }
+
+    @Test void refusedTrueWithoutClaimsKeyIsAccepted() throws Exception {
+        reply = "{\"refused\":true}";
+        assertTrue(new AssistantClient(url()).ask("q", "r").refused());
+    }
+
     @Test void reachableTrueWhenUpFalseWhenDown() {
         assertTrue(new AssistantClient(url()).reachable());
         server.stop(0);
