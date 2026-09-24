@@ -255,6 +255,14 @@ class HarnessTest {
         try (var s = Files.list(root.resolve("caseResults"))) { assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count()); }
     }
 
+    @Test void checkErrorWithNullMessageFallsBackToExceptionString() throws Exception {
+        cases("- id: c1\n  question: q\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
+        replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
+        var buf = new ByteArrayOutputStream();
+        Harness.run(new String[0], root, new PrintStream(buf), model -> (s, u) -> { throw new IllegalStateException(); });
+        assertTrue(buf.toString().contains("check error: java.lang.IllegalStateException"), buf.toString());
+    }
+
     @Test void negatedClaimWithAllKeywordsFailsCoverageEndToEnd() throws Exception {
         cases("- id: c1\n  question: q\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
         replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"Everything in A except the body\",\"citations\":[\"d#a\"]}]}";

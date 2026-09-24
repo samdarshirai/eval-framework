@@ -42,8 +42,10 @@ public final class Judge {
         String reply = llm.complete(COVERING_SYSTEM, "Fact: " + fact + "\nClaims:\n" + numbered);
         Matcher m = ARRAY.matcher(reply == null ? "" : reply);
         if (!m.find()) throw new IllegalStateException("judge returned no JSON array: \"" + reply + "\"");
+        String array = m.group();
+        if (m.find()) throw new IllegalStateException("judge returned more than one array: \"" + reply + "\"");
         try {
-            int[] numbers = M.readValue(m.group(), int[].class);
+            int[] numbers = M.readValue(array, int[].class);
             List<Integer> indices = new ArrayList<>();
             for (int n : numbers) {
                 if (n < 1 || n > claims.size()) throw new IllegalStateException("judge returned claim number " + n + " but there are " + claims.size() + " claims");

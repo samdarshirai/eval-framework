@@ -119,9 +119,9 @@ public final class Harness {
         }
         List<CheckOutcome> outcomes = new ArrayList<>();
         boolean passed = true;
-        // Checks.registered() (eval/checks/Checks.java) is the single list of every check the harness runs, in run order.
-        // A check is a small class implementing Check: it takes the eval case and the assistant's answer and returns
-        // pass/fail plus a reason (today only RefusalCheck: hallucination, over-refusal, contract violation).
+        // Checks.registered(kb, judge) (eval/checks/Checks.java) is the single list of every check the harness runs, in run order.
+        // A check is a small class implementing Check: it takes the eval case, the assistant's answer and the per-case
+        // CaseState and returns pass/fail plus a reason (currently Refusal, Citation integrity and Coverage).
         // Each entry is wrapped in Registered with a gating flag: a failing gating check fails the case, an advisory
         // one is only reported. Nothing here names a specific check, so adding one is a new class plus one line in Checks.
         CaseState state = new CaseState();
@@ -130,7 +130,7 @@ public final class Harness {
             try {
                 res = r.check().run(c, answer, state);
             } catch (RuntimeException e) {
-                res = CheckResult.fail("check error: " + e.getMessage());
+                res = CheckResult.fail("check error: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
             }
             outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
             if (r.gating() && !res.passed()) passed = false;

@@ -35,6 +35,9 @@ class JudgeTest {
     @Test void coveringReturnsZeroBasedIndices() { assertEquals(List.of(0, 2), saying("[1, 3]").covering("f", CLAIMS)); }
     @Test void coveringEmptyListMeansNotCovered() { assertEquals(List.of(), saying("[]").covering("f", CLAIMS)); }
     @Test void coveringToleratesTextAroundTheArray() { assertEquals(List.of(1), saying("Claims: [2]").covering("f", CLAIMS)); }
+    @Test void coveringRejectsReplyWithTwoArrays() {
+        assertThrows(IllegalStateException.class, () -> saying("None state it; claims [1] and [2] contradict it").covering("f", CLAIMS));
+    }
     @Test void coveringRejectsOutOfRangeAndGarbage() {
         assertThrows(IllegalStateException.class, () -> saying("[4]").covering("f", CLAIMS));
         assertThrows(IllegalStateException.class, () -> saying("[0]").covering("f", CLAIMS));
