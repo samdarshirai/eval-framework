@@ -10,15 +10,19 @@ public final class OpenRouterLlm implements Llm {
     private static final ObjectMapper M = new ObjectMapper();
     private static final URI URL = URI.create("https://openrouter.ai/api/v1/chat/completions");
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-    private final String model, apiKey;
+    private final String model, apiKey, effort;
 
-    public OpenRouterLlm(String model, String apiKey) { this.model = model; this.apiKey = apiKey; }
+    public OpenRouterLlm(String model, String apiKey) { this(model, apiKey, null); }
+    public OpenRouterLlm(String model, String apiKey, String effort) { this.model = model; this.apiKey = apiKey; this.effort = effort; }
 
-    public static OpenRouterLlm fromEnv(String model) {
+    public static OpenRouterLlm fromEnv(String model) { return fromEnv(model, null); }
+
+    /** {@code effort} is OpenRouter's reasoning effort ("low", "medium", "high"); null leaves it unset. */
+    public static OpenRouterLlm fromEnv(String model, String effort) {
         String key = System.getenv("OPENROUTER_API_KEY");
         if (key == null || key.isBlank())
             throw new IllegalStateException("OPENROUTER_API_KEY is not set. Run: export OPENROUTER_API_KEY=...");
-        return new OpenRouterLlm(model, key);
+        return new OpenRouterLlm(model, key, effort);
     }
 
     @Override public String complete(String system, String user) {
@@ -26,7 +30,7 @@ public final class OpenRouterLlm implements Llm {
             var req = HttpRequest.newBuilder(URL).timeout(Duration.ofSeconds(60))
                 .header("content-type", "application/json")
                 .header("authorization", "Bearer " + apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody(model, system, user))).build();
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody(model, system, user, effort))).build();
             var res = http.send(req, HttpResponse.BodyHandlers.ofString());
             if (res.statusCode() != 200)
                 throw new IllegalStateException("OpenRouter API " + res.statusCode() + ": " + res.body());
@@ -39,14 +43,18 @@ public final class OpenRouterLlm implements Llm {
         }
     }
 
-    static String requestBody(String model, String system, String user) {
+    static String requestBody(String model, String system, String user) { return requestBody(model, system, user, null); }
+
+    static String requestBody(String model, String system, String user, String effort) {
         ObjectNode n = M.createObjectNode();
         n.put("model", model);
-        n.put("max_tokens", 1024);
+        // Reasoning tokens count toward max_tokens; leave room for the answer after them.
+        n.put("max_tokens", effort == null ? 1024 : 4096);
         n.put("temperature", 0);
         // Default routing silently ignores parameters a provider does not support; this makes the call fail
         // instead of quietly running at the provider's default temperature (D14).
         n.putObject("provider").put("require_parameters", true);
+        if (effort != null) n.putObject("reasoning").put("effort", effort);
         ArrayNode messages = n.putArray("messages");
         messages.addObject().put("role", "system").put("content", system);
         messages.addObject().put("role", "user").put("content", user);

@@ -33,4 +33,22 @@ class OpenRouterLlmTest {
         var e = assertThrows(IllegalStateException.class, () -> OpenRouterLlm.fromEnv("m"));
         assertTrue(e.getMessage().contains("OPENROUTER_API_KEY"));
     }
+
+    @Test void effortIsSentAsReasoningEffortWhenSet() throws Exception {
+        var n = new com.fasterxml.jackson.databind.ObjectMapper().readTree(OpenRouterLlm.requestBody("m", "s", "u", "low"));
+        assertEquals("low", n.get("reasoning").get("effort").asText());
+        assertEquals(0, n.get("temperature").asInt());
+        assertTrue(n.get("provider").get("require_parameters").asBoolean());
+    }
+
+    @Test void effortRaisesMaxTokensSoReasoningCannotEatTheAnswer() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        assertEquals(1024, mapper.readTree(OpenRouterLlm.requestBody("m", "s", "u")).get("max_tokens").asInt());
+        assertEquals(4096, mapper.readTree(OpenRouterLlm.requestBody("m", "s", "u", "low")).get("max_tokens").asInt());
+    }
+
+    @Test void noReasoningFieldWhenEffortIsNull() throws Exception {
+        var n = new com.fasterxml.jackson.databind.ObjectMapper().readTree(OpenRouterLlm.requestBody("m", "s", "u"));
+        assertFalse(n.has("reasoning"));
+    }
 }
