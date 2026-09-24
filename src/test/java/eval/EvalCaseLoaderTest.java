@@ -64,5 +64,24 @@ class EvalCaseLoaderTest {
         assertTrue(err(() -> load()).contains("no cases"));
     }
 
+    @Test void wrongTypedFieldsGiveClearErrorsNotCrashesOrSilentDrops() throws Exception {
+        String head = "- id: c1\n  question: Q?\n  category: x\n  expected_behavior: answer\n";
+        write("a.yaml", head + "  facts:\n    - some fact text\n" + META);
+        String m = err(() -> load());
+        assertTrue(m.contains("c1") && m.contains("fact"), m);
+        write("a.yaml", head + "  facts:\n    -\n" + META);
+        m = err(() -> load());
+        assertTrue(m.contains("c1") && m.contains("fact"), m);
+        write("a.yaml", head + "  facts:\n    - {fact: F, chunks: [d#a], keywords: Safari}\n" + META);
+        m = err(() -> load());
+        assertTrue(m.contains("c1") && m.contains("keywords") && m.contains("list"), m);
+        write("a.yaml", head + "  facts:\n    - {fact: F, chunks: d#a}\n" + META);
+        m = err(() -> load());
+        assertTrue(m.contains("c1") && m.contains("chunks") && m.contains("list"), m);
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: x\n  expected_behavior: refuse\n  facts: {fact: F}\n" + META);
+        m = err(() -> load());
+        assertTrue(m.contains("c1") && m.contains("facts") && m.contains("list"), m);
+    }
+
     private void load() { try { EvalCaseLoader.load(dir, kb); } catch (java.io.IOException e) { throw new RuntimeException(e); } }
 }
