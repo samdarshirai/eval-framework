@@ -6,8 +6,8 @@ import java.util.regex.*;
 import llm.Llm;
 
 /**
- * Two narrow judge questions used by Coverage (D24). The prompts are the only place judge wording
- * lives.
+ * Three narrow judge questions used by Coverage (D24). The prompts are the only place judge
+ * wording lives.
  */
 public final class Judge {
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -32,6 +32,15 @@ A claim that contradicts the fact, negates it, limits it with an exception, or g
 Reply with a JSON array of numbers only, for example [1, 3]. Reply [] if no claim states the fact.\
 """;
 
+  private static final String SUPPORTS_SYSTEM =
+      """
+You check whether a passage from documentation supports a claim made by an assistant.
+Answer YES only if everything the claim states is stated in the passage or follows directly from it, including every number, version, condition and qualifier such as "always", "only" or "all".
+Answer NO if the claim adds a detail the passage does not state, changes a number or version, overstates or drops a qualifier, contradicts the passage, or is not about what the passage says.
+The claim may be worded differently from the passage and may combine sentences of the passage.
+Reply with exactly one word: YES or NO.\
+""";
+
   private final Llm llm;
 
   public Judge(Llm llm) {
@@ -40,7 +49,15 @@ Reply with a JSON array of numbers only, for example [1, 3]. Reply [] if no clai
 
   /** Do the fact and the claim agree? */
   public boolean agree(String fact, String claim) {
-    String reply = llm.complete(AGREE_SYSTEM, "Fact: " + fact + "\nClaim: " + claim);
+    return yesNo(llm.complete(AGREE_SYSTEM, "Fact: " + fact + "\nClaim: " + claim));
+  }
+
+  /** Does the passage support the claim? */
+  public boolean supports(String claim, String passage) {
+    return yesNo(llm.complete(SUPPORTS_SYSTEM, "Passage:\n" + passage + "\n\nClaim: " + claim));
+  }
+
+  private static boolean yesNo(String reply) {
     Matcher matcher = FIRST_WORD.matcher(reply == null ? "" : reply);
     if (!matcher.find()) {
       throw new IllegalStateException("judge returned neither YES nor NO: \"" + reply + "\"");
