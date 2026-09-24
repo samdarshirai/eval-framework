@@ -66,7 +66,7 @@ public final class Harness {
         for (EvalCase c : cases) {
             caseResults.add(runCase(c, client, runId));
         }
-        SuiteReport report = new SuiteReport(runId, endpoint, floor, caseResults);
+        SuiteReport report = new SuiteReport(runId, endpoint, floor, checkInfos(), caseResults);
 
         print(report, out);
         Files.createDirectories(root.resolve("caseResults"));
@@ -85,15 +85,19 @@ public final class Harness {
         return categories;
     }
 
+    private static List<CheckInfo> checkInfos() {
+        return Checks.registered().stream().map(r -> new CheckInfo(r.check().name(), r.gating())).toList();
+    }
+
     private static CaseResult runCase(EvalCase c, AssistantClient client, String runId) {
         Answer answer;
         try {
             answer = client.ask(c.question(), runId);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return new CaseResult(c.id(), c.category(), c.subtype(), c.expectedBehavior(), false, "interrupted", null, List.of());
+            return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), c.expectedBehavior(), c.facts(), false, "interrupted", null, List.of());
         } catch (Exception e) {
-            return new CaseResult(c.id(), c.category(), c.subtype(), c.expectedBehavior(), false, e.getMessage(), null, List.of());
+            return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), c.expectedBehavior(), c.facts(), false, e.getMessage(), null, List.of());
         }
         List<CheckOutcome> outcomes = new ArrayList<>();
         boolean passed = true;
@@ -104,10 +108,10 @@ public final class Harness {
         // one is only reported. Nothing here names a specific check, so adding one is a new class plus one line in Checks.
         for (Registered r : Checks.registered()) {
             CheckResult res = r.check().run(c, answer);
-            outcomes.add(new CheckOutcome(r.check().name(), r.gating(), res.passed(), res.reason()));
+            outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
             if (r.gating() && !res.passed()) passed = false;
         }
-        return new CaseResult(c.id(), c.category(), c.subtype(), c.expectedBehavior(), passed, null, answer, outcomes);
+        return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), c.expectedBehavior(), c.facts(), passed, null, answer, outcomes);
     }
 
     private static void print(SuiteReport r, PrintStream out) {
@@ -116,7 +120,7 @@ public final class Harness {
             out.printf("%-4s %-22s %-14s%n", c.passed() ? "PASS" : "FAIL", c.id(), c.category());
             if (c.error() != null) out.println("       assistant error: " + c.error());
             for (CheckOutcome o : c.checks())
-                if (!o.passed()) out.println("       " + o.check() + (o.gating() ? "" : " (advisory)") + ": " + o.reason());
+                if (!o.passed()) out.println("       " + o.check() + (r.isGating(o.check()) ? "" : " (advisory)") + ": " + o.reason());
         }
         out.printf("%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n", r.passed(), r.cases().size(), r.passRate() * 100, r.passFloor() * 100);
         if (r.exitCode() == 0) out.println("RESULT: OK");

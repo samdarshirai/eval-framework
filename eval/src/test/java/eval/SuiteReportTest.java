@@ -9,9 +9,9 @@ class SuiteReportTest {
     private SuiteReport report(int n, Set<Integer> failing, Set<Integer> oos) {
         List<CaseResult> cs = new ArrayList<>();
         for (int i = 0; i < n; i++)
-            cs.add(new CaseResult((oos.contains(i) ? "oos-" : "c-") + i, oos.contains(i) ? "out-of-scope" : "single-source",
-                null, "answer", !failing.contains(i), null, null, List.of()));
-        return new SuiteReport("r", "http://x", 0.90, cs);
+            cs.add(new CaseResult((oos.contains(i) ? "oos-" : "c-") + i, "q", oos.contains(i) ? "out-of-scope" : "single-source",
+                null, "answer", List.of(), !failing.contains(i), null, null, List.of()));
+        return new SuiteReport("r", "http://x", 0.90, List.of(), cs);
     }
 
     @Test void twentySixOfTwentyEightMeetsFloor() {

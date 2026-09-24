@@ -3,8 +3,13 @@ package eval;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 
-public record SuiteReport(String runId, String endpoint, double passFloor, List<CaseResult> cases) {
+public record SuiteReport(String runId, String endpoint, double passFloor, List<CheckInfo> checks, List<CaseResult> cases) {
     public static final String OUT_OF_SCOPE = "out-of-scope";
+
+    /** Whether the named check gates a case; unknown names count as gating. */
+    public boolean isGating(String check) {
+        return checks.stream().filter(c -> c.name().equals(check)).findFirst().map(CheckInfo::gating).orElse(true);
+    }
 
     public long passed() { return cases.stream().filter(CaseResult::passed).count(); }
 
