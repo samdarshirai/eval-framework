@@ -6,7 +6,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.file.*;
-import org.junit.jupiter.api.Disabled;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -246,7 +245,6 @@ class HarnessTest {
         assertEquals(0, requests.get());
     }
 
-    @Disabled("enabled in Task 5")
     @Test void judgeFailureFailsTheCaseWithCheckErrorAndTheRunStillWritesAReport() throws Exception {
         cases("- id: c1\n  question: q\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
         replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
@@ -255,5 +253,16 @@ class HarnessTest {
         assertEquals(1, code, buf.toString());
         assertTrue(buf.toString().contains("check error: boom"), buf.toString());
         try (var s = Files.list(root.resolve("caseResults"))) { assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count()); }
+    }
+
+    @Test void negatedClaimWithAllKeywordsFailsCoverageEndToEnd() throws Exception {
+        cases("- id: c1\n  question: q\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
+        replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"Everything in A except the body\",\"citations\":[\"d#a\"]}]}";
+        var judgeCalls = new int[1];
+        var buf = new ByteArrayOutputStream();
+        int code = Harness.run(new String[0], root, new PrintStream(buf), model -> (s, u) -> { judgeCalls[0]++; return "NO"; });
+        assertEquals(1, code, buf.toString());
+        assertTrue(buf.toString().contains("Coverage: not covered"), buf.toString());
+        assertEquals(1, judgeCalls[0]);
     }
 }

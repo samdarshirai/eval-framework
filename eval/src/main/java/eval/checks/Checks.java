@@ -9,6 +9,7 @@ public final class Checks {
     public static List<Registered> registered(KnowledgeBase kb, Judge judge) {
         return List.of(
             new Registered(new RefusalCheck(), true),
-            new Registered(new CitationIntegrityCheck(kb), true));
+            new Registered(new CitationIntegrityCheck(kb), true),
+            new Registered(new CoverageCheck(judge), true));
     }
 }
