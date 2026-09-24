@@ -32,8 +32,11 @@ public final class AnthropicLlm implements Llm {
             if (res.statusCode() != 200)
                 throw new IllegalStateException("Anthropic API " + res.statusCode() + ": " + res.body());
             return parseText(res.body());
-        } catch (java.io.IOException | InterruptedException e) {
+        } catch (java.io.IOException e) {
             throw new IllegalStateException("Anthropic API call failed: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Anthropic API call interrupted", e);
         }
     }
 
