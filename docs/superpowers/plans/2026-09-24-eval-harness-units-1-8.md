@@ -2,25 +2,50 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **First execution step:** copy this file to `docs/superpowers/plans/2026-09-24-eval-harness-units-1-8.md` in the repo (plan mode only allowed writing here).
+> **Revised after PR #1 review.** The code was restructured into Maven modules and the stub moved to Spring Boot. The header, Global Constraints, File Structure and Verification below describe the current layout. **The code blocks inside Tasks 1-8 are the original single-module code as first executed**; read "Revision after PR review" (right after this header) before using them, because paths, packages and a few signatures differ.
 
 **Goal:** A working harness that runs a case file against an HTTP assistant, reports pass/fail per case, and fails the run when an out-of-scope question gets a confident answer. This is build-order checkpoint 1 (units 1–8).
 
-**Architecture:** Two Java packages that only talk over HTTP. `assistant/` is the app under test (Chunker → BM25 → LLM → `{refused, claims}` behind `POST /answer`). `eval/` is the harness (YAML cases → `AssistantClient` → registered checks → report + exit code). `llm/` holds the one LLM interface both sides may use. Only Refusal exists as a check; units 9+ add the rest.
+**Architecture:** Four Maven modules; the harness and the app only talk over HTTP. `assistant/` is the app under test (Chunker → BM25 → LLM → `{refused, claims}` behind `POST /answer`, a Spring Boot service). `eval/` is the harness (YAML cases → `AssistantClient` → registered checks → report + exit code). `kb/` holds `Chunk` and `Chunker`, the only code both sides share. `llm/` holds the one LLM interface (`Llm`, `AnthropicLlm`). `eval/` depends on `kb` and never on `assistant`. Only Refusal exists as a check; units 9+ add the rest.
 
-**Tech Stack:** Java 21, Maven, Jackson (`jackson-databind`), SnakeYAML, JUnit 5 (test scope only), JDK `HttpClient` and `com.sun.net.httpserver`. Anthropic Messages API over raw HTTP (no SDK).
+**Tech Stack:** Java 21, Maven multi-module (Spring Boot 3.3.4 BOM), Spring Boot web for the stub only, Jackson (`jackson-databind`), SnakeYAML, JUnit 5, JDK `HttpClient`. Anthropic Messages API over raw HTTP (no SDK).
 
 **Spec:** `usercentrics-eval-harness-plan.md` (design), `build-order.md` (units 1–8), `grilling-decisions.md` (D-numbers win over plan text), `CONTEXT.md` (vocabulary), `usercentrics-tech-stack-and-repo-structure.md` (layout).
 
+## Revision after PR review
+
+Commits `a2f6d58`, `d4dc566`, `58dbb22` changed the code after the tasks below were executed. The task text is kept as the record of what was built first; apply this table and list when reading it.
+
+**Path and package mapping**
+
+| In the tasks below | Now |
+|---|---|
+| `src/main/java/assistant/{Chunk,Chunker}.java`, package `assistant` | `kb/src/main/java/kb/`, package `kb` (`import kb.Chunk;`, `import kb.Chunker;`) |
+| `src/main/java/assistant/{BM25Index,Claim,AssistantResponse,Assistant}.java` | `assistant/src/main/java/assistant/` (unchanged package) |
+| `src/main/java/llm/` | `llm/src/main/java/llm/` |
+| `src/main/java/eval/` | `eval/src/main/java/eval/` |
+| `src/test/java/<pkg>/` | `<module>/src/test/java/<pkg>/` (`ChunkerTest` is in `kb`) |
+| `config/assistant.yaml` (`model`, `port`, `topK`) | `config/application.yaml` (`server.port`, `server.address: 127.0.0.1`, `assistant.model`, `assistant.topK`, `assistant.docs`) |
+| single `pom.xml` | parent `pom.xml` plus `kb/`, `llm/`, `assistant/`, `eval/` POMs |
+
+**Behaviour and signature changes**
+- **Task 5, stub server:** `StubServer` is a Spring Boot `@SpringBootApplication` with beans for `BM25Index`, `Llm` and `Assistant`; `AnswerController` serves `POST /answer` (400 blank or non-JSON, 405 non-POST, 500 `{"error":...}` on `IllegalArgumentException`/`IllegalStateException`). The `StubServer.create(port, assistant)` factory is gone. `StubServerTest` is a `@SpringBootTest` with `@MockBean Llm`. Loopback binding is `server.address: 127.0.0.1`.
+- **Task 6, loader:** `EvalCaseLoader.load(Path casesDir, KnowledgeBase kb, List<String> allowedCategories)`. Categories come from `eval/config.yaml`; `Harness` rejects a config whose `categories` is missing or lacks `out-of-scope`. `source`, `owner` and `added` are optional. Internals were refactored (`readCaseEntries`, `parseCase`, descriptive names, inline comments).
+- **Task 8, harness:** `SuiteReport.OUT_OF_SCOPE` holds the category name; `--endpoint`, unknown-argument and setup errors exit 2. `ArchitectureTest` was removed.
+- **Running:** there is no `exec:java`. Build with `mvn -q -DskipTests package`, then `java -jar assistant/target/assistant.jar` and `java -jar eval/target/eval.jar` from the repo root. Tests run with the repo root as working directory (surefire `workingDirectory`).
+- Decisions recorded: D37 (modules and Spring Boot) and D18 amended, in `grilling-decisions.md`.
+
+---
+
 ## Global Constraints
 
-- Java 21; only deps are Jackson, SnakeYAML; JUnit 5 in test scope. No LLM SDK, no Lucene, no web framework.
+- Java 21. Deps: Jackson, SnakeYAML, JUnit 5 (test scope), and Spring Boot web in `assistant/` only (D37). `eval/` stays plain Java. No LLM SDK, no Lucene.
 - Chunk IDs are `<doc>#<heading-slug>`, never positional; duplicate headings get `-1`, `-2` suffixes counting from 1, single headings get none (D6, D33).
 - The response has **no free-text answer field**: exactly `{refused, claims:[{claim, citations}]}` (D1). `refused: true` never comes with claims (D1, D25).
 - Temperature 0 for assistant and judges (D14). Assistant model and judge model are separate config values, judge stronger (D15).
-- `eval/` never imports `assistant/` except `assistant.Chunk` and `assistant.Chunker` (D28). The harness reaches the app only via HTTP with an `X-Eval-Run` header on each request (D32).
+- `eval/` does not depend on `assistant/` at all; it shares only `kb.Chunk` and `kb.Chunker` (D28, D37), enforced by the module graph. The harness reaches the app only via HTTP with an `X-Eval-Run` header on each request (D32).
 - BM25 always returns the top-k chunks; there is no retrieval score cutoff (D36).
-- Pass floor is 0.90, read from `eval/config.yaml` (D34).
+- Pass floor is 0.90, read from `eval/config.yaml` (D34). Allowed case categories are also read from `eval/config.yaml` and must include `out-of-scope` (D13).
 - Every commit message ends with the trailer `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
 
 ## Review Focus
@@ -38,26 +63,32 @@ Inputs the spec implies but no unit's criteria pin down. Each gets a test in the
 ## File Structure
 
 ```
-pom.xml
-config/assistant.yaml                 # model, port, topK  (app-side config)
-eval/config.yaml                      # endpoint, passFloor (harness-side config)
-eval/cases/single-source.yaml         # 2 seed cases (unit 21 grows to 8)
-eval/cases/out-of-scope.yaml          # 2 seed cases (unit 21 grows to 5)
+pom.xml                               # parent: modules kb, llm, assistant, eval; imports the Spring Boot BOM
+config/application.yaml               # assistant config: server.port/address, assistant.model/topK/docs (Spring reads ./config)
 docs/{browser-support,ab-test,geolocation-rules,consent-mode,tcf2}.md
 results/.gitkeep
-src/main/java/llm/Llm.java            # interface: String complete(system, user)
-src/main/java/llm/AnthropicLlm.java
-src/main/java/assistant/{Chunk,Chunker,BM25Index,Claim,AssistantResponse,Assistant,StubServer}.java
-src/main/java/eval/{Answer,Claim,EvalCase,ExpectedFact,KnowledgeBase,EvalCaseLoader,AssistantClient,CaseResult,SuiteReport,Harness}.java
-src/main/java/eval/checks/{Check,CheckResult,Registered,Checks,RefusalCheck}.java
-src/test/java/...                     # one test class per main class above
+kb/pom.xml
+kb/src/main/java/kb/{Chunk,Chunker}.java
+llm/pom.xml
+llm/src/main/java/llm/{Llm,AnthropicLlm}.java
+assistant/pom.xml                     # spring-boot-starter-web, kb, llm; repackages assistant/target/assistant.jar
+assistant/src/main/java/assistant/{BM25Index,Claim,AssistantResponse,Assistant,StubServer,AnswerController}.java
+eval/pom.xml                          # kb, jackson, snakeyaml; shades eval/target/eval.jar (Main-Class eval.Harness)
+eval/config.yaml                      # endpoint, passFloor, categories (harness-side config)
+eval/cases/single-source.yaml         # 2 seed cases (unit 21 grows to 8)
+eval/cases/out-of-scope.yaml          # 2 seed cases (unit 21 grows to 5)
+eval/src/main/java/eval/{Answer,Claim,EvalCase,ExpectedFact,KnowledgeBase,EvalCaseLoader,AssistantClient,CaseResult,CheckOutcome,SuiteReport,Harness}.java
+eval/src/main/java/eval/checks/{Check,CheckResult,Registered,Checks,RefusalCheck}.java
+<module>/src/test/java/...            # one test class per main class above
 ```
 
 Deviations from `usercentrics-tech-stack-and-repo-structure.md` (flag at review):
-- `llm/` package: `LlmClient` was listed under `eval/`, but the stub needs it too and `assistant` must not import `eval`. It is an interface `Llm` plus `AnthropicLlm`; tests use a lambda as the fake. Call/token recording (unit 20) wraps `Llm` later.
+- `llm/` module: `LlmClient` was listed under `eval/`, but the stub needs it too and `assistant` must not depend on `eval`. It is an interface `Llm` plus `AnthropicLlm`; tests use a lambda as the fake. Call/token recording (unit 20) wraps `Llm` later.
+- `kb/` module (PR review): `Chunk` and `Chunker` moved out of `assistant` so `eval` can use them without depending on Spring or on the app. `ArchitectureTest` is gone; the module graph enforces the boundary.
+- Spring Boot stub (PR review): replaces the JDK `HttpServer` chosen in the tech-stack doc. Only `assistant/` carries Spring.
 - `eval/` has its own `Answer`/`Claim` records instead of importing `assistant.AssistantResponse`. The contract is JSON; another-language app shares no classes. This is what keeps D28 true.
-- `config/assistant.yaml` is separate from `eval/config.yaml` so the app does not read harness config.
-- `EvalCase` gets an `id` field (spec is silent) and optional `subtype`. Needed for reporting and, later, regressions.
+- `config/application.yaml` (was `config/assistant.yaml`) is separate from `eval/config.yaml` so the app does not read harness config.
+- `EvalCase` gets an `id` field (spec is silent) and optional `subtype`. Needed for reporting and, later, regressions. `source`, `owner` and `added` are optional (D18, amended in review).
 - JUnit 5 added (user choice) although the tech-stack doc says no framework. Harness itself remains a plain `main()`.
 
 ---
@@ -1779,7 +1810,7 @@ git commit -m "feat: harness with pass floor and out-of-scope exit rule" -m "Co-
 
 ## Verification (whole plan)
 
-1. `mvn -q test` — all green, no network, no API key needed.
-2. `mvn -q compile exec:java -Dexec.mainClass=assistant.Chunker` — one ID per section across all five docs; `tcf2#non-iab-vendors-1` and `-2` present.
-3. With `ANTHROPIC_API_KEY` set: start `StubServer`, run `Harness`; covered question returns cited claims, pricing question refuses, harness prints summary and writes `results/<ts>.json`.
-4. Task 8 Step 5 negative demos: stub down (exit 2, start instructions), bad gold chunk (exit 2, no requests), always-answer fake on `--endpoint` (exit 1, hallucination named).
+1. `mvn clean package` — all green (76 tests), no network, no API key needed.
+2. `java -cp kb/target/classes kb.Chunker` — one ID per section across all five docs; `tcf2#non-iab-vendors-1` and `-2` present.
+3. With `ANTHROPIC_API_KEY` set: `java -jar assistant/target/assistant.jar`, then `java -jar eval/target/eval.jar` from the repo root; covered question returns cited claims, pricing question refuses, harness prints summary and writes `results/<ts>.json`.
+4. Task 8 Step 5 negative demos (use the jars instead of `exec:java`): stub down (exit 2, start instructions), bad gold chunk (exit 2, no requests), always-answer fake on `--endpoint` (exit 1, hallucination named).
