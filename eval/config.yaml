@@ -4,14 +4,24 @@ passFloor: 0.90
 judgeModel: anthropic/claude-opus-4.8
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.
 categories: [single-source, multi-source, false-premise, out-of-scope, edge-case]
+# Paths below (knowledgeBase.path, cases, outputDir, calibration.trapPairs) resolve against the directory of
+# the config file when it is passed with `--config <file>`, and against the repo root (the working directory)
+# for this default eval/config.yaml. Absolute paths are used as-is.
+# Directory of the case YAML files. Default: eval/cases (default layout) or cases (with --config).
+# cases: eval/cases
+# Where the run report is written. Default: caseResults.
+# outputDir: caseResults
+# Judge trap pairs. Default: the set bundled in the eval jar. Set a file to use your own.
+# calibration:
+#   trapPairs: my-trap-pairs.yaml
 # Where the harness gets the chunks the assistant was built on. Default: docs from ./docs.
 knowledgeBase:
   type: docs        # chunk a docs directory with the reference Chunker
-  path: docs        # relative to the repo root
+  path: docs        # relative to the config file's directory (repo root for this file)
 # Other sources (http and manifest are placeholders: selecting one exits with "not implemented yet").
 #   type: http                                 # the app serves the chunks it indexed
 #   url: http://localhost:8080/chunks          # GET returns [{"id": "consent-mode#default-consent-states", "text": "..."}]
 #
 # knowledgeBase:
 #   type: manifest                             # a JSON file exported by the app's build
-#   path: kb/manifest.json                     # same [{"id": ..., "text": ...}] array, relative to the repo root
+#   path: kb/manifest.json                     # same [{"id": ..., "text": ...}] array, relative to the config directory

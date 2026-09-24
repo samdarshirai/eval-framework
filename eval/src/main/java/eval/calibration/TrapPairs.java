@@ -2,6 +2,8 @@ package eval.calibration;
 
 import eval.Claim;
 import eval.Judge;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import org.yaml.snakeyaml.Yaml;
@@ -11,9 +13,26 @@ public final class TrapPairs {
   /** {@code detail} is null when the judge got the pair right. */
   public record TrapResult(String name, boolean passed, String detail) {}
 
-  /** A judge that throws on a pair counts as wrong on it. */
+  private static final String BUNDLED = "/calibration/trap-pairs.yaml";
+
+  /** Runs the trap pairs shipped inside the jar. */
+  public static List<TrapResult> runBundled(Judge judge) throws java.io.IOException {
+    try (Reader reader =
+        new InputStreamReader(
+            TrapPairs.class.getResourceAsStream(BUNDLED), StandardCharsets.UTF_8)) {
+      return run(reader, judge);
+    }
+  }
+
   public static List<TrapResult> run(Path file, Judge judge) throws java.io.IOException {
-    List<Map<String, Object>> pairs = new Yaml().load(Files.readString(file));
+    try (Reader reader = Files.newBufferedReader(file)) {
+      return run(reader, judge);
+    }
+  }
+
+  /** A judge that throws on a pair counts as wrong on it. */
+  public static List<TrapResult> run(Reader source, Judge judge) {
+    List<Map<String, Object>> pairs = new Yaml().load(source);
     List<TrapResult> results = new ArrayList<>();
     for (Map<String, Object> pair : pairs) {
       String problem; // null means the judge got it right

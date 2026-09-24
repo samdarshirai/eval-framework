@@ -11,24 +11,29 @@ public final class KnowledgeSources {
      * @param root the repo root that relative paths resolve against
      */
     public static KnowledgeSource from(Map<String, Object> cfg, Path root) {
+        return from(cfg, root, "eval/config.yaml");
+    }
+
+    /** As above; {@code configName} prefixes error messages. */
+    public static KnowledgeSource from(Map<String, Object> cfg, Path root, String configName) {
         Object block = cfg.get("knowledgeBase");
         if (block != null && !(block instanceof Map<?, ?>))
-            throw new IllegalArgumentException("eval/config.yaml: 'knowledgeBase' must be a map with a 'type'");
+            throw new IllegalArgumentException(configName + ": 'knowledgeBase' must be a map with a 'type'");
         Map<?, ?> kbConfig = block == null ? Map.of() : (Map<?, ?>) block;
         String type = kbConfig.get("type") == null ? "docs" : kbConfig.get("type").toString();
         return switch (type) {
-            case "docs" -> new DocsDirSource(root.resolve(text(kbConfig, "path", "docs")));
-            case "http" -> new HttpSource(text(kbConfig, "url", null));
-            case "manifest" -> new ManifestSource(root.resolve(text(kbConfig, "path", null)));
+            case "docs" -> new DocsDirSource(root.resolve(text(kbConfig, "path", "docs", configName)));
+            case "http" -> new HttpSource(text(kbConfig, "url", null, configName));
+            case "manifest" -> new ManifestSource(root.resolve(text(kbConfig, "path", null, configName)));
             default -> throw new IllegalArgumentException(
-                "eval/config.yaml: unknown knowledgeBase type '" + type + "', expected one of: docs, http, manifest");
+                configName + ": unknown knowledgeBase type '" + type + "', expected one of: docs, http, manifest");
         };
     }
 
-    private static String text(Map<?, ?> kbConfig, String key, String defaultValue) {
+    private static String text(Map<?, ?> kbConfig, String key, String defaultValue, String configName) {
         Object value = kbConfig.get(key);
         if (value != null && !value.toString().isBlank()) return value.toString();
         if (defaultValue != null) return defaultValue;
-        throw new IllegalArgumentException("eval/config.yaml: knowledgeBase needs '" + key + "' for type '" + kbConfig.get("type") + "'");
+        throw new IllegalArgumentException(configName + ": knowledgeBase needs '" + key + "' for type '" + kbConfig.get("type") + "'");
     }
 }
