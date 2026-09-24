@@ -10,7 +10,7 @@ import llm.Llm;
  * lives.
  */
 public final class Judge {
-  private static final ObjectMapper M = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   // Leading markdown or quotes are ignored ("**YES**"); the first word must still be yes or no.
   private static final Pattern FIRST_WORD =
       Pattern.compile("^[\\s*`\"']*(yes|no)\\b", Pattern.CASE_INSENSITIVE);
@@ -41,11 +41,11 @@ Reply with a JSON array of numbers only, for example [1, 3]. Reply [] if no clai
   /** Do the fact and the claim agree? */
   public boolean agree(String fact, String claim) {
     String reply = llm.complete(AGREE_SYSTEM, "Fact: " + fact + "\nClaim: " + claim);
-    Matcher m = FIRST_WORD.matcher(reply == null ? "" : reply);
-    if (!m.find()) {
+    Matcher matcher = FIRST_WORD.matcher(reply == null ? "" : reply);
+    if (!matcher.find()) {
       throw new IllegalStateException("judge returned neither YES nor NO: \"" + reply + "\"");
     }
-    return m.group(1).equalsIgnoreCase("yes");
+    return matcher.group(1).equalsIgnoreCase("yes");
   }
 
   /** Zero-based indices of the claims that state the fact; empty means none does. */
@@ -55,24 +55,28 @@ Reply with a JSON array of numbers only, for example [1, 3]. Reply [] if no clai
       numbered.append(i + 1).append(". ").append(claims.get(i).claim()).append('\n');
     }
     String reply = llm.complete(COVERING_SYSTEM, "Fact: " + fact + "\nClaims:\n" + numbered);
-    Matcher m = ARRAY.matcher(reply == null ? "" : reply);
-    if (!m.find()) {
+    Matcher matcher = ARRAY.matcher(reply == null ? "" : reply);
+    if (!matcher.find()) {
       throw new IllegalStateException("judge returned no JSON array: \"" + reply + "\"");
     }
-    String array = m.group();
-    if (m.find()) {
+    String array = matcher.group();
+    if (matcher.find()) {
       throw new IllegalStateException("judge returned more than one array: \"" + reply + "\"");
     }
     try {
-      int[] numbers = M.readValue(array, int[].class);
+      int[] numbers = MAPPER.readValue(array, int[].class);
       List<Integer> indices = new ArrayList<>();
-      for (int n : numbers) {
-        if (n < 1 || n > claims.size()) {
+      for (int claimNumber : numbers) {
+        if (claimNumber < 1 || claimNumber > claims.size()) {
           throw new IllegalStateException(
-              "judge returned claim number " + n + " but there are " + claims.size() + " claims");
+              "judge returned claim number "
+                  + claimNumber
+                  + " but there are "
+                  + claims.size()
+                  + " claims");
         }
-        if (!indices.contains(n - 1)) {
-          indices.add(n - 1);
+        if (!indices.contains(claimNumber - 1)) {
+          indices.add(claimNumber - 1);
         }
       }
       return indices;

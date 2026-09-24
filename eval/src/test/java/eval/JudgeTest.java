@@ -42,15 +42,16 @@ class JudgeTest {
         IllegalStateException.class, () -> saying("I think it is probably fine").agree("f", "c"));
     assertThrows(IllegalStateException.class, () -> saying("Not sure").agree("f", "c"));
     assertThrows(IllegalStateException.class, () -> saying("").agree("f", "c"));
-    assertThrows(IllegalStateException.class, () -> new Judge((s, u) -> null).agree("f", "c"));
+    assertThrows(
+        IllegalStateException.class, () -> new Judge((system, user) -> null).agree("f", "c"));
   }
 
   @Test
   void agreePromptCarriesFactAndClaim() {
     var seen = new String[1];
     new Judge(
-            (s, u) -> {
-              seen[0] = u;
+            (system, user) -> {
+              seen[0] = user;
               return "YES";
             })
         .agree("Safari 14 is supported", "Safari 13 is supported");
@@ -93,8 +94,8 @@ class JudgeTest {
   void coveringPromptNumbersClaimsFromOne() {
     var seen = new String[1];
     new Judge(
-            (s, u) -> {
-              seen[0] = u;
+            (system, user) -> {
+              seen[0] = user;
               return "[]";
             })
         .covering("f", CLAIMS);

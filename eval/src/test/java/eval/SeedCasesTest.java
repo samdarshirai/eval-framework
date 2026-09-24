@@ -24,23 +24,25 @@ class SeedCasesTest {
 
   @Test
   void seedsExerciseEveryCoveragePath() {
-    var facts = cases.stream().flatMap(c -> c.facts().stream()).toList();
+    var facts = cases.stream().flatMap(evalCase -> evalCase.facts().stream()).toList();
     assertTrue(
-        facts.stream().anyMatch(f -> f.keywords().isEmpty()),
+        facts.stream().anyMatch(fact -> fact.keywords().isEmpty()),
         "need a fact without keywords (one judge call over all claims)");
     assertTrue(
-        facts.stream().anyMatch(f -> !f.keywords().isEmpty()),
+        facts.stream().anyMatch(fact -> !fact.keywords().isEmpty()),
         "need a fact with keywords (keyword filter, then judge confirm)");
     assertTrue(
-        cases.stream().anyMatch(c -> c.facts().size() > 1),
+        cases.stream().anyMatch(evalCase -> evalCase.facts().size() > 1),
         "need a case with two facts (every fact must be covered)");
     assertTrue(
-        facts.stream().anyMatch(f -> f.chunks().size() > 1),
+        facts.stream().anyMatch(fact -> fact.chunks().size() > 1),
         "need a fact with alternative gold chunks (D5 any-of)");
     assertTrue(
         cases.stream()
             .anyMatch(
-                c -> c.category().equals("false-premise") && c.expectedBehavior().equals("answer")),
+                evalCase ->
+                    evalCase.category().equals("false-premise")
+                        && evalCase.expectedBehavior().equals("answer")),
         "need a false-premise case that expects an answer (D3)");
   }
 
@@ -50,14 +52,18 @@ class SeedCasesTest {
    */
   @Test
   void everyKeywordAppearsInAGoldChunkOfItsFact() {
-    for (EvalCase c : cases) {
-      for (ExpectedFact f : c.facts()) {
-        for (String keyword : f.keywords()) {
+    for (EvalCase evalCase : cases) {
+      for (ExpectedFact fact : evalCase.facts()) {
+        for (String keyword : fact.keywords()) {
           assertTrue(
-              f.chunks().stream()
+              fact.chunks().stream()
                   .anyMatch(
                       id -> knowledge.get(id).text().toLowerCase().contains(keyword.toLowerCase())),
-              c.id() + ": keyword '" + keyword + "' is in none of the gold chunks " + f.chunks());
+              evalCase.id()
+                  + ": keyword '"
+                  + keyword
+                  + "' is in none of the gold chunks "
+                  + fact.chunks());
         }
       }
     }

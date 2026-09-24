@@ -32,7 +32,7 @@ class TrapPairsTest {
   @Test
   void countsAJudgeThatAgreesWithEverythingAsMissesOnBothKinds() throws Exception {
     var out = new ByteArrayOutputStream();
-    var judge = new Judge((s, u) -> isCoveringCall(s) ? "[1, 2]" : "YES");
+    var judge = new Judge((system, user) -> isCoveringCall(system) ? "[1, 2]" : "YES");
     assertEquals(2, TrapPairs.run(file(), judge, new PrintStream(out)));
     assertTrue(out.toString().contains("MISS negated"), out.toString());
     assertTrue(out.toString().contains("MISS covering"), out.toString());
@@ -41,7 +41,9 @@ class TrapPairsTest {
   @Test
   void aJudgeThatIsRightOnAllHasNoMisses() throws Exception {
     var judge =
-        new Judge((s, u) -> isCoveringCall(s) ? "[2]" : (u.contains("except") ? "NO" : "YES"));
+        new Judge(
+            (system, user) ->
+                isCoveringCall(system) ? "[2]" : (user.contains("except") ? "NO" : "YES"));
     assertEquals(0, TrapPairs.run(file(), judge, new PrintStream(new ByteArrayOutputStream())));
   }
 
@@ -49,7 +51,8 @@ class TrapPairsTest {
   void unusableJudgeReplyIsAMissNotACrashAndTheRunContinues() throws Exception {
     var out = new ByteArrayOutputStream();
     assertEquals(
-        3, TrapPairs.run(file(), new Judge((s, u) -> "the first one"), new PrintStream(out)));
+        3,
+        TrapPairs.run(file(), new Judge((system, user) -> "the first one"), new PrintStream(out)));
     assertTrue(out.toString().contains("(error:"), out.toString());
     assertTrue(out.toString().contains("3 miss(es) out of 3"), out.toString());
   }
@@ -61,11 +64,14 @@ class TrapPairsTest {
     // and both covering traps.
     TrapPairs.run(
         Path.of("calibration/trap-pairs.yaml"),
-        new Judge((s, u) -> isCoveringCall(s) ? "[1, 2]" : "YES"),
+        new Judge((system, user) -> isCoveringCall(system) ? "[1, 2]" : "YES"),
         new PrintStream(out));
     assertEquals(
         7,
-        out.toString().lines().filter(l -> l.startsWith("ok ") || l.startsWith("MISS ")).count());
-    assertEquals(5, out.toString().lines().filter(l -> l.startsWith("MISS ")).count());
+        out.toString()
+            .lines()
+            .filter(line -> line.startsWith("ok ") || line.startsWith("MISS "))
+            .count());
+    assertEquals(5, out.toString().lines().filter(line -> line.startsWith("MISS ")).count());
   }
 }

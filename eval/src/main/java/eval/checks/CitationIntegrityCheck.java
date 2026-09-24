@@ -20,9 +20,10 @@ public final class CitationIntegrityCheck implements Check {
   }
 
   @Override
-  public CheckResult run(EvalCase c, Answer a, CaseState state) {
+  public CheckResult run(EvalCase evalCase, Answer answer, CaseState state) {
     List<String> problems = new ArrayList<>();
-    for (Claim claim : a.claims() == null ? List.<Claim>of() : a.claims()) {
+    List<Claim> claims = answer.claims() == null ? List.of() : answer.claims();
+    for (Claim claim : claims) {
       if (claim.citations() == null || claim.citations().isEmpty()) {
         problems.add("no citation for claim: \"" + claim.claim() + "\"");
         continue;

@@ -43,40 +43,40 @@ class CoverageCheckTest {
   @Test
   void noClaimWithAllKeywordsMeansNotCoveredAndZeroJudgeCalls() {
     var llm = new FakeLlm("anything");
-    var r =
+    var result =
         new CoverageCheck(new Judge(llm))
             .run(
                 caseWith(SAFARI),
                 new Answer(false, List.of(claim("Safari 13 is supported"))),
                 new CaseState());
-    assertFalse(r.passed());
-    assertTrue(r.reason().contains("Safari 14 or later is supported"), r.reason());
+    assertFalse(result.passed());
+    assertTrue(result.reason().contains("Safari 14 or later is supported"), result.reason());
     assertEquals(0, llm.calls);
   }
 
   @Test
   void keywordsMatchCaseInsensitively() {
     var llm = new FakeLlm("later");
-    var r =
+    var result =
         new CoverageCheck(new Judge(llm))
             .run(
                 caseWith(SAFARI),
                 new Answer(false, List.of(claim("SAFARI 14 and later work"))),
                 new CaseState());
-    assertTrue(r.passed(), r.reason());
+    assertTrue(result.passed(), result.reason());
     assertEquals(1, llm.calls);
   }
 
   @Test
   void keywordHitAloneNeverPassesTheJudgeRejectsNegation() {
     var llm = new FakeLlm("NEVER-MATCHES");
-    var r =
+    var result =
         new CoverageCheck(new Judge(llm))
             .run(
                 caseWith(SAFARI),
                 new Answer(false, List.of(claim("All Safari versions except 14 are supported"))),
                 new CaseState());
-    assertFalse(r.passed());
+    assertFalse(result.passed());
     assertEquals(1, llm.calls);
   }
 
@@ -86,43 +86,43 @@ class CoverageCheckTest {
     var bad = claim("Safari 14 is not supported on iOS");
     var other = claim("Unrelated statement");
     var state = new CaseState();
-    var r =
+    var result =
         new CoverageCheck(new Judge(new FakeLlm("or later")))
             .run(caseWith(SAFARI), new Answer(false, List.of(bad, good, other)), state);
-    assertTrue(r.passed(), r.reason());
+    assertTrue(result.passed(), result.reason());
     assertEquals(List.of(good), state.covering(SAFARI));
   }
 
   @Test
   void keywordSubstringStillOnlyMakesACandidateTheJudgeDecides() {
     var llm = new FakeLlm("NEVER-MATCHES");
-    var r =
+    var result =
         new CoverageCheck(new Judge(llm))
             .run(
                 caseWith(SAFARI),
                 new Answer(false, List.of(claim("Safari 141 is supported"))),
                 new CaseState());
-    assertFalse(r.passed());
+    assertFalse(result.passed());
     assertEquals(1, llm.calls);
   }
 
   @Test
   void refusedAnswerFailsCoverageWithoutAnyJudgeCall() {
     var llm = new FakeLlm("x");
-    var r =
+    var result =
         new CoverageCheck(new Judge(llm))
             .run(caseWith(SAFARI), new Answer(true, List.of()), new CaseState());
-    assertFalse(r.passed());
+    assertFalse(result.passed());
     assertEquals(0, llm.calls);
   }
 
   @Test
   void nullClaimsListIsTreatedAsNoClaims() {
     var llm = new FakeLlm("x");
-    var r =
+    var result =
         new CoverageCheck(new Judge(llm))
             .run(caseWith(SAFARI), new Answer(false, null), new CaseState());
-    assertFalse(r.passed());
+    assertFalse(result.passed());
     assertEquals(0, llm.calls);
   }
 
@@ -131,7 +131,7 @@ class CoverageCheckTest {
     assertTrue(
         new CoverageCheck(
                 new Judge(
-                    (s, u) -> {
+                    (system, user) -> {
                       throw new AssertionError("no call expected");
                     }))
             .run(
@@ -149,19 +149,21 @@ class CoverageCheckTest {
             "Chrome 80 is supported",
             List.of("browser-support#browser-support"),
             List.of("Chrome", "80"));
-    var r =
+    var result =
         new CoverageCheck(new Judge(new FakeLlm("x")))
             .run(
                 caseWith(SAFARI, f2),
                 new Answer(false, List.of(claim("nothing relevant"))),
                 new CaseState());
     assertTrue(
-        r.reason().contains("Safari 14 or later") && r.reason().contains("Chrome 80"), r.reason());
+        result.reason().contains("Safari 14 or later") && result.reason().contains("Chrome 80"),
+        result.reason());
   }
 
   @Test
   void coverageIsThirdAndGatingInTheRegistrationList() {
-    var third = Checks.registered(new KnowledgeBase(List.of()), new Judge((s, u) -> "YES")).get(2);
+    var third =
+        Checks.registered(new KnowledgeBase(List.of()), new Judge((system, user) -> "YES")).get(2);
     assertEquals("Coverage", third.check().name());
     assertTrue(third.gating());
   }
@@ -179,40 +181,40 @@ class CoverageCheckTest {
     var check =
         new CoverageCheck(
             new Judge(
-                (s, u) -> {
+                (system, user) -> {
                   calls[0]++;
                   return "[1]";
                 }));
-    var r = check.run(caseWith(NO_KEYWORDS), new Answer(false, List.of(first, second)), state);
-    assertTrue(r.passed(), r.reason());
+    var result = check.run(caseWith(NO_KEYWORDS), new Answer(false, List.of(first, second)), state);
+    assertTrue(result.passed(), result.reason());
     assertEquals(1, calls[0]);
     assertEquals(List.of(first), state.covering(NO_KEYWORDS));
   }
 
   @Test
   void emptyIndexListMeansNotCovered() {
-    var r =
-        new CoverageCheck(new Judge((s, u) -> "[]"))
+    var result =
+        new CoverageCheck(new Judge((system, user) -> "[]"))
             .run(caseWith(NO_KEYWORDS), new Answer(false, List.of(claim("x"))), new CaseState());
-    assertFalse(r.passed());
-    assertTrue(r.reason().contains("The A/B test split is not always even"), r.reason());
+    assertFalse(result.passed());
+    assertTrue(result.reason().contains("The A/B test split is not always even"), result.reason());
   }
 
   @Test
   void keywordlessFactWithNoClaimsMakesNoJudgeCall() {
-    var r =
+    var result =
         new CoverageCheck(
                 new Judge(
-                    (s, u) -> {
+                    (system, user) -> {
                       throw new AssertionError("no call expected");
                     }))
             .run(caseWith(NO_KEYWORDS), new Answer(true, List.of()), new CaseState());
-    assertFalse(r.passed());
+    assertFalse(result.passed());
   }
 
   @Test
   void unusableJudgeReplyThrowsSoTheHarnessReportsACheckError() {
-    var check = new CoverageCheck(new Judge((s, u) -> "the first one"));
+    var check = new CoverageCheck(new Judge((system, user) -> "the first one"));
     assertThrows(
         IllegalStateException.class,
         () ->

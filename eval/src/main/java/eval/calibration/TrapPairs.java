@@ -26,10 +26,10 @@ public final class TrapPairs {
   public static int run(Path file, Judge judge, PrintStream out) throws java.io.IOException {
     List<Map<String, Object>> pairs = new Yaml().load(Files.readString(file));
     int misses = 0;
-    for (Map<String, Object> p : pairs) {
+    for (Map<String, Object> pair : pairs) {
       String problem; // null means the judge got it right
       try {
-        problem = p.containsKey("claims") ? checkCovering(p, judge) : checkAgree(p, judge);
+        problem = pair.containsKey("claims") ? checkCovering(pair, judge) : checkAgree(pair, judge);
       } catch (IllegalStateException e) {
         problem = "error: " + e.getMessage();
       }
@@ -38,34 +38,34 @@ public final class TrapPairs {
       }
       out.println(
           problem == null
-              ? "ok   " + p.get("name")
-              : "MISS " + p.get("name") + " (" + problem + ")");
+              ? "ok   " + pair.get("name")
+              : "MISS " + pair.get("name") + " (" + problem + ")");
     }
     out.println(misses + " miss(es) out of " + pairs.size());
     return misses;
   }
 
-  private static String checkAgree(Map<String, Object> p, Judge judge) {
-    boolean expected = (Boolean) p.get("agree");
-    boolean actual = judge.agree((String) p.get("fact"), (String) p.get("claim"));
+  private static String checkAgree(Map<String, Object> pair, Judge judge) {
+    boolean expected = (Boolean) pair.get("agree");
+    boolean actual = judge.agree((String) pair.get("fact"), (String) pair.get("claim"));
     return expected == actual ? null : "expected " + (expected ? "YES" : "NO");
   }
 
   @SuppressWarnings("unchecked")
-  private static String checkCovering(Map<String, Object> p, Judge judge) {
-    List<Map<String, Object>> raw = (List<Map<String, Object>>) p.get("claims");
+  private static String checkCovering(Map<String, Object> pair, Judge judge) {
+    List<Map<String, Object>> claimEntries = (List<Map<String, Object>>) pair.get("claims");
     List<Claim> claims =
-        raw.stream()
-            .map(c -> new Claim((String) c.get("text"), List.of("x#y")))
+        claimEntries.stream()
+            .map(entry -> new Claim((String) entry.get("text"), List.of("x#y")))
             .toList(); // citations are unused by the judge
     Set<Integer> expected = new TreeSet<>();
-    for (int i = 0; i < raw.size(); i++) {
-      if ((Boolean) raw.get(i).get("states")) {
+    for (int i = 0; i < claimEntries.size(); i++) {
+      if ((Boolean) claimEntries.get(i).get("states")) {
         expected.add(i + 1);
       }
     }
     Set<Integer> actual = new TreeSet<>();
-    for (int index : judge.covering((String) p.get("fact"), claims)) {
+    for (int index : judge.covering((String) pair.get("fact"), claims)) {
       actual.add(index + 1);
     }
     return expected.equals(actual)

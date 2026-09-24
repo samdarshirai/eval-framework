@@ -25,13 +25,13 @@ class HarnessTest {
     server = HttpServer.create(new InetSocketAddress(0), 0);
     server.createContext(
         "/answer",
-        ex -> {
+        exchange -> {
           requests.incrementAndGet();
-          ex.getRequestBody().readAllBytes();
-          byte[] b = replyFor.getBytes();
-          ex.sendResponseHeaders(status, b.length);
-          ex.getResponseBody().write(b);
-          ex.close();
+          exchange.getRequestBody().readAllBytes();
+          byte[] replyBytes = replyFor.getBytes();
+          exchange.sendResponseHeaders(status, replyBytes.length);
+          exchange.getResponseBody().write(replyBytes);
+          exchange.close();
         });
     server.start();
     config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
@@ -70,7 +70,7 @@ class HarnessTest {
 
   private String[] out(int[] code, String... args) throws Exception {
     var buf = new ByteArrayOutputStream();
-    code[0] = Harness.run(args, root, new PrintStream(buf), model -> (s, u) -> "YES");
+    code[0] = Harness.run(args, root, new PrintStream(buf), model -> (system, user) -> "YES");
     return new String[] {buf.toString()};
   }
 
@@ -78,11 +78,11 @@ class HarnessTest {
   void refusedOutOfScopePassesAndWritesTimestampedReport() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(0, code[0], o);
-    assertTrue(o.contains("PASS") && o.contains("oos-1"));
-    try (var s = Files.list(root.resolve("caseResults"))) {
-      assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count());
+    String output = out(code)[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("PASS") && output.contains("oos-1"));
+    try (var files = Files.list(root.resolve("caseResults"))) {
+      assertEquals(1, files.filter(path -> path.toString().endsWith(".json")).count());
     }
   }
 
@@ -97,25 +97,32 @@ class HarnessTest {
             + "    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
     replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(0, code[0], o);
-    var m = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(o);
-    assertTrue(m.find(), o);
+    String output = out(code)[0];
+    assertEquals(0, code[0], output);
+    var reportMatcher = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(output);
+    assertTrue(reportMatcher.find(), output);
     var json =
         new com.fasterxml.jackson.databind.ObjectMapper()
-            .readTree(root.resolve(m.group(1)).toFile());
-    var c = json.get("cases").get(0);
-    assertEquals("What is A?", c.get("question").asText());
-    assertFalse(c.get("expected").get("refused").asBoolean());
-    assertEquals("A is body", c.get("expected").get("claims").get(0).get("claim").asText());
-    assertEquals("d#a", c.get("expected").get("claims").get(0).get("citations").get(0).asText());
-    assertEquals("body", c.get("expected").get("claims").get(0).get("keywords").get(0).asText());
-    assertEquals("d#a", c.get("actual").get("claims").get(0).get("citations").get(0).asText());
-    assertFalse(c.has("answer") || c.has("expectedBehavior") || c.has("expectedFacts"));
+            .readTree(root.resolve(reportMatcher.group(1)).toFile());
+    var caseJson = json.get("cases").get(0);
+    assertEquals("What is A?", caseJson.get("question").asText());
+    assertFalse(caseJson.get("expected").get("refused").asBoolean());
+    assertEquals("A is body", caseJson.get("expected").get("claims").get(0).get("claim").asText());
+    assertEquals(
+        "d#a", caseJson.get("expected").get("claims").get(0).get("citations").get(0).asText());
+    assertEquals(
+        "body", caseJson.get("expected").get("claims").get(0).get("keywords").get(0).asText());
+    assertEquals(
+        "d#a", caseJson.get("actual").get("claims").get(0).get("citations").get(0).asText());
+    assertFalse(
+        caseJson.has("answer")
+            || caseJson.has("expectedBehavior")
+            || caseJson.has("expectedFacts"));
     assertEquals("Refusal", json.get("checks").get(0).get("name").asText());
     assertTrue(json.get("checks").get(0).get("gating").asBoolean());
     assertFalse(
-        c.get("checks").get(0).has("gating"), "gating is listed once at the top, not per case");
+        caseJson.get("checks").get(0).has("gating"),
+        "gating is listed once at the top, not per case");
   }
 
   @Test
@@ -124,10 +131,10 @@ class HarnessTest {
     replyFor =
         "{\"refused\":false,\"claims\":[{\"claim\":\"It costs 5 EUR\",\"citations\":[\"d#a\"]}]}";
     int[] code = new int[1];
-    String o = out(code)[0];
+    String output = out(code)[0];
     assertEquals(1, code[0]);
-    assertTrue(o.contains("answered where it should have refused"), o);
-    assertTrue(o.contains("out-of-scope case failed: oos-1"), o);
+    assertTrue(output.contains("answered where it should have refused"), output);
+    assertTrue(output.contains("out-of-scope case failed: oos-1"), output);
   }
 
   @Test
@@ -136,9 +143,9 @@ class HarnessTest {
     status = 500;
     replyFor = "{\"error\":\"boom\"}";
     int[] code = new int[1];
-    String o = out(code)[0];
+    String output = out(code)[0];
     assertEquals(1, code[0]);
-    assertTrue(o.contains("HTTP 500"), o);
+    assertTrue(output.contains("HTTP 500"), output);
     assertTrue(Files.exists(root.resolve("caseResults")));
   }
 
@@ -155,9 +162,9 @@ class HarnessTest {
             + "  owner: p\n"
             + "  added: \"2026-09-24\"\n");
     int[] code = new int[1];
-    String o = out(code)[0];
+    String output = out(code)[0];
     assertEquals(2, code[0]);
-    assertTrue(o.contains("c1") && o.contains("d#nope"), o);
+    assertTrue(output.contains("c1") && output.contains("d#nope"), output);
     assertEquals(0, requests.get(), "no request may reach the assistant");
   }
 
@@ -166,10 +173,10 @@ class HarnessTest {
     cases(OOS);
     server.stop(0);
     int[] code = new int[1];
-    String o = out(code)[0];
+    String output = out(code)[0];
     assertEquals(2, code[0]);
-    assertTrue(o.contains("assistant/target/assistant.jar"), o);
-    assertFalse(o.contains("ConnectException"), o);
+    assertTrue(output.contains("assistant/target/assistant.jar"), output);
+    assertFalse(output.contains("ConnectException"), output);
   }
 
   @Test
@@ -188,18 +195,18 @@ class HarnessTest {
   void missingConfigExitsTwoWithErrorNotAStackTrace() throws Exception {
     Files.delete(root.resolve("eval/config.yaml"));
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("ERROR"), o);
-    assertFalse(o.contains("\tat "), o);
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR"), output);
+    assertFalse(output.contains("\tat "), output);
   }
 
   @Test
   void missingCasesDirExitsTwoWithError() throws Exception {
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("ERROR"), o);
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR"), output);
   }
 
   @Test
@@ -207,9 +214,9 @@ class HarnessTest {
     cases(OOS);
     config("endpoint: " + url() + "\ncategories: [out-of-scope]\n");
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("ERROR"), o);
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR"), output);
   }
 
   @Test
@@ -217,9 +224,9 @@ class HarnessTest {
     cases(OOS);
     config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source]\n");
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("out-of-scope"), o);
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("out-of-scope"), output);
     assertEquals(0, requests.get());
   }
 
@@ -228,9 +235,9 @@ class HarnessTest {
     cases(OOS);
     config("endpoint: " + url() + "\npassFloor: 0.90\n");
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("categories"), o);
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("categories"), output);
   }
 
   @Test
@@ -242,9 +249,9 @@ class HarnessTest {
             + "\npassFloor: 0.90\ncategories: [out-of-scope]\n"
             + "knowledgeBase:\n  type: http\n  url: http://localhost:1/chunks\n");
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("not implemented yet"), o);
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("not implemented yet"), output);
     assertEquals(0, requests.get());
   }
 
@@ -252,9 +259,9 @@ class HarnessTest {
   void unknownArgExitsTwoWithUsageBeforeTouchingNetwork() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String o = out(code, "--endpiont", url())[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("ERROR") && o.contains("Usage"), o);
+    String output = out(code, "--endpiont", url())[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("Usage"), output);
     assertEquals(0, requests.get());
   }
 
@@ -262,28 +269,28 @@ class HarnessTest {
   void endpointWithoutValueExitsTwo() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String o = out(code, "--endpoint")[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("ERROR") && o.contains("Usage"), o);
-    o = out(code, "--endpoint", "--other")[0];
-    assertEquals(2, code[0], o);
+    String output = out(code, "--endpoint")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("Usage"), output);
+    output = out(code, "--endpoint", "--other")[0];
+    assertEquals(2, code[0], output);
   }
 
   @Test
   void endpointEqualsFormExitsTwo() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String o = out(code, "--endpoint=http://x")[0];
-    assertEquals(2, code[0], o);
-    assertTrue(o.contains("ERROR") && o.contains("Usage"), o);
+    String output = out(code, "--endpoint=http://x")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("Usage"), output);
   }
 
   @Test
   void outputShowsWhichEndpointAndRunRan() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertTrue(o.contains("Endpoint: " + url() + "  Run: "), o);
+    String output = out(code)[0];
+    assertTrue(output.contains("Endpoint: " + url() + "  Run: "), output);
   }
 
   @Test
@@ -298,9 +305,9 @@ class HarnessTest {
     replyFor =
         "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#nope\"]}]}";
     int[] code = new int[1];
-    String o = out(code)[0];
-    assertEquals(1, code[0], o);
-    assertTrue(o.contains("Citation integrity: fabricated citation: d#nope"), o);
+    String output = out(code)[0];
+    assertEquals(1, code[0], output);
+    assertTrue(output.contains("Citation integrity: fabricated citation: d#nope"), output);
   }
 
   @Test
@@ -310,9 +317,9 @@ class HarnessTest {
         "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
     cases(OOS);
     int[] code = new int[1];
-    String o = out(code)[0];
+    String output = out(code)[0];
     assertEquals(2, code[0]);
-    assertTrue(o.contains("judgeModel"), o);
+    assertTrue(output.contains("judgeModel"), output);
     assertEquals(0, requests.get());
   }
 
@@ -352,13 +359,13 @@ class HarnessTest {
             root,
             new PrintStream(buf),
             model ->
-                (s, u) -> {
+                (system, user) -> {
                   throw new IllegalStateException("boom");
                 });
     assertEquals(1, code, buf.toString());
     assertTrue(buf.toString().contains("check error: boom"), buf.toString());
-    try (var s = Files.list(root.resolve("caseResults"))) {
-      assertEquals(1, s.filter(p -> p.toString().endsWith(".json")).count());
+    try (var files = Files.list(root.resolve("caseResults"))) {
+      assertEquals(1, files.filter(path -> path.toString().endsWith(".json")).count());
     }
   }
 
@@ -378,7 +385,7 @@ class HarnessTest {
         root,
         new PrintStream(buf),
         model ->
-            (s, u) -> {
+            (system, user) -> {
               throw new IllegalStateException();
             });
     assertTrue(
@@ -405,7 +412,7 @@ class HarnessTest {
             root,
             new PrintStream(buf),
             model ->
-                (s, u) -> {
+                (system, user) -> {
                   judgeCalls[0]++;
                   return "NO";
                 });

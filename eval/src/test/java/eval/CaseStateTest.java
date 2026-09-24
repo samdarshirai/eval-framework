@@ -6,18 +6,18 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CaseStateTest {
-  private static final ExpectedFact F = new ExpectedFact("f", List.of("d#a"), List.of());
+  private static final ExpectedFact FACT = new ExpectedFact("f", List.of("d#a"), List.of());
 
   @Test
   void unrecordedFactHasNoCoveringClaims() {
-    assertEquals(List.of(), new CaseState().covering(F));
+    assertEquals(List.of(), new CaseState().covering(FACT));
   }
 
   @Test
   void recordedClaimsComeBack() {
-    var s = new CaseState();
-    var c = new Claim("x", List.of("d#a"));
-    s.setCovering(F, List.of(c));
-    assertEquals(List.of(c), s.covering(F));
+    var state = new CaseState();
+    var claim = new Claim("x", List.of("d#a"));
+    state.setCovering(FACT, List.of(claim));
+    assertEquals(List.of(claim), state.covering(FACT));
   }
 }

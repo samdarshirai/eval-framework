@@ -25,38 +25,41 @@ class CitationIntegrityCheckTest {
 
   @Test
   void claimWithoutCitationFails() {
-    var r = run(new Claim("Safari 14 works", List.of()));
-    assertFalse(r.passed());
+    var result = run(new Claim("Safari 14 works", List.of()));
+    assertFalse(result.passed());
     assertTrue(
-        r.reason().contains("no citation") && r.reason().contains("Safari 14 works"), r.reason());
+        result.reason().contains("no citation") && result.reason().contains("Safari 14 works"),
+        result.reason());
   }
 
   @Test
   void claimWithNullCitationsFailsWithoutCrashing() {
-    var r = run(new Claim("x", null));
-    assertFalse(r.passed());
-    assertTrue(r.reason().contains("no citation"), r.reason());
+    var result = run(new Claim("x", null));
+    assertFalse(result.passed());
+    assertTrue(result.reason().contains("no citation"), result.reason());
   }
 
   @Test
   void fabricatedCitationFailsAndNamesTheId() {
-    var r = run(new Claim("x", List.of("d#nope")));
-    assertFalse(r.passed());
-    assertTrue(r.reason().contains("fabricated citation: d#nope"), r.reason());
+    var result = run(new Claim("x", List.of("d#nope")));
+    assertFalse(result.passed());
+    assertTrue(result.reason().contains("fabricated citation: d#nope"), result.reason());
   }
 
   @Test
   void oneFabricatedIdAmongRealOnesStillFailsAndOnlyNamesTheFabricatedOne() {
-    var r = run(new Claim("x", List.of("d#a", "d#nope")));
-    assertFalse(r.passed());
-    assertTrue(r.reason().contains("d#nope"), r.reason());
-    assertFalse(r.reason().contains("d#a"), "the real ID must not be blamed: " + r.reason());
+    var result = run(new Claim("x", List.of("d#a", "d#nope")));
+    assertFalse(result.passed());
+    assertTrue(result.reason().contains("d#nope"), result.reason());
+    assertFalse(
+        result.reason().contains("d#a"), "the real ID must not be blamed: " + result.reason());
   }
 
   @Test
   void everyBadClaimIsListed() {
-    var r = run(new Claim("first", List.of()), new Claim("second", List.of("d#nope")));
-    assertTrue(r.reason().contains("first") && r.reason().contains("second"), r.reason());
+    var result = run(new Claim("first", List.of()), new Claim("second", List.of("d#nope")));
+    assertTrue(
+        result.reason().contains("first") && result.reason().contains("second"), result.reason());
   }
 
   @Test

@@ -7,7 +7,7 @@ import java.net.http.*;
 import java.time.Duration;
 
 public final class OpenRouterLlm implements Llm {
-  private static final ObjectMapper M = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final URI URL = URI.create("https://openrouter.ai/api/v1/chat/completions");
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
@@ -43,18 +43,19 @@ public final class OpenRouterLlm implements Llm {
   @Override
   public String complete(String system, String user) {
     try {
-      var req =
+      var request =
           HttpRequest.newBuilder(URL)
               .timeout(Duration.ofSeconds(60))
               .header("content-type", "application/json")
               .header("authorization", "Bearer " + apiKey)
               .POST(HttpRequest.BodyPublishers.ofString(requestBody(model, system, user, effort)))
               .build();
-      var res = http.send(req, HttpResponse.BodyHandlers.ofString());
-      if (res.statusCode() != 200) {
-        throw new IllegalStateException("OpenRouter API " + res.statusCode() + ": " + res.body());
+      var response = http.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() != 200) {
+        throw new IllegalStateException(
+            "OpenRouter API " + response.statusCode() + ": " + response.body());
       }
-      return parseText(res.body());
+      return parseText(response.body());
     } catch (java.io.IOException e) {
       throw new IllegalStateException("OpenRouter API call failed: " + e.getMessage(), e);
     } catch (InterruptedException e) {
@@ -68,27 +69,27 @@ public final class OpenRouterLlm implements Llm {
   }
 
   static String requestBody(String model, String system, String user, String effort) {
-    ObjectNode n = M.createObjectNode();
-    n.put("model", model);
+    ObjectNode body = MAPPER.createObjectNode();
+    body.put("model", model);
     // Reasoning tokens count toward max_tokens; leave room for the answer after them.
-    n.put("max_tokens", effort == null ? 1024 : 4096);
-    n.put("temperature", 0);
+    body.put("max_tokens", effort == null ? 1024 : 4096);
+    body.put("temperature", 0);
     // Default routing silently ignores parameters a provider does not support; this makes the call
     // fail
     // instead of quietly running at the provider's default temperature (D14).
-    n.putObject("provider").put("require_parameters", true);
+    body.putObject("provider").put("require_parameters", true);
     if (effort != null) {
-      n.putObject("reasoning").put("effort", effort);
+      body.putObject("reasoning").put("effort", effort);
     }
-    ArrayNode messages = n.putArray("messages");
+    ArrayNode messages = body.putArray("messages");
     messages.addObject().put("role", "system").put("content", system);
     messages.addObject().put("role", "user").put("content", user);
-    return n.toString();
+    return body.toString();
   }
 
   static String parseText(String json) {
     try {
-      JsonNode root = M.readTree(json);
+      JsonNode root = MAPPER.readTree(json);
       // OpenRouter can answer HTTP 200 with an error object instead of choices.
       if (root.has("error")) {
         throw new IllegalStateException("OpenRouter API error: " + root.get("error"));

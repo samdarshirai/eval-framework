@@ -8,43 +8,44 @@ import org.junit.jupiter.api.Test;
 
 class RefusalCheckTest {
   private final RefusalCheck check = new RefusalCheck();
-  private static final CaseState S = new CaseState();
+  private static final CaseState STATE = new CaseState();
 
-  private EvalCase c(String behavior) {
+  private EvalCase caseExpecting(String behavior) {
     return new EvalCase("c", "q", "x", null, behavior, List.of(), "authored", "o", "2026-09-24");
   }
 
-  private static final Claim CL = new Claim("c", List.of("d#a"));
+  private static final Claim CLAIM = new Claim("c", List.of("d#a"));
 
   @Test
   void expectedRefuseAndRefusedPasses() {
-    assertTrue(check.run(c("refuse"), new Answer(true, List.of()), S).passed());
+    assertTrue(check.run(caseExpecting("refuse"), new Answer(true, List.of()), STATE).passed());
   }
 
   @Test
   void expectedAnswerAndAnsweredPasses() {
-    assertTrue(check.run(c("answer"), new Answer(false, List.of(CL)), S).passed());
+    assertTrue(
+        check.run(caseExpecting("answer"), new Answer(false, List.of(CLAIM)), STATE).passed());
   }
 
   @Test
   void confidentAnswerToOutOfScopeIsHallucination() {
-    var r = check.run(c("refuse"), new Answer(false, List.of(CL)), S);
-    assertFalse(r.passed());
-    assertTrue(r.reason().startsWith("hallucination"));
+    var result = check.run(caseExpecting("refuse"), new Answer(false, List.of(CLAIM)), STATE);
+    assertFalse(result.passed());
+    assertTrue(result.reason().startsWith("hallucination"));
   }
 
   @Test
   void refusingACoveredQuestionIsOverRefusal() {
-    var r = check.run(c("answer"), new Answer(true, List.of()), S);
-    assertFalse(r.passed());
-    assertTrue(r.reason().startsWith("over-refusal"));
+    var result = check.run(caseExpecting("answer"), new Answer(true, List.of()), STATE);
+    assertFalse(result.passed());
+    assertTrue(result.reason().startsWith("over-refusal"));
   }
 
   @Test
   void refusedWithClaimsIsContractViolation() {
-    var r = check.run(c("refuse"), new Answer(true, List.of(CL)), S);
-    assertFalse(r.passed());
-    assertTrue(r.reason().startsWith("contract violation"));
+    var result = check.run(caseExpecting("refuse"), new Answer(true, List.of(CLAIM)), STATE);
+    assertFalse(result.passed());
+    assertTrue(result.reason().startsWith("contract violation"));
   }
 
   @Test

@@ -22,10 +22,10 @@ public final class CoverageCheck implements Check {
   }
 
   @Override
-  public CheckResult run(EvalCase c, Answer a, CaseState state) {
-    List<Claim> claims = a.claims() == null ? List.of() : a.claims();
+  public CheckResult run(EvalCase evalCase, Answer answer, CaseState state) {
+    List<Claim> claims = answer.claims() == null ? List.of() : answer.claims();
     List<String> uncovered = new ArrayList<>();
-    for (ExpectedFact fact : c.facts()) {
+    for (ExpectedFact fact : evalCase.facts()) {
       List<Claim> covering = coveringClaims(fact, claims);
       if (covering.isEmpty()) {
         uncovered.add(fact.fact());
@@ -37,7 +37,9 @@ public final class CoverageCheck implements Check {
       return CheckResult.ok();
     }
     return CheckResult.fail(
-        "not covered: " + String.join("; ", uncovered.stream().map(f -> "\"" + f + "\"").toList()));
+        "not covered: "
+            + String.join(
+                "; ", uncovered.stream().map(factText -> "\"" + factText + "\"").toList()));
   }
 
   private List<Claim> coveringClaims(ExpectedFact fact, List<Claim> claims) {
@@ -59,6 +61,6 @@ public final class CoverageCheck implements Check {
 
   private static boolean containsAll(String text, List<String> keywords) {
     String lower = text.toLowerCase();
-    return keywords.stream().allMatch(k -> lower.contains(k.toLowerCase()));
+    return keywords.stream().allMatch(keyword -> lower.contains(keyword.toLowerCase()));
   }
 }

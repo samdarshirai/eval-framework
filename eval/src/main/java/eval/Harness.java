@@ -16,11 +16,11 @@ import org.yaml.snakeyaml.Yaml;
 public final class Harness {
 
   public static void main(String[] args) throws Exception {
-    System.exit(run(args, Path.of("."), System.out));
+    System.exit(run(args, Path.of(".")));
   }
 
-  static int run(String[] args, Path root, PrintStream out) throws Exception {
-    return run(args, root, out, model -> OpenRouterLlm.fromEnv(model, "low"));
+  static int run(String[] args, Path root) throws Exception {
+    return run(args, root, System.out, model -> OpenRouterLlm.fromEnv(model, "low"));
   }
 
   static int run(String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm)
@@ -89,8 +89,8 @@ public final class Harness {
             .withZone(ZoneOffset.UTC)
             .format(Instant.now());
     List<CaseResult> caseResults = new ArrayList<>();
-    for (EvalCase c : cases) {
-      caseResults.add(runCase(c, client, runId, checks));
+    for (EvalCase evalCase : cases) {
+      caseResults.add(runCase(evalCase, client, runId, checks));
     }
     SuiteReport report = new SuiteReport(runId, endpoint, floor, checkInfos(checks), caseResults);
 
@@ -122,42 +122,44 @@ public final class Harness {
   }
 
   private static List<CheckInfo> checkInfos(List<Registered> checks) {
-    return checks.stream().map(r -> new CheckInfo(r.check().name(), r.gating())).toList();
+    return checks.stream()
+        .map(registered -> new CheckInfo(registered.check().name(), registered.gating()))
+        .toList();
   }
 
   /** The case's expectation in the assistant's response shape, for the report. */
-  private static Expected expected(EvalCase c) {
+  private static Expected expected(EvalCase evalCase) {
     return new Expected(
-        c.expectedBehavior().equals("refuse"),
-        c.facts().stream()
-            .map(f -> new Expected.ExpectedClaim(f.fact(), f.chunks(), f.keywords()))
+        evalCase.expectedBehavior().equals("refuse"),
+        evalCase.facts().stream()
+            .map(fact -> new Expected.ExpectedClaim(fact.fact(), fact.chunks(), fact.keywords()))
             .toList());
   }
 
   private static CaseResult runCase(
-      EvalCase c, AssistantClient client, String runId, List<Registered> checks) {
+      EvalCase evalCase, AssistantClient client, String runId, List<Registered> checks) {
     Answer answer;
     try {
-      answer = client.ask(c.question(), runId);
+      answer = client.ask(evalCase.question(), runId);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       return new CaseResult(
-          c.id(),
-          c.question(),
-          c.category(),
-          c.subtype(),
-          expected(c),
+          evalCase.id(),
+          evalCase.question(),
+          evalCase.category(),
+          evalCase.subtype(),
+          expected(evalCase),
           false,
           "interrupted",
           null,
           List.of());
     } catch (Exception e) {
       return new CaseResult(
-          c.id(),
-          c.question(),
-          c.category(),
-          c.subtype(),
-          expected(c),
+          evalCase.id(),
+          evalCase.question(),
+          evalCase.category(),
+          evalCase.subtype(),
+          expected(evalCase),
           false,
           e.getMessage(),
           null,
@@ -176,57 +178,60 @@ public final class Harness {
     // one is only reported. Nothing here names a specific check, so adding one is a new class plus
     // one line in Checks.
     CaseState state = new CaseState();
-    for (Registered r : checks) {
-      CheckResult res;
+    for (Registered registered : checks) {
+      CheckResult checkResult;
       try {
-        res = r.check().run(c, answer, state);
+        checkResult = registered.check().run(evalCase, answer, state);
       } catch (RuntimeException e) {
-        res =
+        checkResult =
             CheckResult.fail(
                 "check error: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
       }
-      outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
-      if (r.gating() && !res.passed()) {
+      outcomes.add(
+          new CheckOutcome(registered.check().name(), checkResult.passed(), checkResult.reason()));
+      if (registered.gating() && !checkResult.passed()) {
         passed = false;
       }
     }
     return new CaseResult(
-        c.id(),
-        c.question(),
-        c.category(),
-        c.subtype(),
-        expected(c),
+        evalCase.id(),
+        evalCase.question(),
+        evalCase.category(),
+        evalCase.subtype(),
+        expected(evalCase),
         passed,
         null,
         answer,
         outcomes);
   }
 
-  private static void print(SuiteReport r, PrintStream out) {
-    out.println("Endpoint: " + r.endpoint() + "  Run: " + r.runId());
-    for (CaseResult c : r.cases()) {
-      out.printf("%-4s %-22s %-14s%n", c.passed() ? "PASS" : "FAIL", c.id(), c.category());
-      if (c.error() != null) {
-        out.println("       assistant error: " + c.error());
+  private static void print(SuiteReport report, PrintStream out) {
+    out.println("Endpoint: " + report.endpoint() + "  Run: " + report.runId());
+    for (CaseResult caseResult : report.cases()) {
+      out.printf(
+          "%-4s %-22s %-14s%n",
+          caseResult.passed() ? "PASS" : "FAIL", caseResult.id(), caseResult.category());
+      if (caseResult.error() != null) {
+        out.println("       assistant error: " + caseResult.error());
       }
-      for (CheckOutcome o : c.checks()) {
-        if (!o.passed()) {
+      for (CheckOutcome outcome : caseResult.checks()) {
+        if (!outcome.passed()) {
           out.println(
               "       "
-                  + o.check()
-                  + (r.isGating(o.check()) ? "" : " (advisory)")
+                  + outcome.check()
+                  + (report.isGating(outcome.check()) ? "" : " (advisory)")
                   + ": "
-                  + o.reason());
+                  + outcome.reason());
         }
       }
     }
     out.printf(
         "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
-        r.passed(), r.cases().size(), r.passRate() * 100, r.passFloor() * 100);
-    if (r.exitCode() == 0) {
+        report.passed(), report.cases().size(), report.passRate() * 100, report.passFloor() * 100);
+    if (report.exitCode() == 0) {
       out.println("RESULT: OK");
     } else {
-      r.exitReasons().forEach(x -> out.println("RESULT: FAIL - " + x));
+      report.exitReasons().forEach(reason -> out.println("RESULT: FAIL - " + reason));
     }
   }
 }
