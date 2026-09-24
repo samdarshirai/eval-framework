@@ -41,5 +41,5 @@ build/
 Case_Study__*.pdf
 
 ### Eval results ###
-results/*.json
-!results/baseline.json
+caseResults/*.json
+!caseResults/baseline.json

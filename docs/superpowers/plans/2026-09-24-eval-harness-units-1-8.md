@@ -34,6 +34,7 @@ Commits `a2f6d58`, `d4dc566`, `58dbb22` changed the code after the tasks below w
 - **Task 8, harness:** `SuiteReport.OUT_OF_SCOPE` holds the category name; `--endpoint`, unknown-argument and setup errors exit 2. `ArchitectureTest` was removed.
 - **Running:** there is no `exec:java`. Build with `mvn -q -DskipTests package`, then `java -jar assistant/target/assistant.jar` and `java -jar eval/target/eval.jar` from the repo root. Tests run with the repo root as working directory (surefire `workingDirectory`).
 - Decisions recorded: D37 (modules and Spring Boot) and D18 amended, in `grilling-decisions.md`.
+- **Task 8, report folder:** reports go to `caseResults/<runId>.json`, not `results/` (`.gitignore` and `.gitkeep` moved with it). Each case has `expected` and `actual` in the response shape plus its check outcomes; the checks that ran (name, gating) are listed once at the top of the report.
 - **Task 4, LLM client:** `AnthropicLlm` / `ANTHROPIC_API_KEY` are superseded by `OpenRouterLlm` / `OPENROUTER_API_KEY` (D39): chat-completions wire format, system prompt as the first message, model slugs like `anthropic/claude-haiku-4.5`. Every `ANTHROPIC_API_KEY` in the task text below now reads `OPENROUTER_API_KEY`.
 
 ---
