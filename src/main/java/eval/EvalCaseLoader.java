@@ -36,14 +36,18 @@ public final class EvalCaseLoader {
         if (!behavior.equals("answer") && !behavior.equals("refuse"))
             throw new IllegalArgumentException(where + ": expected_behavior must be 'answer' or 'refuse', got '" + behavior + "'");
         List<ExpectedFact> facts = new ArrayList<>();
-        if (m.get("facts") instanceof List<?> fl) {
+        Object factsRaw = m.get("facts");
+        if (factsRaw != null && !(factsRaw instanceof List<?>))
+            throw new IllegalArgumentException(where + ": 'facts' must be a list");
+        if (factsRaw instanceof List<?> fl) {
             for (Object fo : fl) {
-                Map<?, ?> fm = (Map<?, ?>) fo;
-                List<String> chunks = strList(fm.get("chunks"));
+                if (!(fo instanceof Map<?, ?> fm))
+                    throw new IllegalArgumentException(where + ": each fact must be a map with 'fact' and 'chunks'");
+                List<String> chunks = strList(fm.get("chunks"), "chunks", where);
                 if (chunks.isEmpty()) throw new IllegalArgumentException(where + ": fact needs at least one gold chunk");
                 for (String ch : chunks)
                     if (!kb.has(ch)) throw new IllegalArgumentException(where + ": gold chunk '" + ch + "' does not exist in the knowledge base");
-                facts.add(new ExpectedFact(str(fm, "fact", file, id, true), chunks, strList(fm.get("keywords"))));
+                facts.add(new ExpectedFact(str(fm, "fact", file, id, true), chunks, strList(fm.get("keywords"), "keywords", where)));
             }
         }
         if (behavior.equals("answer") && facts.isEmpty())
@@ -64,7 +68,9 @@ public final class EvalCaseLoader {
         return v.toString();
     }
 
-    private static List<String> strList(Object o) {
-        return o instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of();
+    private static List<String> strList(Object o, String field, String where) {
+        if (o == null) return List.of();
+        if (!(o instanceof List<?> l)) throw new IllegalArgumentException(where + ": '" + field + "' must be a list");
+        return l.stream().map(String::valueOf).toList();
     }
 }
