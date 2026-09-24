@@ -46,4 +46,22 @@ class AssistantTest {
         var r = Assistant.parse("{\"refused\":true,\"claims\":[],\"answer\":\"hi\"}");
         assertTrue(r.refused());
     }
+
+    @Test void emptyObjectIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> Assistant.parse("{}"));
+    }
+
+    @Test void objectWithoutRefusedIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> Assistant.parse("{\"answer\":\"hi\"}"));
+    }
+
+    @Test void nonRefusalWithoutClaimsIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> Assistant.parse("{\"refused\":false}"));
+    }
+
+    @Test void refusalWithoutClaimsKeyIsAccepted() {
+        var r = Assistant.parse("{\"refused\":true}");
+        assertTrue(r.refused());
+        assertTrue(r.claims().isEmpty());
+    }
 }

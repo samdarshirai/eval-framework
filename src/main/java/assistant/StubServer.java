@@ -19,7 +19,9 @@ public final class StubServer {
             try {
                 if (!ex.getRequestMethod().equals("POST")) { status = 405; body = msg("POST only"); }
                 else {
-                    String q = M.readTree(ex.getRequestBody()).path("question").asText("");
+                    String q;
+                    try { q = M.readTree(ex.getRequestBody()).path("question").asText(""); }
+                    catch (com.fasterxml.jackson.core.JsonProcessingException e) { q = ""; }
                     if (q.isBlank()) { status = 400; body = msg("question is required"); }
                     else { status = 200; body = M.writeValueAsBytes(assistant.answer(q)); }
                 }
