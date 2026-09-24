@@ -112,8 +112,9 @@ public final class Harness {
         // pass/fail plus a reason (today only RefusalCheck: hallucination, over-refusal, contract violation).
         // Each entry is wrapped in Registered with a gating flag: a failing gating check fails the case, an advisory
         // one is only reported. Nothing here names a specific check, so adding one is a new class plus one line in Checks.
+        CaseState state = new CaseState();
         for (Registered r : Checks.registered()) {
-            CheckResult res = r.check().run(c, answer);
+            CheckResult res = r.check().run(c, answer, state);
             outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
             if (r.gating() && !res.passed()) passed = false;
         }

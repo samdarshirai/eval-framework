@@ -1,12 +1,13 @@
 package eval.checks;
 
 import eval.Answer;
+import eval.CaseState;
 import eval.EvalCase;
 
 public final class RefusalCheck implements Check {
     @Override public String name() { return "Refusal"; }
 
-    @Override public CheckResult run(EvalCase c, Answer a) {
+    @Override public CheckResult run(EvalCase c, Answer a, CaseState state) {
         int n = a.claims() == null ? 0 : a.claims().size();
         if (a.refused() && n > 0) return CheckResult.fail("contract violation: refused=true but response has " + n + " claims");
         if (c.expectedBehavior().equals("refuse") && !a.refused())
