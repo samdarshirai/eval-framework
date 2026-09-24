@@ -49,7 +49,7 @@ public final class EvalCaseLoader {
     /**
      * Turns one YAML entry into an EvalCase. SnakeYAML gives untyped maps and lists, so every field is
      * type-checked here by hand. Order of checks:
-     * id, expected_behavior, facts (with gold-chunk lookup), the answer-needs-facts rule, category, then metadata.
+     * id, expected_behavior, facts (with gold-chunk lookup), the answer-needs-facts rule, category, then optional metadata.
      */
     private static EvalCase parseCase(String file, Object entry, KnowledgeBase kb, List<String> allowedCategories) {
         // A case must be a YAML map; a bare string or list in the file is a mistake.
@@ -90,14 +90,15 @@ public final class EvalCaseLoader {
         if (!allowedCategories.contains(category))
             throw new IllegalArgumentException(where + ": category '" + category + "' is not one of: " + String.join(", ", allowedCategories));
 
+        // source, owner and added are optional bookkeeping (D18): recorded when given, never required.
         // Unquoted YAML dates (added: 2026-09-24) arrive as java.util.Date; normalise them to ISO text.
         Object addedRaw = caseMap.get("added");
         String added = addedRaw instanceof Date addedDate
             ? addedDate.toInstant().atZone(ZoneOffset.UTC).toLocalDate().toString()
-            : str(caseMap, "added", file, id, true);
+            : str(caseMap, "added", file, id, false);
         return new EvalCase(id, str(caseMap, "question", file, id, true), category,
             str(caseMap, "subtype", file, id, false), expectedBehavior, facts,
-            str(caseMap, "source", file, id, true), str(caseMap, "owner", file, id, true), added);
+            str(caseMap, "source", file, id, false), str(caseMap, "owner", file, id, false), added);
     }
 
     /** Reads a scalar field as text; a missing or blank required field is an error, an optional one is null. */
