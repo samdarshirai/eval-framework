@@ -144,6 +144,17 @@ class HarnessTest {
         assertTrue(o.contains("categories"), o);
     }
 
+    @Test void unimplementedKnowledgeSourceExitsTwoBeforeAnyAssistantCall() throws Exception {
+        cases(OOS);
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [out-of-scope]\n"
+            + "knowledgeBase:\n  type: http\n  url: http://localhost:1/chunks\n");
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("not implemented yet"), o);
+        assertEquals(0, requests.get());
+    }
+
     @Test void unknownArgExitsTwoWithUsageBeforeTouchingNetwork() throws Exception {
         cases(OOS);
         int[] code = new int[1];
