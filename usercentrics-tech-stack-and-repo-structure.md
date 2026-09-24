@@ -18,7 +18,7 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 
 **Two commands:** `mvn -q -DskipTests package`, then start the stub (`java -jar assistant/target/assistant.jar`) and run the harness (`java -jar eval/target/eval.jar`), which is the one command the brief asks for. Both run from the repo root. `--endpoint <url>` points the harness at any other app; `--baseline <file>` enables regression comparison.
 
-**Models:** the assistant model and the judge model are separate config values in the same provider, with the judge stronger than the assistant. The Coverage confirm step uses the main judge. Temperature is 0 everywhere.
+**Models:** the assistant model and the judge model are separate config values (both routed through OpenRouter, D39), with the judge stronger than the assistant. The Coverage confirm step uses the main judge. Temperature is 0 everywhere.
 
 **Explicitly not used, and why (for the walkthrough/Q&A):**
 - **Python + rank_bm25/pyyaml** — considered first; dropped because live-session code changes need to happen in the language you're fastest in under pressure, not the one with marginally more convenient libraries for a 5-hour build.
@@ -30,7 +30,7 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 
 ## Repo structure
 
-**Module layout (D37, supersedes the paths in the tree below):** `kb/` (Chunk, Chunker), `llm/` (Llm, AnthropicLlm), `assistant/` (Spring Boot: Assistant, BM25Index, StubServer, AnswerController), `eval/` (harness sources under `eval/src`, plus `eval/config.yaml` and `eval/cases/`). `docs/`, `config/application.yaml` and `results/` stay at the repo root. `Chunk` and `Chunker` are in package `kb`, not `assistant`.
+**Module layout (D37, supersedes the paths in the tree below):** `kb/` (Chunk, Chunker), `llm/` (Llm, OpenRouterLlm), `assistant/` (Spring Boot: Assistant, BM25Index, StubServer, AnswerController), `eval/` (harness sources under `eval/src`, plus `eval/config.yaml` and `eval/cases/`). `docs/`, `config/application.yaml` and `results/` stay at the repo root. `Chunk` and `Chunker` are in package `kb`, not `assistant`.
 
 ```
 usercentrics-eval-harness/

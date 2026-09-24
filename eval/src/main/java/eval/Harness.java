@@ -55,7 +55,7 @@ public final class Harness {
         if (!client.reachable()) {
             out.println("ERROR: cannot reach the assistant at " + endpoint);
             out.println("Start the stub in another terminal first:");
-            out.println("  export ANTHROPIC_API_KEY=...");
+            out.println("  export OPENROUTER_API_KEY=...");
             out.println("  mvn -q -DskipTests package");
             out.println("  java -jar assistant/target/assistant.jar");
             return 2;
