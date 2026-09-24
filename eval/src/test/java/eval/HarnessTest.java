@@ -52,7 +52,11 @@ class HarnessTest {
    * stay valid.
    */
   private void config(String body) throws IOException {
-    Files.writeString(root.resolve("eval/config.yaml"), body + "judgeModel: test/judge\n");
+    Files.writeString(
+        root.resolve("eval/config.yaml"),
+        body
+            + "judgeModel: test/judge\n"
+            + "calibration:\n  trapPairs: calibration/trap-pairs.yaml\n");
   }
 
   private void trapFile(String yaml) throws IOException {
