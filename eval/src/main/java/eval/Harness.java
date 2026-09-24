@@ -49,28 +49,18 @@ public final class Harness {
     EvalConfig config = EvalConfig.load(root, endpointArg);
 
     // Validate cases against the docs BEFORE contacting the assistant.
-    KnowledgeBase kb;
-    List<EvalCase> cases;
-    try {
-      kb = new KnowledgeBase(KnowledgeSources.from(config.raw(), root));
-      cases = EvalCaseLoader.load(root.resolve("eval/cases"), kb, config.categories());
-    } catch (IllegalArgumentException e) {
-      out.println("ERROR: " + e.getMessage());
+    KnowledgeBase kb = getKnowledgeBase(root, out, config);
+    if (kb == null) {
       return 2;
     }
+    List<EvalCase> cases = getEvalCases(root, kb, config);
 
     String judgeModel = config.requireJudgeModel();
-    Judge judge =
-        new Judge(
-            judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
+    Judge judge = new Judge(judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
     List<Registered> checks = Checks.registered(kb, judge);
     AssistantClient client = new AssistantClient(config.endpoint());
     if (!client.reachable()) {
-      out.println("ERROR: cannot reach the assistant at " + config.endpoint());
-      out.println("Start the stub in another terminal first:");
-      out.println("  export OPENROUTER_API_KEY=...");
-      out.println("  mvn -q -DskipTests package");
-      out.println("  java -jar assistant/target/assistant.jar");
+      logErrorBeforeExit(out, config);
       return 2;
     }
 
@@ -88,6 +78,30 @@ public final class Harness {
     ReportWriter.write(root, report);
     out.println("Report: caseResults/" + runId + ".json");
     return report.exitCode();
+  }
+
+  private static List<EvalCase> getEvalCases(Path root, KnowledgeBase kb, EvalConfig config) throws IOException {
+    return EvalCaseLoader.load(root.resolve("eval/cases"), kb, config.categories());
+  }
+
+  private static KnowledgeBase getKnowledgeBase(Path root, PrintStream out, EvalConfig config) throws IOException {
+    KnowledgeBase kb;
+    try {
+      kb = new KnowledgeBase(KnowledgeSources.from(config.raw(), root));
+
+    } catch (IllegalArgumentException e) {
+      out.println("ERROR: " + e.getMessage());
+      return null;
+    }
+    return kb;
+  }
+
+  private static void logErrorBeforeExit(PrintStream out, EvalConfig config) {
+    out.println("ERROR: cannot reach the assistant at " + config.endpoint());
+    out.println("Start the stub in another terminal first:");
+    out.println("  export OPENROUTER_API_KEY=...");
+    out.println("  mvn -q -DskipTests package");
+    out.println("  java -jar assistant/target/assistant.jar");
   }
 
   private static List<CheckInfo> checkInfos(List<Registered> checks) {
