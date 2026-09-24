@@ -28,7 +28,7 @@ Status: **in progress**. Not final until confirmed.
 
 ## Eval-set growth
 
-18. Every case records `source`, `owner` and `added`.
+18. A case may record `source`, `owner` and `added` (optional, PR #1 review; the loader does not require them). `subtype` stays, since out-of-scope reporting is by subtype.
 19. Hard cap per category. Adding a case means retiring or merging one.
 20. A candidate is admitted only if it adds a distinct failure. Otherwise it becomes a note on an existing case.
 21. Loader flags stale cases: missing gold chunk = hard error. Doc content hash changed since the case was last confirmed = warning (design now, build if time).

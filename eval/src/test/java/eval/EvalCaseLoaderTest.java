@@ -97,6 +97,15 @@ class EvalCaseLoaderTest {
         assertTrue(err(() -> load()).contains("'billing'"));
     }
 
+    @Test void sourceOwnerAndAddedAreOptional() throws Exception {
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  subtype: unrelated\n  expected_behavior: refuse\n");
+        var c = EvalCaseLoader.load(dir, kb, CATEGORIES).get(0);
+        assertNull(c.source());
+        assertNull(c.owner());
+        assertNull(c.added());
+        assertEquals("unrelated", c.subtype());
+    }
+
     @Test void ymlFilesAreLoadedToo() throws Exception {
         write("a.yml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  expected_behavior: refuse\n" + META);
         assertEquals("c1", EvalCaseLoader.load(dir, kb, CATEGORIES).get(0).id());
