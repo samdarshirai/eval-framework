@@ -2,10 +2,18 @@ endpoint: http://localhost:8080/answer
 passFloor: 0.90
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.
 categories: [single-source, multi-source, false-premise, out-of-scope, edge-case]
-# Where the harness gets the chunks the assistant was built on (default: docs from ./docs).
-#   docs      chunk a docs directory with the reference Chunker
-#   http      GET a url returning [{id, text}]            (placeholder, not implemented yet)
-#   manifest  read a JSON file holding [{id, text}]       (placeholder, not implemented yet)
+# Where the harness gets the chunks the assistant was built on. Default: docs from ./docs.
 knowledgeBase:
-  type: docs
-  path: docs
+  type: docs        # chunk a docs directory with the reference Chunker
+  path: docs        # relative to the repo root
+
+# Other sources (http and manifest are placeholders: selecting one exits with "not implemented yet").
+# Replace the block above with one of these:
+#
+# knowledgeBase:
+#   type: http                                 # the app serves the chunks it indexed
+#   url: http://localhost:8080/chunks          # GET returns [{"id": "consent-mode#default-consent-states", "text": "..."}]
+#
+# knowledgeBase:
+#   type: manifest                             # a JSON file exported by the app's build
+#   path: kb/manifest.json                     # same [{"id": ..., "text": ...}] array, relative to the repo root
