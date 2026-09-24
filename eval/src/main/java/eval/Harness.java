@@ -29,6 +29,7 @@ public final class Harness {
     }
   }
 
+  /** Wiring only: parse args, load config and cases, preflight, run each case, report. */
   private static int runInner(
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
     String endpointArg = null;
@@ -46,7 +47,6 @@ public final class Harness {
       }
     }
     EvalConfig config = EvalConfig.load(root, endpointArg);
-    String endpoint = config.endpoint();
 
     // Validate cases against the docs BEFORE contacting the assistant.
     KnowledgeBase kb;
@@ -64,9 +64,9 @@ public final class Harness {
         new Judge(
             judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
     List<Registered> checks = Checks.registered(kb, judge);
-    AssistantClient client = new AssistantClient(endpoint);
+    AssistantClient client = new AssistantClient(config.endpoint());
     if (!client.reachable()) {
-      out.println("ERROR: cannot reach the assistant at " + endpoint);
+      out.println("ERROR: cannot reach the assistant at " + config.endpoint());
       out.println("Start the stub in another terminal first:");
       out.println("  export OPENROUTER_API_KEY=...");
       out.println("  mvn -q -DskipTests package");
@@ -80,7 +80,7 @@ public final class Harness {
     for (EvalCase evalCase : cases) {
       caseResults.add(runner.run(evalCase, runId));
     }
-    SuiteReport report = new SuiteReport(runId, endpoint, config.passFloor(), checkInfos(checks), caseResults);
+    SuiteReport report = new SuiteReport(runId, config.endpoint(), config.passFloor(), checkInfos(checks), caseResults);
 
     ConsoleReport.print(report, out);
     ReportWriter.write(root, report);
