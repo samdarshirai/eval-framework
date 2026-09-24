@@ -64,8 +64,11 @@ class HarnessTest {
         var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(root.resolve(m.group(1)).toFile());
         var c = json.get("cases").get(0);
         assertEquals("What is A?", c.get("question").asText());
-        assertEquals("d#a", c.get("expectedFacts").get(0).get("chunks").get(0).asText());
-        assertEquals("d#a", c.get("answer").get("claims").get(0).get("citations").get(0).asText());
+        assertFalse(c.get("expected").get("refused").asBoolean());
+        assertEquals("A is body", c.get("expected").get("claims").get(0).get("claim").asText());
+        assertEquals("d#a", c.get("expected").get("claims").get(0).get("citations").get(0).asText());
+        assertEquals("d#a", c.get("actual").get("claims").get(0).get("citations").get(0).asText());
+        assertFalse(c.has("answer") || c.has("expectedBehavior") || c.has("expectedFacts"));
         assertEquals("Refusal", json.get("checks").get(0).get("name").asText());
         assertTrue(json.get("checks").get(0).get("gating").asBoolean());
         assertFalse(c.get("checks").get(0).has("gating"), "gating is listed once at the top, not per case");

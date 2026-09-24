@@ -89,15 +89,21 @@ public final class Harness {
         return Checks.registered().stream().map(r -> new CheckInfo(r.check().name(), r.gating())).toList();
     }
 
+    /** The case's expectation in the assistant's response shape, for the report. */
+    private static Answer expected(EvalCase c) {
+        return new Answer(c.expectedBehavior().equals("refuse"),
+            c.facts().stream().map(f -> new Claim(f.fact(), f.chunks())).toList());
+    }
+
     private static CaseResult runCase(EvalCase c, AssistantClient client, String runId) {
         Answer answer;
         try {
             answer = client.ask(c.question(), runId);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), c.expectedBehavior(), c.facts(), false, "interrupted", null, List.of());
+            return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), expected(c), false, "interrupted", null, List.of());
         } catch (Exception e) {
-            return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), c.expectedBehavior(), c.facts(), false, e.getMessage(), null, List.of());
+            return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), expected(c), false, e.getMessage(), null, List.of());
         }
         List<CheckOutcome> outcomes = new ArrayList<>();
         boolean passed = true;
@@ -111,7 +117,7 @@ public final class Harness {
             outcomes.add(new CheckOutcome(r.check().name(), res.passed(), res.reason()));
             if (r.gating() && !res.passed()) passed = false;
         }
-        return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), c.expectedBehavior(), c.facts(), passed, null, answer, outcomes);
+        return new CaseResult(c.id(), c.question(), c.category(), c.subtype(), expected(c), passed, null, answer, outcomes);
     }
 
     private static void print(SuiteReport r, PrintStream out) {
