@@ -3,6 +3,7 @@ package eval;
 import com.fasterxml.jackson.databind.*;
 import eval.checks.*;
 import org.yaml.snakeyaml.Yaml;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.*;
 import java.time.*;
@@ -15,6 +16,15 @@ public final class Harness {
     }
 
     static int run(String[] args, Path root, PrintStream out) throws Exception {
+        try {
+            return runInner(args, root, out);
+        } catch (IOException | RuntimeException e) {
+            out.println("ERROR: " + (e.getMessage() != null ? e.getMessage() : e));
+            return 2;
+        }
+    }
+
+    private static int runInner(String[] args, Path root, PrintStream out) throws Exception {
         Map<String, Object> cfg = new Yaml().load(Files.readString(root.resolve("eval/config.yaml")));
         String endpoint = (String) cfg.get("endpoint");
         double floor = ((Number) cfg.get("passFloor")).doubleValue();

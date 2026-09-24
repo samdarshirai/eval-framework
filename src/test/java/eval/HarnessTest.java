@@ -99,4 +99,29 @@ class HarnessTest {
         out(code, "--endpoint", url());
         assertEquals(0, code[0]);
     }
+
+    @Test void missingConfigExitsTwoWithErrorNotAStackTrace() throws Exception {
+        Files.delete(root.resolve("eval/config.yaml"));
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("ERROR"), o);
+        assertFalse(o.contains("\tat "), o);
+    }
+
+    @Test void missingCasesDirExitsTwoWithError() throws Exception {
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("ERROR"), o);
+    }
+
+    @Test void configWithoutPassFloorExitsTwoWithError() throws Exception {
+        cases(OOS);
+        Files.writeString(root.resolve("eval/config.yaml"), "endpoint: " + url() + "\n");
+        int[] code = new int[1];
+        String o = out(code)[0];
+        assertEquals(2, code[0], o);
+        assertTrue(o.contains("ERROR"), o);
+    }
 }
