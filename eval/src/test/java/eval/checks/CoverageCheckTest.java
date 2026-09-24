@@ -89,4 +89,33 @@ class CoverageCheckTest {
         assertEquals("Coverage", third.check().name());
         assertTrue(third.gating());
     }
+
+    private static final ExpectedFact NO_KEYWORDS = new ExpectedFact("The A/B test split is not always even", List.of("ab-test#ab-test"), List.of());
+
+    @Test void factWithoutKeywordsMakesOneJudgeCallAndUsesTheReturnedIndices() {
+        var calls = new int[1];
+        var first = claim("Traffic can be split unevenly"); var second = claim("Something else");
+        var state = new CaseState();
+        var check = new CoverageCheck(new Judge((s, u) -> { calls[0]++; return "[1]"; }));
+        var r = check.run(caseWith(NO_KEYWORDS), new Answer(false, List.of(first, second)), state);
+        assertTrue(r.passed(), r.reason());
+        assertEquals(1, calls[0]);
+        assertEquals(List.of(first), state.covering(NO_KEYWORDS));
+    }
+
+    @Test void emptyIndexListMeansNotCovered() {
+        var r = new CoverageCheck(new Judge((s, u) -> "[]")).run(caseWith(NO_KEYWORDS), new Answer(false, List.of(claim("x"))), new CaseState());
+        assertFalse(r.passed());
+        assertTrue(r.reason().contains("The A/B test split is not always even"), r.reason());
+    }
+
+    @Test void keywordlessFactWithNoClaimsMakesNoJudgeCall() {
+        var r = new CoverageCheck(new Judge((s, u) -> { throw new AssertionError("no call expected"); })).run(caseWith(NO_KEYWORDS), new Answer(true, List.of()), new CaseState());
+        assertFalse(r.passed());
+    }
+
+    @Test void unusableJudgeReplyThrowsSoTheHarnessReportsACheckError() {
+        var check = new CoverageCheck(new Judge((s, u) -> "the first one"));
+        assertThrows(IllegalStateException.class, () -> check.run(caseWith(NO_KEYWORDS), new Answer(false, List.of(claim("x"))), new CaseState()));
+    }
 }

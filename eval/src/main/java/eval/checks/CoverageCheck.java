@@ -28,6 +28,8 @@ public final class CoverageCheck implements Check {
 
     private List<Claim> coveringClaims(ExpectedFact fact, List<Claim> claims) {
         if (claims.isEmpty()) return List.of();
+        if (fact.keywords().isEmpty())
+            return judge.covering(fact.fact(), claims).stream().map(claims::get).toList();
         List<Claim> covering = new ArrayList<>();
         for (Claim candidate : claims)
             if (containsAll(candidate.claim(), fact.keywords()) && judge.agree(fact.fact(), candidate.claim()))
