@@ -10,6 +10,7 @@ public final class Checks {
     return List.of(
         new Registered(new RefusalCheck(), true),
         new Registered(new CitationIntegrityCheck(kb), true),
-        new Registered(new CoverageCheck(judge), true));
+        new Registered(new CoverageCheck(judge), true),
+        new Registered(new GroundednessCheck(kb, judge), true));
   }
 }

@@ -429,7 +429,7 @@ class HarnessTest {
                 });
     assertEquals(1, code, buf.toString());
     assertTrue(buf.toString().contains("Coverage: not covered"), buf.toString());
-    assertEquals(1, judgeCalls[0]);
+    assertEquals(2, judgeCalls[0]); // Coverage's confirm call plus Groundedness's call on the uncovered claim
   }
 
   @Test
