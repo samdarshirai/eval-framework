@@ -1,0 +1,13 @@
+- id: fp-ab-script-after-cmp
+  question: "I want my A/B testing tool to load after the Usercentrics CMP. Where do I add the tool's script?"
+  category: false-premise
+  expected_behavior: answer
+  facts:
+    # The correction is the fact. "put it in head, after the CMP" (going along with the premise) can still contain
+    # "head", and "not before the CMP" contains both keywords: keywords alone cannot tell them apart, the judge does.
+    - fact: "The A/B testing tool script must be added in the head section before the Usercentrics CMP script, so the tool is loaded before the CMP and can split properly"
+      chunks: [ab-test#a-b-testing-with-third-party-tool]
+      keywords: ["head", "before"]
+  source: authored
+  owner: platform
+  added: "2026-09-24"
