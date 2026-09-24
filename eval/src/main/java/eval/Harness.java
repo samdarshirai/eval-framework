@@ -8,7 +8,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.function.Function;
 import llm.*;
-import org.yaml.snakeyaml.Yaml;
 
 public final class Harness {
 
@@ -46,27 +45,21 @@ public final class Harness {
         return 2;
       }
     }
-    Map<String, Object> cfg = new Yaml().load(Files.readString(root.resolve("eval/config.yaml")));
-    String endpoint = endpointArg != null ? endpointArg : (String) cfg.get("endpoint");
-    double floor = ((Number) cfg.get("passFloor")).doubleValue();
-
-    List<String> categories = categoriesFrom(cfg);
+    EvalConfig config = EvalConfig.load(root, endpointArg);
+    String endpoint = config.endpoint();
 
     // Validate cases against the docs BEFORE contacting the assistant.
     KnowledgeBase kb;
     List<EvalCase> cases;
     try {
-      kb = new KnowledgeBase(KnowledgeSources.from(cfg, root));
-      cases = EvalCaseLoader.load(root.resolve("eval/cases"), kb, categories);
+      kb = new KnowledgeBase(KnowledgeSources.from(config.raw(), root));
+      cases = EvalCaseLoader.load(root.resolve("eval/cases"), kb, config.categories());
     } catch (IllegalArgumentException e) {
       out.println("ERROR: " + e.getMessage());
       return 2;
     }
 
-    if (!(cfg.get("judgeModel") instanceof String judgeModel) || judgeModel.isBlank()) {
-      throw new IllegalArgumentException(
-          "eval/config.yaml: 'judgeModel' is required (an OpenRouter model slug)");
-    }
+    String judgeModel = config.requireJudgeModel();
     Judge judge =
         new Judge(
             judgeLlm.apply(judgeModel)); // throws with the export hint if the API key is missing
@@ -87,30 +80,12 @@ public final class Harness {
     for (EvalCase evalCase : cases) {
       caseResults.add(runner.run(evalCase, runId));
     }
-    SuiteReport report = new SuiteReport(runId, endpoint, floor, checkInfos(checks), caseResults);
+    SuiteReport report = new SuiteReport(runId, endpoint, config.passFloor(), checkInfos(checks), caseResults);
 
     ConsoleReport.print(report, out);
     ReportWriter.write(root, report);
     out.println("Report: caseResults/" + runId + ".json");
     return report.exitCode();
-  }
-
-  /**
-   * The allowed case categories from config; 'out-of-scope' must stay because the exit rule depends
-   * on it.
-   */
-  private static List<String> categoriesFrom(Map<String, Object> cfg) {
-    if (!(cfg.get("categories") instanceof List<?> raw) || raw.isEmpty()) {
-      throw new IllegalArgumentException("eval/config.yaml: 'categories' must be a non-empty list");
-    }
-    List<String> categories = raw.stream().map(String::valueOf).toList();
-    if (!categories.contains(SuiteReport.OUT_OF_SCOPE)) {
-      throw new IllegalArgumentException(
-          "eval/config.yaml: 'categories' must include '"
-              + SuiteReport.OUT_OF_SCOPE
-              + "' (the out-of-scope exit rule depends on it)");
-    }
-    return categories;
   }
 
   private static List<CheckInfo> checkInfos(List<Registered> checks) {
