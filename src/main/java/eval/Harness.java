@@ -25,10 +25,18 @@ public final class Harness {
     }
 
     private static int runInner(String[] args, Path root, PrintStream out) throws Exception {
+        String endpointArg = null;
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) endpointArg = args[++i];
+            else {
+                out.println("ERROR: " + (args[i].equals("--endpoint") ? "--endpoint needs a value" : "unknown argument '" + args[i] + "'"));
+                out.println("Usage: Harness [--endpoint <url>]");
+                return 2;
+            }
+        }
         Map<String, Object> cfg = new Yaml().load(Files.readString(root.resolve("eval/config.yaml")));
-        String endpoint = (String) cfg.get("endpoint");
+        String endpoint = endpointArg != null ? endpointArg : (String) cfg.get("endpoint");
         double floor = ((Number) cfg.get("passFloor")).doubleValue();
-        for (int i = 0; i + 1 < args.length; i++) if (args[i].equals("--endpoint")) endpoint = args[i + 1];
 
         // Validate cases against the docs BEFORE contacting the assistant.
         List<EvalCase> cases;
@@ -81,6 +89,7 @@ public final class Harness {
     }
 
     private static void print(SuiteReport r, PrintStream out) {
+        out.println("Endpoint: " + r.endpoint() + "  Run: " + r.runId());
         for (CaseResult c : r.cases()) {
             out.printf("%-4s %-22s %-14s%n", c.passed() ? "PASS" : "FAIL", c.id(), c.category());
             if (c.error() != null) out.println("       assistant error: " + c.error());
