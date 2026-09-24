@@ -2,7 +2,9 @@ package eval;
 
 import java.util.List;
 
-/** Expected (behavior, facts) and actual (answer, check outcomes) side by side, so a failure can be debugged from the report alone. */
-public record CaseResult(String id, String question, String category, String subtype, String expectedBehavior,
-                         List<ExpectedFact> expectedFacts, boolean passed, String error, Answer answer,
-                         List<CheckOutcome> checks) {}
+/**
+ * One case in the report. {@code expected} and {@code actual} share the response shape, so they read side by side:
+ * expected claims are the case's facts (claim = fact text, citations = its gold chunks, any-of).
+ */
+public record CaseResult(String id, String question, String category, String subtype, Answer expected,
+                         boolean passed, String error, Answer actual, List<CheckOutcome> checks) {}
