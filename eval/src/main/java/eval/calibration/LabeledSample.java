@@ -28,8 +28,15 @@ public final class LabeledSample {
   public record Result(List<PairResult> pairs) {
     public static final Result NONE = new Result(List.of());
 
+    @JsonProperty("agreed")
     public long agreed() {
       return pairs.stream().filter(PairResult::agreed).count();
+    }
+
+    /** Pairs where the judge threw or answered unclearly: each fails the run. */
+    @JsonProperty("errors")
+    public long errors() {
+      return pairs.stream().filter(pair -> pair.judged() == null).count();
     }
 
     @JsonProperty("agreement")

@@ -55,6 +55,12 @@ class LabeledSampleTest {
   }
 
   @Test
+  void errorsCountThePairsTheJudgeGaveNoUsableAnswerOn() {
+    assertEquals(2, run("Maybe").errors());
+    assertEquals(0, run("YES").errors());
+  }
+
+  @Test
   void ninetyPercentAgreementIsTheLine() {
     assertTrue(withAgreed(18, 20).agreementMet());
     assertFalse(withAgreed(17, 20).agreementMet());

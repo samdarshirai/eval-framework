@@ -514,6 +514,7 @@ class HarnessTest {
         new com.fasterxml.jackson.databind.ObjectMapper()
             .readTree(root.resolve(reportMatcher.group(1)).toFile());
     assertEquals(1, json.get("calibration").get("groundedness").get("falseSupported").asInt());
+    assertTrue(json.get("calibration").get("groundedness").has("agreed"));
     assertEquals(
         "u1", json.get("calibration").get("groundedness").get("pairs").get(0).get("name").asText());
   }

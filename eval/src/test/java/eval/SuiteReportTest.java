@@ -10,7 +10,7 @@ class SuiteReportTest {
   /** n cases; ids in failing set fail; ids starting "oos" get category out-of-scope. */
   private SuiteReport report(int n, Set<Integer> failing, Set<Integer> oos) {
     List<CaseResult> cs = new ArrayList<>();
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
       cs.add(
           new CaseResult(
               (oos.contains(i) ? "oos-" : "c-") + i,
@@ -22,6 +22,7 @@ class SuiteReportTest {
               null,
               null,
               List.of()));
+    }
     return new SuiteReport("r", "http://x", 0.90, List.of(), SuiteReport.Calibration.SKIPPED, cs);
   }
 
@@ -112,6 +113,30 @@ class SuiteReportTest {
         report.exitReasons().stream()
             .anyMatch(reason -> reason.contains("groundedness calibration: agreement 50.0%")),
         report.exitReasons().toString());
+  }
+
+  @Test
+  void anErroredPairFailsTheRunEvenWhenAgreementIsAboveTarget() {
+    var pairs = new ArrayList<LabeledSample.PairResult>();
+    for (int i = 0; i < 19; i++) {
+      pairs.add(new LabeledSample.PairResult("a" + i, "supported", true, true, null));
+    }
+    pairs.add(new LabeledSample.PairResult("e", "unsupported", false, null, "error: unclear"));
+    var report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(),
+            new SuiteReport.Calibration(true, List.of(), new LabeledSample.Result(pairs)),
+            List.of());
+    assertTrue(
+        report
+            .exitReasons()
+            .contains(
+                "groundedness calibration: 1 pair(s) errored (the judge gave no usable answer)"),
+        report.exitReasons().toString());
+    assertTrue(report.exitReasons().stream().noneMatch(r -> r.contains("agreement")));
   }
 
   @Test

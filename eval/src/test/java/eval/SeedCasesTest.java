@@ -78,7 +78,7 @@ class SeedCasesTest {
                 evalCase ->
                     evalCase.facts().stream()
                             .flatMap(fact -> fact.chunks().stream())
-                            .map(chunkId -> chunkId.substring(0, chunkId.indexOf('#')))
+                            .map(chunkId -> chunkId.split("#")[0])
                             .distinct()
                             .count()
                         > 1),

@@ -51,18 +51,22 @@ public record SuiteReport(
   @JsonProperty("exitReasons")
   public List<String> exitReasons() {
     List<String> reasons = new ArrayList<>();
-    if (passRate() < passFloor)
+    if (passRate() < passFloor) {
       reasons.add(
           String.format(
               "pass rate %.1f%% is below floor %.1f%%", passRate() * 100, passFloor * 100));
+    }
     List<String> oos =
         cases.stream()
             .filter(c -> !c.passed() && OUT_OF_SCOPE.equals(c.category()))
             .map(CaseResult::id)
             .toList();
-    if (!oos.isEmpty()) reasons.add("out-of-scope case failed: " + String.join(", ", oos));
-    if (calibration.misses() > 0)
+    if (!oos.isEmpty()) {
+      reasons.add("out-of-scope case failed: " + String.join(", ", oos));
+    }
+    if (calibration.misses() > 0) {
       reasons.add("judge calibration: " + calibration.misses() + " trap pair miss(es)");
+    }
     LabeledSample.Result sample = calibration.groundedness();
     if (sample.falseSupported() > 0) {
       reasons.add(
@@ -71,6 +75,12 @@ public record SuiteReport(
               + " of "
               + sample.unsupportedPairs()
               + " unsupported pair(s) judged supported");
+    }
+    if (sample.errors() > 0) {
+      reasons.add(
+          "groundedness calibration: "
+              + sample.errors()
+              + " pair(s) errored (the judge gave no usable answer)");
     }
     if (!sample.agreementMet()) {
       reasons.add(

@@ -74,5 +74,8 @@ final class ConsoleReport {
         "  unsupported judged supported: %d of %d (target 0)%n",
         sample.falseSupported(), sample.unsupportedPairs());
     out.printf("  supported judged unsupported: %d (no target)%n", sample.falseUnsupported());
+    if (sample.errors() > 0) {
+      out.println("  errored pairs: " + sample.errors() + " (each fails the run)");
+    }
   }
 }
