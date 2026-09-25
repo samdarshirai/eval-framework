@@ -3,8 +3,10 @@ package eval;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -38,29 +40,83 @@ final class EvalConfig {
     this.categories = categories;
   }
 
-  /** Loads {@code <root>/eval/config.yaml}; paths resolve against root. */
-  static EvalConfig load(Path root, String endpointOverride) throws IOException {
-    return read(root.resolve("eval/config.yaml"), root, true, "eval/config.yaml", endpointOverride);
+  /**
+   * The top-level keys of the config file. Each can be overridden for one run with {@code --<key>
+   * <value>}; a nested key is written with dots ({@code --calibration.trapPairs file}).
+   */
+  private static final Set<String> SETTINGS =
+      Set.of(
+          "endpoint",
+          "passFloor",
+          "judgeModel",
+          "categories",
+          "cases",
+          "outputDir",
+          "skipCalibration",
+          "baseline",
+          "calibration",
+          "knowledgeBase");
+
+  /** True when {@code key} (dots allowed) starts with one of the config file's top-level keys. */
+  static boolean isSetting(String key) {
+    return SETTINGS.contains(key.split("\\.", -1)[0]) && !key.startsWith(".") && !key.endsWith(".");
+  }
+
+  /**
+   * Loads {@code <root>/eval/config.yaml}; paths resolve against root. Each override replaces the
+   * config file's value for that key, typed as YAML would type it ({@code true}, {@code 0.8}, a
+   * path, a {@code [list]}).
+   */
+  static EvalConfig load(Path root, Map<String, String> overrides) throws IOException {
+    return read(root.resolve("eval/config.yaml"), root, true, "eval/config.yaml", overrides);
   }
 
   /**
    * Loads an explicit config file; every relative path in it resolves against the file's own
    * directory.
    */
-  static EvalConfig loadFile(Path configFile, String endpointOverride) throws IOException {
+  static EvalConfig loadFile(Path configFile, Map<String, String> overrides) throws IOException {
     Path parent = configFile.getParent();
     Path baseDir = parent != null ? parent : Path.of(".");
-    return read(configFile, baseDir, false, configFile.toString(), endpointOverride);
+    return read(configFile, baseDir, false, configFile.toString(), overrides);
   }
 
   private static EvalConfig read(
-      Path file, Path baseDir, boolean defaultLayout, String fileName, String endpointOverride)
+      Path file,
+      Path baseDir,
+      boolean defaultLayout,
+      String fileName,
+      Map<String, String> overrides)
       throws IOException {
     Map<String, Object> raw = new Yaml().load(Files.readString(file));
-    String endpoint = endpointOverride != null ? endpointOverride : (String) raw.get("endpoint");
+    if (overrides != null) {
+      overrides.forEach((key, value) -> override(raw, key, value));
+    }
+    Object endpointValue = raw.get("endpoint");
+    String endpoint = endpointValue == null ? null : endpointValue.toString();
     double passFloor = ((Number) raw.get("passFloor")).doubleValue();
     return new EvalConfig(
         raw, baseDir, defaultLayout, fileName, endpoint, passFloor, categoriesFrom(raw, fileName));
+  }
+
+  /** Sets {@code key} (dots nest) to {@code value}, parsed as YAML; creates missing maps. */
+  @SuppressWarnings("unchecked")
+  private static void override(Map<String, Object> raw, String key, String value) {
+    String[] path = key.split("\\.");
+    Map<String, Object> target = raw;
+    for (int index = 0; index < path.length - 1; index++) {
+      Object child = target.get(path[index]);
+      if (child == null) {
+        child = new LinkedHashMap<String, Object>();
+        target.put(path[index], child);
+      }
+      if (!(child instanceof Map<?, ?>)) {
+        throw new IllegalArgumentException(
+            "cannot set '" + key + "': '" + path[index] + "' is not a map in the config");
+      }
+      target = (Map<String, Object>) child;
+    }
+    target.put(path[path.length - 1], new Yaml().load(value));
   }
 
   /** The directory relative paths resolve against. */

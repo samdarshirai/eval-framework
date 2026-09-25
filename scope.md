@@ -67,7 +67,7 @@ Planned total is 28 (unit 21); 8 exist today.
 | **Judge calibration** inside the same command: 7 trap pairs plus 20 hand-labeled Groundedness pairs (measured: 20/20 agreement, 0 of 10 false-supported) | A judge you have not measured is not evidence (D16, D41, D43) |
 | **Regression against a baseline** (`--baseline`): a case that passed there and fails now fails the run, after one re-run | Blocks a silent slide even when the pass rate stays above the floor; the re-run keeps flakes from crying wolf (D13, D14, D46) |
 | **Exit-code rules**: pass floor 90%, and any failing out-of-scope case fails the run | Blocks a hallucination even when the pass rate is high (D13, D34) |
-| **Reusable by other teams**: `--config`, `--endpoint`, `--skip-calibration`, pluggable knowledge source | The "pattern for thirty more" (D38, D42) |
+| **Reusable by other teams**: `--config`, a `--<setting> <value>` override for every config key, pluggable knowledge source | The "pattern for thirty more" (D38, D42) |
 
 ## In scope, planned and not built yet
 

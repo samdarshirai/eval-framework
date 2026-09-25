@@ -102,4 +102,52 @@ class EvalConfigTest {
         EvalConfig.loadFile(write("baseline: results/baseline.json\n"), null).baselineFile());
     assertNull(EvalConfig.loadFile(write("baseline: \"\"\n"), null).baselineFile());
   }
+
+  @Test
+  void anOverrideReplacesTheConfigValueAndIsTypedLikeYaml() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(
+            write("skipCalibration: false\n"),
+            java.util.Map.of(
+                "skipCalibration", "true", "passFloor", "0.8", "endpoint", "http://y/a"));
+    assertTrue(config.skipCalibration());
+    assertEquals(0.8, config.passFloor());
+    assertEquals("http://y/a", config.endpoint());
+  }
+
+  @Test
+  void aDottedOverrideSetsANestedKeyAndKeepsItsSiblings() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(
+            write("calibration:\n  labeledSample: pairs.yaml\n"),
+            java.util.Map.of("calibration.trapPairs", "traps.yaml"));
+    assertEquals(dir.resolve("traps.yaml"), config.trapPairsFile());
+    assertEquals(dir.resolve("pairs.yaml"), config.labeledSampleFile());
+  }
+
+  @Test
+  void aDottedOverrideThroughAValueThatIsNotAMapIsAnError() throws Exception {
+    var failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> EvalConfig.loadFile(write(""), java.util.Map.of("endpoint.host", "x")));
+    assertTrue(failure.getMessage().contains("endpoint.host"), failure.getMessage());
+  }
+
+  @Test
+  void anEmptyBaselineOverrideMeansNoBaseline() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(write("baseline: old.json\n"), java.util.Map.of("baseline", ""));
+    assertNull(config.baselineFile());
+  }
+
+  @Test
+  void onlyKnownTopLevelKeysAreSettings() {
+    assertTrue(EvalConfig.isSetting("baseline"));
+    assertTrue(EvalConfig.isSetting("calibration.trapPairs"));
+    assertTrue(EvalConfig.isSetting("skipCalibration"));
+    assertFalse(EvalConfig.isSetting("skip-calibration"));
+    assertFalse(EvalConfig.isSetting("endpiont"));
+    assertFalse(EvalConfig.isSetting("endpoint=http://x"));
+  }
 }

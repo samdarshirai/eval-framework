@@ -1,11 +1,15 @@
 endpoint: http://localhost:8080/answer
 passFloor: 0.90
-# Run settings that are also command-line flags. A flag on the command line beats the value in this file.
-#   endpoint: above; --endpoint <url> overrides it.
-#   skipCalibration: true    # skip the judge trap pairs and the Groundedness sample. Default false. --skip-calibration / --no-skip-calibration
-#   baseline: caseResults/baseline.json   # previous report to compare with: a case that passed there and fails now
-#                                         # fails the run, after one re-run. Off by default. --baseline <file> / --no-baseline
-#                                         # Resolves against this file's directory; the flag's path against the working directory.
+# Every setting in this file can be overridden for ONE run from the command line with --<name> <value>,
+# e.g.  java -jar eval.jar --skipCalibration true --baseline caseResults/baseline.json --passFloor 0.8
+# The value is read as YAML, so it is typed the same as here (true, 0.8, a path, [a, b]); a nested
+# setting uses dots (--calibration.trapPairs file). The value on the command line beats this file.
+# --skip-calibration is kept as a shorthand for --skipCalibration true. --config <file> picks the file itself.
+# Relative paths, from here or from the command line, resolve against this file's directory.
+#   skipCalibration: false                 # true = skip the judge trap pairs and the Groundedness sample
+#   baseline: caseResults/baseline.json    # a previous report: a case that passed there and fails now fails the
+#                                          # run, after one re-run. Not set, or no file there: logged, and the run
+#                                          # goes ahead with no regression check. Pass --baseline "" to switch it off.
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.

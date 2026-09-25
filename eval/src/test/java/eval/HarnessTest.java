@@ -641,20 +641,6 @@ class HarnessTest {
   }
 
   @Test
-  void aBadBaselineFileExitsTwoBeforeAnyAssistantCall() throws Exception {
-    cases(OOS);
-    int[] code = new int[1];
-    String output = out(code, "--baseline", "caseResults/missing.json")[0];
-    assertEquals(2, code[0], output);
-    assertTrue(output.contains("ERROR") && output.contains("missing.json"), output);
-    baseline("{not json");
-    output = out(code, "--baseline", "caseResults/baseline.json")[0];
-    assertEquals(2, code[0], output);
-    assertTrue(output.contains("ERROR") && output.contains("baseline.json"), output);
-    assertEquals(0, requests.get());
-  }
-
-  @Test
   void baselineWithoutAValueExitsTwoWithUsage() throws Exception {
     cases(OOS);
     int[] code = new int[1];
@@ -725,7 +711,7 @@ class HarnessTest {
     labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
     config(defaultConfig() + "skipCalibration: true\n");
     assertEquals(0, judgeCallsOf());
-    assertTrue(judgeCallsOf("--no-skip-calibration") > 0);
+    assertTrue(judgeCallsOf("--skipCalibration", "false") > 0);
   }
 
   @Test
@@ -734,6 +720,7 @@ class HarnessTest {
     labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
     config(defaultConfig() + "skipCalibration: false\n");
     assertTrue(judgeCallsOf() > 0);
+    assertEquals(0, judgeCallsOf("--skipCalibration", "true"));
     assertEquals(0, judgeCallsOf("--skip-calibration"));
   }
 
@@ -766,39 +753,94 @@ class HarnessTest {
   }
 
   @Test
-  void noBaselineFlagTurnsTheConfigBaselineOff() throws Exception {
+  void aBrokenBaselineFileExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    baseline("{not json");
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("baseline.json"), output);
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void aBaselineFileThatDoesNotExistIsLoggedAndTheRunGoesAheadWithoutIt() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/missing.json")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("missing.json") && output.contains("not found"), output);
+    assertTrue(output.contains("running without"), output);
+    assertFalse(output.contains("Baseline:"), output);
+    assertEquals(2, requests.get(), "ping plus one attempt");
+  }
+
+  @Test
+  void aMissingBaselineNamedInTheConfigIsLoggedAndTheRunGoesAheadWithoutIt() throws Exception {
+    cases(OOS);
+    config(defaultConfig() + "baseline: caseResults/nope.json\n");
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("nope.json") && output.contains("not found"), output);
+  }
+
+  @Test
+  void noBaselineSetIsLoggedOnceAndTheRunGoesAheadWithoutIt() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("No baseline set, running without one"), output);
+  }
+
+  @Test
+  void anEmptyBaselineValueTurnsTheConfigBaselineOff() throws Exception {
     cases(ANSWER_CASE);
     baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
     config(defaultConfig() + "baseline: caseResults/baseline.json\n");
     replyFor = REFUSAL;
     int[] code = new int[1];
-    String output = out(code, "--no-baseline")[0];
+    String output = out(code, "--baseline", "")[0];
     assertFalse(output.contains("Baseline:"), output);
+    assertTrue(output.contains("No baseline set"), output);
     assertEquals(2, requests.get());
   }
 
   @Test
-  void theLastOfBaselineAndNoBaselineWins() throws Exception {
+  void whenASettingIsGivenTwiceTheLastValueWins() throws Exception {
     cases(ANSWER_CASE);
     baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
     replyFor = REFUSAL;
     int[] code = new int[1];
-    assertFalse(
-        out(code, "--baseline", "caseResults/baseline.json", "--no-baseline")[0].contains(
-            "Baseline:"));
     assertTrue(
-        out(code, "--no-baseline", "--baseline", "caseResults/baseline.json")[0].contains(
+        out(code, "--baseline", "", "--baseline", "caseResults/baseline.json")[0].contains(
+            "Baseline:"));
+    assertFalse(
+        out(code, "--baseline", "caseResults/baseline.json", "--baseline", "")[0].contains(
             "Baseline:"));
   }
 
   @Test
-  void aMissingBaselineNamedInTheConfigExitsTwoBeforeAnyAssistantCall() throws Exception {
+  void anySettingCanBeOverriddenIncludingNestedOnes() throws Exception {
     cases(OOS);
-    config(defaultConfig() + "baseline: caseResults/nope.json\n");
     int[] code = new int[1];
-    String output = out(code)[0];
+    String output = out(code, "--calibration.trapPairs", "calibration/gone.yaml")[0];
     assertEquals(2, code[0], output);
-    assertTrue(output.contains("nope.json"), output);
+    assertTrue(output.contains("gone.yaml") && output.contains("--skip-calibration"), output);
+    assertEquals(0, requests.get());
+    out(code, "--passFloor", "1.0");
+    assertEquals(0, code[0], "an all-passing run meets a floor of 1.0");
+  }
+
+  @Test
+  void anUnknownSettingExitsTwoNamingItBeforeTouchingTheNetwork() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--skipCalibraton", "true")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("unknown setting") && output.contains("skipCalibraton"), output);
+    assertTrue(output.contains("Usage"), output);
     assertEquals(0, requests.get());
   }
 }

@@ -34,60 +34,49 @@ public final class Harness {
   /** Wiring only: parse args, load config and cases, preflight, run each case, report. */
   private static int runInner(
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
-    String endpointArg = null;
     String configArg = null;
-    String baselineArg = null;
-    Boolean skipCalibrationArg = null; // null: use the config value
-    boolean noBaseline = false;
+    Map<String, String> overrides = new LinkedHashMap<>();
     for (int i = 0; i < args.length; i++) {
-      if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
-        endpointArg = args[++i];
-      } else if (args[i].equals("--config")
-          && i + 1 < args.length
-          && !args[i + 1].startsWith("--")) {
-        configArg = args[++i];
-      } else if (args[i].equals("--baseline")
-          && i + 1 < args.length
-          && !args[i + 1].startsWith("--")) {
-        baselineArg = args[++i];
-        noBaseline = false;
-      } else if (args[i].equals("--no-baseline")) {
-        baselineArg = null;
-        noBaseline = true;
-      } else if (args[i].equals("--no-skip-calibration")) {
-        skipCalibrationArg = false;
-      } else if (args[i].equals("--skip-calibration")) {
-        skipCalibrationArg = true;
-      } else {
+      String arg = args[i];
+      if (arg.equals("--skip-calibration")) { // shorthand for --skipCalibration true
+        overrides.put("skipCalibration", "true");
+        continue;
+      }
+      String key = arg.startsWith("--") ? arg.substring(2) : "";
+      if (!key.equals("config") && !EvalConfig.isSetting(key)) {
         out.println(
             "ERROR: "
-                + (args[i].equals("--endpoint")
-                        || args[i].equals("--config")
-                        || args[i].equals("--baseline")
-                    ? args[i] + " needs a value"
-                    : "unknown argument '" + args[i] + "'"));
-        out.println(
-            "Usage: Harness [--config <file>] [--endpoint <url>] [--baseline <file> |"
-                + " --no-baseline] [--skip-calibration | --no-skip-calibration]");
+                + (arg.startsWith("--")
+                    ? "unknown setting '" + arg + "'"
+                    : "unknown argument '" + arg + "'"));
+        printUsage(out);
         return 2;
+      }
+      if (i + 1 >= args.length || args[i + 1].startsWith("--")) {
+        out.println("ERROR: " + arg + " needs a value");
+        printUsage(out);
+        return 2;
+      }
+      String value = args[++i];
+      if (key.equals("config")) {
+        configArg = value;
+      } else {
+        overrides.put(key, value);
       }
     }
     EvalConfig config;
     if (configArg == null) {
-      config = EvalConfig.load(root, endpointArg);
+      config = EvalConfig.load(root, overrides);
     } else {
       Path configFile = root.resolve(configArg);
       if (!Files.isRegularFile(configFile)) {
         out.println("ERROR: config file not found: " + configArg);
         return 2;
       }
-      config = EvalConfig.loadFile(configFile, endpointArg);
+      config = EvalConfig.loadFile(configFile, overrides);
     }
-    boolean skipCalibration =
-        skipCalibrationArg != null ? skipCalibrationArg : config.skipCalibration();
-    Path baselineFile =
-        noBaseline ? null : baselineArg != null ? root.resolve(baselineArg) : config.baselineFile();
-    Baseline baseline = baselineFile == null ? null : Baseline.load(baselineFile);
+    boolean skipCalibration = config.skipCalibration();
+    Baseline baseline = loadBaseline(config, out);
     Path trapFile = config.trapPairsFile(); // null: use the trap pairs bundled in the jar
     if (!skipCalibration && trapFile != null && !Files.isReadable(trapFile)) {
       out.println("ERROR: cannot read the judge trap pairs at " + trapFile);
@@ -157,6 +146,35 @@ public final class Harness {
         "Report: "
             + (reportFile.startsWith(rootDir) ? rootDir.relativize(reportFile) : reportFile));
     return report.exitCode();
+  }
+
+  private static void printUsage(PrintStream out) {
+    out.println("Usage: Harness [--config <file>] [--<setting> <value>]... [--skip-calibration]");
+    out.println("Settings (same names as in the config file; a value here beats the file):");
+    out.println(
+        "  endpoint passFloor judgeModel categories cases outputDir skipCalibration baseline");
+    out.println("  calibration.trapPairs calibration.labeledSample knowledgeBase.type ...");
+  }
+
+  /**
+   * The baseline named by the {@code baseline} setting. No path, or a path with no file behind it,
+   * is logged and the run goes ahead without a baseline; a file that exists but is unusable is an
+   * error (it throws, and the run exits 2).
+   */
+  private static Baseline loadBaseline(EvalConfig config, PrintStream out) throws IOException {
+    Path baselineFile = config.baselineFile();
+    if (baselineFile == null) {
+      out.println("No baseline set, running without one (no regression check).");
+      return null;
+    }
+    if (!Files.isRegularFile(baselineFile)) {
+      out.println(
+          "Baseline file "
+              + baselineFile
+              + " not found, running without one (no regression check).");
+      return null;
+    }
+    return Baseline.load(baselineFile);
   }
 
   private static List<EvalCase> getEvalCases(KnowledgeBase kb, EvalConfig config)
