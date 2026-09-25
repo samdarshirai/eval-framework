@@ -208,7 +208,7 @@ final class EvalConfig {
     return list("checks");
   }
 
-  /** The {@code appType:} (D23), or null. It sets the least checks; see Checks. */
+  /** The {@code appType:} (D54), or null. It sets the least checks; see Checks. */
   String appType() {
     return text("appType", null);
   }

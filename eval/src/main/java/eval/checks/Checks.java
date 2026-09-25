@@ -9,11 +9,11 @@ import java.util.Set;
 
 /** The single registration list. Add a check: one class plus one line here. Order is run order. */
 public final class Checks {
-  /** A check that reads what another check stored in CaseState: it cannot run without it (D23). */
+  /** A check that reads what another check stored in CaseState: it cannot run without it (D54). */
   private static final Map<String, String> REQUIRES = Map.of("Source", "Coverage");
 
   /**
-   * App types (D23): the least checks each type must run. An app adds to its type with {@code
+   * App types (D54): the least checks each type must run. An app adds to its type with {@code
    * addChecks} and cannot remove from it; lowering a floor is a change here, i.e. a platform PR.
    */
   private static final Map<String, List<String>> APP_TYPES =
@@ -100,7 +100,7 @@ public final class Checks {
               + String.join(", ", known)
               + ")");
     }
-    // A check that needs another pulls it in: dependent checks run all or none (D23).
+    // A check that needs another pulls it in: dependent checks run all or none (D54).
     REQUIRES.forEach(
         (check, needed) -> {
           if (wanted.contains(check)) {

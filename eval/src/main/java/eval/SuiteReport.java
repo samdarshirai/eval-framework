@@ -51,8 +51,8 @@ public record SuiteReport(
   }
 
   /**
-   * The run compared with a baseline (unit 18): every case that passed there and failed on the
-   * first attempt was re-run once (unit 19). {@code passedOnRerun} false means it failed both
+   * The run compared with a baseline: every case that passed there and failed on the
+   * first attempt was re-run once. {@code passedOnRerun} false means it failed both
    * attempts, which is a regression. {@code improved} lists the cases that failed in the baseline
    * and pass now: worth a new baseline, never a reason to change the exit code.
    */

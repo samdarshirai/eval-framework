@@ -5,7 +5,7 @@ import java.util.*;
 import kb.Chunk;
 
 /**
- * Does each claim's cited chunk support it? (D10) Every claim goes to the judge, one claim and one
+ * Does each claim's cited chunk support it? (D53) Every claim goes to the judge, one claim and one
  * cited chunk per call, and passes when any one cited chunk supports it. There is no shortcut for
  * claims that cite a gold chunk: Coverage tolerates extra detail, so only this check can catch an
  * invented addition to a correct fact. A claim with no existing cited chunk is skipped: Citation

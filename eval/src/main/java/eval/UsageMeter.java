@@ -24,8 +24,7 @@ final class UsageMeter {
       new LinkedHashMap<>(); // {calls, prompt, completion}
   private int assistantCalls;
   private long assistantMillis;
-  // ponytail: one current check, right while cases run one at a time; parallel cases need a
-  // ThreadLocal here.
+  // Shared state: the current check is correct only while cases run one at a time.
   private String currentCheck = OUTSIDE_CHECKS;
 
   /** Names the check whose judge calls are counted next; null means no check is running. */
