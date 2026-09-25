@@ -35,6 +35,7 @@ class HarnessTest {
         });
     server.start();
     trapFile("- {name: same, fact: F, claim: F, agree: true}\n");
+    labeledSampleFile("[]\n");
     config("endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n");
   }
 
@@ -56,7 +57,14 @@ class HarnessTest {
         root.resolve("eval/config.yaml"),
         body
             + "judgeModel: test/judge\n"
-            + "calibration:\n  trapPairs: calibration/trap-pairs.yaml\n");
+            + "calibration:\n"
+            + "  trapPairs: calibration/trap-pairs.yaml\n"
+            + "  labeledSample: calibration/labeled-sample.yaml\n");
+  }
+
+  private void labeledSampleFile(String yaml) throws IOException {
+    Files.createDirectories(root.resolve("calibration"));
+    Files.writeString(root.resolve("calibration/labeled-sample.yaml"), yaml);
   }
 
   private void trapFile(String yaml) throws IOException {
@@ -429,7 +437,9 @@ class HarnessTest {
                 });
     assertEquals(1, code, buf.toString());
     assertTrue(buf.toString().contains("Coverage: not covered"), buf.toString());
-    assertEquals(1, judgeCalls[0]);
+    assertEquals(
+        2,
+        judgeCalls[0]); // Coverage's confirm call plus Groundedness's call on the uncovered claim
   }
 
   @Test
@@ -483,6 +493,61 @@ class HarnessTest {
     assertEquals(2, code[0], output);
     assertTrue(output.contains("ERROR") && output.contains("trap-pairs.yaml"), output);
     assertTrue(output.contains("--skip-calibration"), output);
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void anUnsupportedPairJudgedSupportedFailsTheRunAndIsInTheReport() throws Exception {
+    cases(OOS);
+    labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
+    int[] code = new int[1];
+    String output = out(code)[0]; // the fake judge says YES to everything
+    assertEquals(1, code[0], output);
+    assertTrue(output.contains("MISS u1 (labeled UNSUPPORTED, judge said SUPPORTED)"), output);
+    assertTrue(
+        output.contains("groundedness calibration: 1 of 1 unsupported pair(s) judged supported"),
+        output);
+    assertTrue(output.contains("PASS") && output.contains("oos-1"), output);
+    var reportMatcher = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(output);
+    assertTrue(reportMatcher.find(), output);
+    var json =
+        new com.fasterxml.jackson.databind.ObjectMapper()
+            .readTree(root.resolve(reportMatcher.group(1)).toFile());
+    assertEquals(1, json.get("calibration").get("groundedness").get("falseSupported").asInt());
+    assertTrue(json.get("calibration").get("groundedness").has("agreed"));
+    assertEquals(
+        "u1", json.get("calibration").get("groundedness").get("pairs").get(0).get("name").asText());
+  }
+
+  @Test
+  void skipCalibrationMakesNoSampleJudgeCalls() throws Exception {
+    cases(OOS);
+    labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
+    var judgeCalls = new int[1];
+    var buf = new ByteArrayOutputStream();
+    int code =
+        Harness.run(
+            new String[] {"--skip-calibration"},
+            root,
+            new PrintStream(buf),
+            model ->
+                (system, user) -> {
+                  judgeCalls[0]++;
+                  return "YES";
+                });
+    assertEquals(0, code, buf.toString());
+    assertEquals(0, judgeCalls[0]);
+  }
+
+  @Test
+  void missingSampleFileWithoutTheFlagExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    Files.delete(root.resolve("calibration/labeled-sample.yaml"));
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(
+        output.contains("labeled-sample.yaml") && output.contains("--skip-calibration"), output);
     assertEquals(0, requests.get());
   }
 }

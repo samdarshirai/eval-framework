@@ -85,6 +85,15 @@ final class EvalConfig {
 
   /** The {@code calibration.trapPairs} file, or null when the bundled trap pairs should be used. */
   Path trapPairsFile() {
+    return calibrationFile("trapPairs");
+  }
+
+  /** The {@code calibration.labeledSample} file, or null when the bundled sample should be used. */
+  Path labeledSampleFile() {
+    return calibrationFile("labeledSample");
+  }
+
+  private Path calibrationFile(String key) {
     Object block = raw.get("calibration");
     if (block == null) {
       return null;
@@ -92,7 +101,7 @@ final class EvalConfig {
     if (!(block instanceof Map<?, ?> calibration)) {
       throw new IllegalArgumentException(fileName + ": 'calibration' must be a map");
     }
-    Object value = calibration.get("trapPairs");
+    Object value = calibration.get(key);
     return value == null || value.toString().isBlank() ? null : baseDir.resolve(value.toString());
   }
 

@@ -66,6 +66,38 @@ class OpenRouterLlmTest {
   }
 
   @Test
+  void retryAfterHeaderWinsOverResetEpoch() {
+    assertEquals(3000, OpenRouterLlm.retryDelayMillis("3", "9999999", 1000));
+  }
+
+  @Test
+  void resetEpochIsUsedWhenNoRetryAfter() {
+    assertEquals(20000, OpenRouterLlm.retryDelayMillis(null, "120000", 100000));
+  }
+
+  @Test
+  void missingBothHeadersWaitsFifteenSeconds() {
+    assertEquals(15000, OpenRouterLlm.retryDelayMillis(null, null, 100000));
+  }
+
+  @Test
+  void delayIsClampedToOneSecondMinimum() {
+    assertEquals(1000, OpenRouterLlm.retryDelayMillis("0", null, 100000));
+    assertEquals(1000, OpenRouterLlm.retryDelayMillis(null, "50000", 100000));
+  }
+
+  @Test
+  void delayIsClampedToSixtyFiveSecondMaximum() {
+    assertEquals(65000, OpenRouterLlm.retryDelayMillis("9999", null, 100000));
+  }
+
+  @Test
+  void nonNumericValuesAreTreatedAsAbsent() {
+    assertEquals(20000, OpenRouterLlm.retryDelayMillis("soon", "120000", 100000));
+    assertEquals(15000, OpenRouterLlm.retryDelayMillis("soon", "later", 100000));
+  }
+
+  @Test
   void noReasoningFieldWhenEffortIsNull() throws Exception {
     var requestJson =
         new com.fasterxml.jackson.databind.ObjectMapper()
