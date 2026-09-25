@@ -15,8 +15,8 @@ final class CaseHash {
   private CaseHash() {}
 
   /**
-   * 12 hex characters of SHA-256 over the id and text of every gold chunk of the case, sorted by
-   * id and without repeats, or null when the case has no gold chunks (a refuse case).
+   * 12 hex characters of SHA-256 over the id and text of every gold chunk of the case, sorted by id
+   * and without repeats, or null when the case has no gold chunks (a refuse case).
    */
   static String of(EvalCase evalCase, KnowledgeBase knowledgeBase) {
     TreeSet<String> goldChunkIds = new TreeSet<>();

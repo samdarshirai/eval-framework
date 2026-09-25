@@ -7,8 +7,7 @@ import kb.Chunk;
 import org.junit.jupiter.api.Test;
 
 class StaleCasesTest {
-  private final KnowledgeBase knowledge =
-      new KnowledgeBase(List.of(new Chunk("d#a", "d", "body")));
+  private final KnowledgeBase knowledge = new KnowledgeBase(List.of(new Chunk("d#a", "d", "body")));
 
   private EvalCase caseWith(String id, String confirmedHash, boolean withFact) {
     List<ExpectedFact> facts =

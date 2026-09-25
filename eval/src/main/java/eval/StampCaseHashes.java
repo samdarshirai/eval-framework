@@ -66,11 +66,7 @@ public final class StampCaseHashes {
       int start = caseStarts.get(caseIndex);
       int end = caseIndex + 1 < caseStarts.size() ? caseStarts.get(caseIndex + 1) : lines.size();
       String caseId =
-          lines
-              .get(start)
-              .substring(CASE_START.length())
-              .trim()
-              .replaceAll("^[\"']|[\"']$", "");
+          lines.get(start).substring(CASE_START.length()).trim().replaceAll("^[\"']|[\"']$", "");
       String hash = hashByCaseId.get(caseId);
       if (hash == null) {
         continue;

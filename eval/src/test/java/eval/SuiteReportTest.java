@@ -201,15 +201,7 @@ class SuiteReportTest {
 
   private static CaseResult result(String id, String category, String subtype, boolean passed) {
     return new CaseResult(
-        id,
-        "q",
-        category,
-        subtype,
-        new Expected(false, List.of()),
-        passed,
-        null,
-        null,
-        List.of());
+        id, "q", category, subtype, new Expected(false, List.of()), passed, null, null, List.of());
   }
 
   private static SuiteReport reportOf(CaseResult... results) {
