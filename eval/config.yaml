@@ -26,6 +26,19 @@ passFloor: 0.90
 # Run only these cases, comma-separated ids: --case ss-zonejs,oos-pricing (D52). Not set: every case.
 # An unknown id exits 2. The pass rate, floor and out-of-scope rule then apply to the selected cases only.
 # case: ss-zonejs,oos-pricing
+# Which checks run (D23). Not set: all six. Two ways to set it:
+#   appType: cited | uncited | smoke   the least checks for that kind of app; the app can add, not remove
+#     cited   = Refusal, Citation integrity, Coverage, Groundedness, Source
+#     uncited = Refusal, Coverage                    (app cannot cite)
+#     smoke   = Refusal, Citation integrity          (no judge calls)
+#   addChecks: [Relevance]             extra checks on top of the app type (needs appType)
+#   checks: [Refusal, Coverage]        or an explicit list, instead of appType (not both). --checks "a,b" too.
+# Names: Refusal, Citation integrity, Coverage, Groundedness, Source, Relevance (case does not matter).
+# A check that needs another pulls it in (Source needs Coverage). A list needs a gating check, and Refusal
+# while the cases include out-of-scope ones. Anything else is an error, exit code 2. The calibration for a
+# check that is off is skipped.
+# appType: cited
+# addChecks: [Relevance]
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
 # Optional label for the assistant build under test (model, prompt version, git tag). Recorded in the report's

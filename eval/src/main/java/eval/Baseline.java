@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A previous run's report, read as the known-good reference (CONTEXT.md: Baseline). Only which
@@ -19,10 +17,13 @@ import java.util.Map;
 final class Baseline {
   private final String name;
   private final Map<String, Boolean> passedInBaselineByCaseId;
+  private final List<String> checkNames;
 
-  private Baseline(String name, Map<String, Boolean> passedInBaselineByCaseId) {
+  private Baseline(
+      String name, Map<String, Boolean> passedInBaselineByCaseId, List<String> checkNames) {
     this.name = name;
     this.passedInBaselineByCaseId = passedInBaselineByCaseId;
+    this.checkNames = checkNames;
   }
 
   /**
@@ -45,8 +46,11 @@ final class Baseline {
       throw new IllegalArgumentException("baseline file not found: " + file);
     }
     JsonNode cases;
+    List<String> checkNames = new ArrayList<>();
     try {
-      cases = new ObjectMapper().readTree(file.toFile()).path("cases");
+      JsonNode report = new ObjectMapper().readTree(file.toFile());
+      cases = report.path("cases");
+      report.path("checks").forEach(check -> checkNames.add(check.path("name").asText()));
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException(
           "baseline " + name + " is not valid JSON: " + e.getOriginalMessage());
@@ -76,7 +80,24 @@ final class Baseline {
             "baseline " + name + " has a duplicate case id '" + caseId + "'");
       }
     }
-    return new Baseline(name, passedInBaselineByCaseId);
+    return new Baseline(name, passedInBaselineByCaseId, checkNames);
+  }
+
+  /**
+   * A warning when the baseline ran a different set of checks than this run (fewer checks pass more
+   * easily), or null. A baseline that lists no checks is not compared.
+   */
+  String checkSetWarning(List<String> current) {
+    if (checkNames.isEmpty() || Set.copyOf(checkNames).equals(Set.copyOf(current))) {
+      return null;
+    }
+    return "baseline "
+        + name
+        + " ran checks "
+        + checkNames
+        + ", this run "
+        + current
+        + "; results are not like-for-like";
   }
 
   /** A baseline that shares no case with the run could never flag a regression: an error. */

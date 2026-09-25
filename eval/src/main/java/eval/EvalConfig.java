@@ -57,6 +57,9 @@ final class EvalConfig {
           "skipCalibration",
           "debug",
           "case",
+          "checks",
+          "appType",
+          "addChecks",
           "baseline",
           "calibration",
           "knowledgeBase");
@@ -193,9 +196,32 @@ final class EvalConfig {
    * The {@code case:} ids to run, comma-separated ({@code --case a,b}); empty means every case.
    */
   List<String> caseIds() {
-    Object value = raw.get("case");
+    List<String> ids = list("case");
+    return ids == null ? List.of() : ids;
+  }
+
+  /**
+   * The {@code checks:} names to run (a list or comma-separated, {@code --checks a,b}); null when
+   * not set, meaning every registered check. Set but empty is an error, raised by Checks.
+   */
+  List<String> checks() {
+    return list("checks");
+  }
+
+  /** The {@code appType:} (D23), or null. It sets the least checks; see Checks. */
+  String appType() {
+    return text("appType", null);
+  }
+
+  /** The {@code addChecks:} on top of the app type's checks, or null when not set. */
+  List<String> addChecks() {
+    return list("addChecks");
+  }
+
+  private List<String> list(String key) {
+    Object value = raw.get(key);
     if (value == null) {
-      return List.of();
+      return null;
     }
     List<?> parts = value instanceof List<?> list ? list : List.of(value.toString().split(","));
     return parts.stream().map(part -> part.toString().trim()).filter(id -> !id.isEmpty()).toList();

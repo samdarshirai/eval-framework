@@ -37,16 +37,24 @@ final class CalibrationRun {
     requireReadable(config.labeledSampleFile(), "the labeled Groundedness sample", "it");
   }
 
-  static SuiteReport.Calibration run(EvalConfig config, Judge judge) throws IOException {
+  /** Trap pairs test Coverage's judge, the sample Groundedness's: each runs only if its check is on. */
+  static SuiteReport.Calibration run(EvalConfig config, Judge judge, List<String> enabled)
+      throws IOException {
     if (config.skipCalibration()) {
       return SuiteReport.Calibration.SKIPPED;
     }
     Path trapFile = config.trapPairsFile();
     List<TrapPairs.TrapResult> trapResults =
-        trapFile == null ? TrapPairs.runBundled(judge) : TrapPairs.run(trapFile, judge);
+        !enabled.contains("Coverage")
+            ? List.of()
+            : trapFile == null ? TrapPairs.runBundled(judge) : TrapPairs.run(trapFile, judge);
     Path sampleFile = config.labeledSampleFile();
     LabeledSample.Result groundedness =
-        sampleFile == null ? LabeledSample.runBundled(judge) : LabeledSample.run(sampleFile, judge);
+        !enabled.contains("Groundedness")
+            ? LabeledSample.Result.NONE
+            : sampleFile == null
+                ? LabeledSample.runBundled(judge)
+                : LabeledSample.run(sampleFile, judge);
     return new SuiteReport.Calibration(true, trapResults, groundedness);
   }
 

@@ -89,4 +89,11 @@ class CliArgsTest {
             .getMessage()
             .contains("unknown argument 'stray'"));
   }
+
+  @Test
+  void checksBecomesAnOverride() {
+    assertEquals(
+        Map.of("checks", "Refusal,Coverage"),
+        CliArgs.parse(new String[] {"--checks", "Refusal,Coverage"}).overrides());
+  }
 }

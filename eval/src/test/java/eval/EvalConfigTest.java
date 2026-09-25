@@ -212,4 +212,15 @@ class EvalConfigTest {
       assertTrue(error.getMessage().contains("judgePricing"), error.getMessage());
     }
   }
+
+  @Test
+  void checksIsNullWhenAbsentAndReadsAListOrACommaString() throws Exception {
+    assertNull(EvalConfig.loadFile(write(""), null).checks());
+    assertEquals(
+        List.of("Refusal", "Citation integrity"),
+        EvalConfig.loadFile(write("checks: [Refusal, Citation integrity]\n"), null).checks());
+    assertEquals(
+        List.of("Refusal", "Coverage"),
+        EvalConfig.loadFile(write(""), java.util.Map.of("checks", "Refusal, Coverage")).checks());
+  }
 }
