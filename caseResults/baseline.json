@@ -1,5 +1,5 @@
 {
-  "runId" : "20260925-190721",
+  "runId" : "20260925-210303",
   "endpoint" : "http://localhost:8080/answer",
   "passFloor" : 0.9,
   "checks" : [ {
@@ -22,15 +22,183 @@
     "gating" : false
   } ],
   "calibration" : {
-    "ran" : false,
-    "pairs" : [ ],
+    "ran" : true,
+    "pairs" : [ {
+      "name" : "all-except-14",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "safari-13-not-14",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "safari-14-not-supported",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "paraphrase-onward",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "paraphrase-from",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "covering-negated-and-different-value",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "covering-picks-only-the-real-one",
+      "passed" : true,
+      "detail" : null
+    } ],
     "groundedness" : {
-      "pairs" : [ ],
-      "agreed" : 0,
-      "unsupportedPairs" : 0,
-      "falseUnsupported" : 0,
+      "pairs" : [ {
+        "name" : "wrong-safari-version",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "wrong-zonejs-version",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "swapped-chrome-version",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "custom-ab-split",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "variant-set-after-cmp",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "tool-after-cmp",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "default-for-all-customers",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "added-exception",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "extra-analytics-js",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "wrong-consent-signal",
+        "kind" : "unsupported",
+        "expectedSupported" : false,
+        "actualSupported" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-chrome-version",
+        "kind" : "supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-even-split",
+        "kind" : "supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-ruleset-delete",
+        "kind" : "supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-variant-before-cmp",
+        "kind" : "supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-default-for-new-customers",
+        "kind" : "supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-oldest-safari",
+        "kind" : "hard-supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-split-across-sentences",
+        "kind" : "hard-supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-half-of-visitors",
+        "kind" : "hard-supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-gdpr-and-tcf",
+        "kind" : "hard-supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-update-analytics-js",
+        "kind" : "hard-supported",
+        "expectedSupported" : true,
+        "actualSupported" : true,
+        "detail" : null,
+        "agreed" : true
+      } ],
+      "agreed" : 20,
       "agreement" : 1.0,
       "falseSupported" : 0,
+      "unsupportedPairs" : 10,
+      "falseUnsupported" : 0,
       "errors" : 0
     },
     "misses" : 0
@@ -72,7 +240,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"bundle.js supports Edge starting from version 79\""
+      "reason" : "grounded (judge): \"bundle.js supports Edge starting from version 79\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -167,7 +335,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"To disable legitimate interest for your TCF CMP, you need to restrict all purposes to consent in the Admin Interface.\""
+      "reason" : "grounded (judge): \"To disable legitimate interest for your TCF CMP, you need to restrict all purposes to consent in the Admin Interface.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -217,7 +385,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.\"; grounded (judge): \"The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.\""
+      "reason" : "grounded (judge): \"The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.\"; grounded (judge): \"The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -308,7 +476,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"When using Google Consent Mode, the respective tags may not be adjusted as described in the Google Tag Manager blocking guide, because Google will use the consent signal to adjust the behavior of their tags based on the user's consent in the Usercentrics CMP instead of having them blocked when no consent is given.\""
+      "reason" : "grounded (judge): \"When using Google Consent Mode, the respective tags may not be adjusted as described in the Google Tag Manager blocking guide, because Google will use the consent signal to adjust the behavior of their tags based on the user's consent in the Usercentrics CMP instead of having them blocked when no consent is given.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -355,7 +523,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"Within your configurations, no regional settings must be in place when using Geolocation Rules. Regional settings in the Admin Interface / Configuration / Legal Specifications should be set to 'Display CMP to all users (default)' and for CCPA configurations to 'Display CCPA CMP to all users'.\""
+      "reason" : "grounded (judge): \"Within your configurations, no regional settings must be in place when using Geolocation Rules. Regional settings in the Admin Interface / Configuration / Legal Specifications should be set to 'Display CMP to all users (default)' and for CCPA configurations to 'Display CCPA CMP to all users'.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -408,7 +576,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"If you do not migrate from TCF 2.0 by November 20, 2023, any TC strings obtained under TCF v2.0 after that date will be considered invalid.\"; grounded (judge): \"Invalid TC strings could adversely affect your agreements with advertisers, potentially resulting in a decrease in your ad revenues.\"; grounded (judge): \"CMPs and publishers were given until November 20, 2023 to implement the new TCF 2.2 policies and specifications.\""
+      "reason" : "grounded (judge): \"If you do not migrate from TCF 2.0 by November 20, 2023, any TC strings obtained under TCF v2.0 after that date will be considered invalid.\"; grounded (judge): \"Invalid TC strings could adversely affect your agreements with advertisers, potentially resulting in a decrease in your ad revenues.\"; grounded (judge): \"CMPs and publishers were given until November 20, 2023 to implement the new TCF 2.2 policies and specifications.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -455,7 +623,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"For TCF 2.2 CMP, only specific TCF 2.2 properties can be used for A/B testing, not all general properties.\""
+      "reason" : "grounded (judge): \"For TCF 2.2 CMP, only specific TCF 2.2 properties can be used for A/B testing, not all general properties.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -509,7 +677,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected (not applicable to In-App SDK).\"; grounded (judge): \"Google Consent Mode is supported by the following Google tag libraries: Conversion Linker, Display & Video 360, Doubleclick Ad, DoubleClick Floodlight, Google Ads, Google Ads Conversion Tracking, Google Ads Remarketing, Google Analytics, Google Analytics 4, Google Campaign Manager, Google Campaign Manager 360, and Search Ads 360.\""
+      "reason" : "grounded (judge): \"Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected (not applicable to In-App SDK).\"; grounded (judge): \"Google Consent Mode is supported by the following Google tag libraries: Conversion Linker, Display & Video 360, Doubleclick Ad, DoubleClick Floodlight, Google Ads, Google Ads Conversion Tracking, Google Ads Remarketing, Google Analytics, Google Analytics 4, Google Campaign Manager, Google Campaign Manager 360, and Search Ads 360.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -569,7 +737,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (judge): \"Consent Mode is meant to be used by advertisers not using a TCF CMP implementation\"; grounded (gold chunk): \"It is recommended to implement the Consent Mode default state into your website even if you are using a TCF implementation\"; grounded (judge): \"The recommendation to implement Consent Mode default state with TCF is due to the fact that necessary consent signals for ad_user_data and ad_personalization in some Google Tags cannot be guaranteed through the TCF API due to varying network loading times\"; grounded (judge): \"Google is registered as a vendor with ID 755 on IAB Global Vendor List, and it is mandatory to select it from the Global Vendor List to ensure accurate signaling of Consent Mode\""
+      "reason" : "grounded (judge): \"Consent Mode is meant to be used by advertisers not using a TCF CMP implementation\"; grounded (judge): \"It is recommended to implement the Consent Mode default state into your website even if you are using a TCF implementation\"; grounded (judge): \"The recommendation to implement Consent Mode default state with TCF is due to the fact that necessary consent signals for ad_user_data and ad_personalization in some Google Tags cannot be guaranteed through the TCF API due to varying network loading times\"; grounded (judge): \"Google is registered as a vendor with ID 755 on IAB Global Vendor List, and it is mandatory to select it from the Global Vendor List to ensure accurate signaling of Consent Mode\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1008,7 +1176,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"bundle.js supports Safari version 14 and above\""
+      "reason" : "grounded (judge): \"bundle.js supports Safari version 14 and above\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1055,7 +1223,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4\""
+      "reason" : "grounded (judge): \"The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1102,7 +1270,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).\""
+      "reason" : "grounded (judge): \"When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1156,15 +1324,15 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.\"; grounded (gold chunk): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
+      "reason" : "grounded (judge): \"The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.\"; grounded (judge): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
     }, {
       "check" : "Source",
       "passed" : true,
       "reason" : null
     }, {
       "check" : "Relevance",
-      "passed" : false,
-      "reason" : "off-topic claim(s): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
+      "passed" : true,
+      "reason" : null
     } ]
   }, {
     "id" : "ss-loader-chrome",
@@ -1203,7 +1371,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"Loader.js supports Chrome version 43 and above on desktop\""
+      "reason" : "grounded (judge): \"Loader.js supports Chrome version 43 and above on desktop\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1256,7 +1424,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"A global configuration is mandatory when creating a ruleset because it acts as a fallback rule when no other rule is specified for that region.\"; grounded (judge): \"The global configuration allows you to decide whether to display the banner or not for regions that don't have specific regional rules defined.\"; grounded (judge): \"A global configuration needs to be defined in order to collect consents.\""
+      "reason" : "grounded (judge): \"A global configuration is mandatory when creating a ruleset because it acts as a fallback rule when no other rule is specified for that region.\"; grounded (judge): \"The global configuration allows you to decide whether to display the banner or not for regions that don't have specific regional rules defined.\"; grounded (judge): \"A global configuration needs to be defined in order to collect consents.\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1303,7 +1471,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"The Privacy Button can be rendered on Bottom Left or Bottom Right\""
+      "reason" : "grounded (judge): \"The Privacy Button can be rendered on Bottom Left or Bottom Right\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1350,7 +1518,7 @@
     }, {
       "check" : "Groundedness",
       "passed" : true,
-      "reason" : "grounded (gold chunk): \"Google Consent Mode v2 introduced two additional bits: ad_user_data and ad_personalization\""
+      "reason" : "grounded (judge): \"Google Consent Mode v2 introduced two additional bits: ad_user_data and ad_personalization\""
     }, {
       "check" : "Source",
       "passed" : true,
@@ -1363,44 +1531,45 @@
   } ],
   "baseline" : null,
   "usage" : {
-    "wallClockMillis" : 227071,
+    "wallClockMillis" : 500895,
     "assistantCalls" : 28,
-    "assistantMillis" : 54688,
+    "assistantMillis" : 53060,
     "byCheck" : [ {
+      "check" : "calibration",
+      "calls" : 27,
+      "promptTokens" : 7746,
+      "completionTokens" : 109
+    }, {
       "check" : "Coverage",
       "calls" : 20,
       "promptTokens" : 4294,
       "completionTokens" : 84
     }, {
+      "check" : "Groundedness",
+      "calls" : 27,
+      "promptTokens" : 23431,
+      "completionTokens" : 108
+    }, {
       "check" : "Relevance",
       "calls" : 27,
       "promptTokens" : 5524,
-      "completionTokens" : 200
-    }, {
-      "check" : "Groundedness",
-      "calls" : 9,
-      "promptTokens" : 10321,
-      "completionTokens" : 36
+      "completionTokens" : 237
     } ],
-    "judgeCostUsd" : 0.108695,
-    "judgeCalls" : 56,
-    "judgePromptTokens" : 20139,
-    "judgeCompletionTokens" : 320
+    "judgeCostUsd" : 0.218425,
+    "judgeCalls" : 101,
+    "judgePromptTokens" : 40995,
+    "judgeCompletionTokens" : 538
   },
-  "outOfScopeBySubtype" : {
-    "unrelated" : {
-      "passed" : 2,
-      "total" : 2
-    },
-    "plausible-nonexistent" : {
-      "passed" : 3,
-      "total" : 3
-    }
+  "provenance" : {
+    "judgeModel" : "anthropic/claude-opus-4.8",
+    "judgePromptHash" : "4be411e69ccf",
+    "gitSha" : "cd9a314-dirty",
+    "assistantVersion" : null
   },
-  "passRate" : 0.7142857142857143,
   "exitReasons" : [ "pass rate 71.4% is below floor 90.0%" ],
+  "passRate" : 0.7142857142857143,
   "advisoryFlags" : {
-    "Relevance" : 2
+    "Relevance" : 1
   },
   "byCategory" : {
     "edge-case" : {
@@ -1422,6 +1591,16 @@
     "single-source" : {
       "passed" : 8,
       "total" : 8
+    }
+  },
+  "outOfScopeBySubtype" : {
+    "unrelated" : {
+      "passed" : 2,
+      "total" : 2
+    },
+    "plausible-nonexistent" : {
+      "passed" : 3,
+      "total" : 3
     }
   }
 }
