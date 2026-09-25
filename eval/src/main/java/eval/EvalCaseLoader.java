@@ -108,7 +108,7 @@ public final class EvalCaseLoader {
         // Unquoted YAML dates (added: 2026-09-24) arrive as java.util.Date; normalise them to ISO text.
         Object addedRaw = caseMap.get("added");
         String added = addedRaw instanceof Date addedDate ? addedDate.toInstant().atZone(ZoneOffset.UTC).toLocalDate().toString() : str(caseMap, "added", file, id, false);
-        return new EvalCase(id, str(caseMap, "question", file, id, true), category, str(caseMap, "subtype", file, id, false), expectedBehavior, facts, str(caseMap, "source", file, id, false), str(caseMap, "owner", file, id, false), added);
+        return new EvalCase(id, str(caseMap, "question", file, id, true), category, str(caseMap, "subtype", file, id, false), expectedBehavior, facts, str(caseMap, "source", file, id, false), str(caseMap, "owner", file, id, false), added, str(caseMap, "confirmed_hash", file, id, false));
     }
 
     /**
