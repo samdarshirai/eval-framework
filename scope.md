@@ -65,6 +65,7 @@ Planned total is 28 (unit 21); 8 exist today.
 | **Groundedness** (LLM judge, gold-chunk shortcut): does the cited chunk support the claim? | Deliverable 3, the check that is not a string match. Chosen first because "a wrong answer that sounds right reaches a customer" (D10, D43) |
 | **Source** (deterministic, document-level) | Proves a multi-source answer used the required documents (D11) |
 | **Judge calibration** inside the same command: 7 trap pairs plus 20 hand-labeled Groundedness pairs (measured: 20/20 agreement, 0 of 10 false-supported) | A judge you have not measured is not evidence (D16, D41, D43) |
+| **Regression against a baseline** (`--baseline`): a case that passed there and fails now fails the run, after one re-run | Blocks a silent slide even when the pass rate stays above the floor; the re-run keeps flakes from crying wolf (D13, D14, D46) |
 | **Exit-code rules**: pass floor 90%, and any failing out-of-scope case fails the run | Blocks a hallucination even when the pass rate is high (D13, D34) |
 | **Reusable by other teams**: `--config`, `--endpoint`, `--skip-calibration`, pluggable knowledge source | The "pattern for thirty more" (D38, D42) |
 
@@ -77,7 +78,6 @@ These are committed to the plan; say plainly that they are unfinished.
 | Full 28-case set | 21 | 8 exist today |
 | **Pattern document** for an engineer with one hour | 24 | Deliverable 4 |
 | **Scale plan**, one page | 25 | The five questions in the brief |
-| Regression against a previous run (`--baseline`) | 18 | Never cut |
 | Re-run of a suspected regression once | 19 | Early cut candidate |
 | Measured calls, tokens, cost, wall-clock time | 20 | Feeds the scale plan cost line |
 | Relevance check (advisory, never fails a case) | 17 | Last on the cut list |
