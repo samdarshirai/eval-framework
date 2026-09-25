@@ -104,6 +104,7 @@ Described in the pattern document and scale plan, not coded in v1 (D22, D23).
 |---|---|
 | **Retrieval metric (context recall)** | The harness sees only claims and citations, never the retrieved chunks. Needs an optional `retrieved` field in the contract. About 2-3 hours as its own PR (D44) |
 | **Cited-from-memory check** | Same reason: needs the `retrieved` field that other apps would not have |
+| **Fail-fast to save judge cost** | Skipping judge-backed checks after a deterministic failure saves roughly 5-10 judge calls per failing case, but a failing case would then show only its first failure. Deferred until the measured cost report shows it matters (D45) |
 | Refusal-message-quality check | Behaviour is checked, wording is not |
 | HyDE and re-ranking | Assistant retrieval improvements, not needed to prove the harness works |
 | A separate model for the Coverage confirm step | The main judge is enough; one judge setting is simpler (D24) |
