@@ -148,8 +148,9 @@ A **baseline** is a previous report that you promote as the known-good reference
 
 ```
 cp caseResults/<run id>.json caseResults/baseline.json
-java -jar eval/target/eval.jar --baseline caseResults/baseline.json
 ```
+
+In this repo `eval/config.yaml` sets `baseline: caseResults/baseline.json`, so every run compares against it, and `--baseline ""` switches that off for one run. In your own config, set `baseline:` the same way; without it the run says so and goes ahead with no regression check.
 
 - A case that failed in the baseline and passes now is listed as `improved since baseline`, which is a hint to promote a newer baseline. It never changes the exit code.
 - A suspected regression is **re-run once** and only counts if it fails twice, and the report shows which cases needed a re-run. Temperature 0 does not make runs identical, and a case near the edge can pass on one run and fail on the next. The re-run count is a free measure of how flaky your suite is.
@@ -174,7 +175,7 @@ knowledgeBase:
 # baseline: caseResults/baseline.json
 ```
 
-Run it from anywhere with `--config my-team/eval.yaml`. Every relative path in the file resolves against the file's folder. The judge needs `OPENROUTER_API_KEY` in the environment, and your own application can use any model provider.
+Run it from anywhere with `--config my-team/eval.yaml`. Every relative path in the file resolves against the file's folder. The judge needs `OPENROUTER_API_KEY` in the environment and calls OpenRouter by default; set the optional `LLM_BASE_URL` (for example `https://llm-gateway.example.com/v1`) to route it through an internal OpenAI-compatible gateway, and the harness appends `/chat/completions`. Your own application can use any model provider.
 
 Useful overrides: `--case id1,id2` runs only those cases, `--checks "Refusal,Coverage"` runs only those checks, `--skip-calibration` skips the judge calibration (the calibration was 27 of the 98 judge calls in the baseline run), `--debug` prints one `[debug]` line per config, case, check, assistant call and judge call, and `--baseline ""` switches a configured baseline off for one run. Keep `out-of-scope` in `categories`, because the exit rule depends on it.
 

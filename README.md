@@ -4,20 +4,27 @@ A small evaluation layer for an AI Hub application, and the pattern for evaluati
 
 The assistant here is a deliberately thin stub over five public Usercentrics documentation pages. The harness is the point.
 
-## Run it in three steps
+## Run it
 
-You need Java 21, Maven, and an [OpenRouter](https://openrouter.ai) API key. The stub and the judge both call models through OpenRouter.
+You need Java 21, Maven, `curl`, and an [OpenRouter](https://openrouter.ai) API key. The stub and the judge both call models through OpenRouter.
 
 ```bash
 export OPENROUTER_API_KEY=...
+./run.sh
+```
 
+`run.sh` builds the jars, starts the stub assistant, runs the harness, stops the stub, and exits with the harness's exit code. Any arguments go to the harness (`./run.sh --case ss-zonejs --skip-calibration`). The stub's log is written to `assistant.log`.
+
+The same thing by hand:
+
+```bash
 # 1. Build both jars (from the repo root)
 mvn -q -DskipTests package
 
 # 2. Start the stub assistant, in its own terminal (listens on 127.0.0.1:8080)
 java -jar assistant/target/assistant.jar
 
-# 3. Run the harness. This is the one command.
+# 3. Run the harness
 java -jar eval/target/eval.jar
 ```
 
@@ -42,13 +49,13 @@ Every setting is a key in `eval/config.yaml`. `--<key> <value>` overrides it for
 ```bash
 java -jar eval/target/eval.jar --endpoint http://localhost:9000/answer   # point at another app
 java -jar eval/target/eval.jar --passFloor 0.8
-java -jar eval/target/eval.jar --baseline caseResults/baseline.json  # fail on any regression
+java -jar eval/target/eval.jar --baseline ""                          # switch the regression check off for this run
 java -jar eval/target/eval.jar --appType uncited --addChecks Relevance   # an app that cannot cite: fewer checks
 java -jar eval/target/eval.jar --case fp-tcf-gettcdata --debug           # one case, with a trace
 java -jar eval/target/eval.jar --skip-calibration                        # skip the judge calibration
 ```
 
-A **baseline** is a previous report you trust. Promote one with `cp caseResults/<run id>.json caseResults/baseline.json`. A case that passed in the baseline and fails now fails the run, after one re-run. `eval/config.yaml` documents every key.
+A **baseline** is a previous report you trust, and `eval/config.yaml` sets `caseResults/baseline.json` by default, so every run includes the regression check. Promote a new one with `cp caseResults/<run id>.json caseResults/baseline.json`. A case that passed in the baseline and fails now fails the run, after one re-run. `eval/config.yaml` documents every key.
 
 ### Another team's app, cases and documents
 
