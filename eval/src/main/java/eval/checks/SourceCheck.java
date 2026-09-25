@@ -9,6 +9,11 @@ import java.util.*;
  * the fact's gold chunks. Example: a fact from {@code geolocation-rules#constraints} is backed by a
  * claim citing {@code geolocation-rules#overview}, but not by one citing only {@code
  * consent-mode#prerequisites}.
+ *
+ * <p>What only this check catches: a claim that states the fact correctly and cites a chunk that
+ * really exists (Citation integrity passes), where the judge accepts that chunk as support
+ * (Groundedness passes), but the chunk comes from a different document than the fact's. In a
+ * multi-source case this proves each required document was actually used.
  */
 public final class SourceCheck implements Check {
   @Override
