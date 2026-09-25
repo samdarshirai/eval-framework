@@ -7,9 +7,13 @@ Answers the five questions in the brief. Numbers come from one measured run of t
 | When | What | Against | Time |
 |---|---|---|---|
 | **Local**, editing a prompt | The cases touched (`--case a,b`), `--skip-calibration` | A candidate on the builder's machine | ~2 min for 10 cases (estimated from the run: at most 12.5 s per case, 350.5 s / 28) |
-| **CI**, on any change to prompt, model, config or documents | Full set, with the baseline. **Blocks the merge** on a regression or a failing out-of-scope case | A candidate started for the run | ~6 min for 28 cases (350.5 s measured, with calibration) |
+| **CI**, on any change to prompt, model, config or documents | Full set, with the baseline. **Blocks the merge** on the exit code (regression, failing out-of-scope case, pass rate under `passFloor`, failed calibration) | A candidate started for the run | ~6 min for 28 cases (350.5 s measured, with calibration; a run with `--skip-calibration` is shorter, not measured) |
 | **Nightly** | Full set | An instance with production's exact prompt, model and config, to catch silent provider drift | Unattended |
 | **Weekly**, and when the judge model or prompt changes | Judge calibration (7 trap pairs, 20 labeled pairs) | The judge itself | 27 judge calls, about $0.04 (time not measured) |
+
+CI blocks a merge on the exit code, and the exit code includes the pass floor. Until an application reaches its tier floor, its CI config sets `passFloor` to its current baseline pass rate. That is a ratchet: it can only go up. CI then still catches regressions and out-of-scope failures without being permanently red. The tier floor is the release bar, not the CI bar. This repo's stub is at 67.9% against a 0.90 floor, so with the default config every run exits 1; that is the demo, not a CI setting.
+
+The default config runs the judge calibration on every run (27 of the 98 judge calls), while the plan runs it weekly. In the plan, CI and local runs use `--skip-calibration` and the weekly job runs it. This is a config choice, not built as a schedule.
 
 This table is the plan: no eval run is automated yet, and the only workflow, `.github/workflows/test.yml`, runs the unit tests with the model calls mocked. Before a change ships, local and CI decide. After, the nightly run says when something moved on its own. **Never against live production** (D32): eval traffic pollutes analytics and cost attribution, and production can change mid-run. Eval calls carry an `X-Eval-Run` header so the gateway can exclude them.
 
@@ -23,7 +27,7 @@ I would refuse to centralise **domain truth** (the platform cannot know a correc
 
 ## 3. What "good enough to ship" means, and who decides
 
-All of these hold: **no regression** against the last known-good run; pass rate **at or above the tier floor** (90% for the top tier); **no failing out-of-scope case**, because a confident wrong answer is the named risk and is never averaged away (D13); **the judge passes calibration**; and the **set is big enough to mean something** (for example 10 cases with at least 2 out-of-scope).
+All of these hold: **no regression** against the baseline; pass rate **at or above the tier floor** (90% for the top tier); **no failing out-of-scope case**, because a confident wrong answer is the named risk and is never averaged away (D13); **the judge passes calibration**; and the **set is big enough to mean something** (for example 10 cases with at least 2 out-of-scope).
 
 **The department owner decides, and the tier sets the bar they cannot go below.** I cannot judge whether an application I did not build is right, so I control the bar instead: no owner and no cases, no onboarding. CI enforces the floor, so the platform is never an approval queue.
 

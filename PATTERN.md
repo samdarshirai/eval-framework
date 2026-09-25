@@ -4,6 +4,19 @@ For an AI Enablement Engineer in another department who has never seen this code
 
 Terms in **bold** are defined in `CONTEXT.md`. Why the harness works this way is logged in `grilling-decisions.md`; you do not need it to use this document.
 
+## Start here: does this fit your application?
+
+| Application shape | Example (department) | What your endpoint returns | Checks (`appType`) | Your first ~10 cases | Status |
+|---|---|---|---|---|---|
+| Answers questions from documents, with citations | The Implementation Assistant (CS), an HR policy assistant | Claims with citations (section 1) | `cited` | 4 single-source, 2 multi-source, 2 out-of-scope, 2 false-premise | Built |
+| Answers questions from documents, in prose | A Legal or Finance FAQ assistant | Prose plus sources, through the prose adapter (section 1) | `cited` once the adapter exists; until then, wrap the app so it returns claims | As the row above | Adapter designed, not built |
+| Generates text without sources | Marketing copy drafts, meeting summaries | Claims without citations | `uncited`, `addChecks: [Relevance]` | Expected facts the output must contain, plus out-of-scope requests it must refuse | Built (Refusal, Coverage, Relevance) |
+| Extracts fields or classifies | Contract clause extraction (Legal), ticket routing (CS), invoice fields (Finance) | Not a fit: it needs field-level exact match or label accuracy, not claims | None | None | Not supported, talk to the platform team |
+
+- Find your row, then go to the Quickstart.
+- The first row is the only fully built path. The others need a wrapper, a config choice, or the platform team.
+- When in doubt, start in the top risk tier (`CONTEXT.md`). Lowering it needs a written reason and sign-off.
+
 ## Quickstart (10 minutes)
 
 The shortest path to a first report. Everything else in this document is reference.
@@ -94,7 +107,22 @@ Rules that the checks depend on:
 
 Before it runs any case, the harness sends a GET to the endpoint. Any HTTP response counts as reachable, and a failed connection stops the run with a message.
 
-**Designed, not built: a prose adapter.** For an application that produces free text, the harness would accept `{"answer": "...", "sources": [...]}` and use the judge to split the answer into claims before running the checks. The trade-off is an extra judge step that itself needs calibrating, because a wrong split changes what every later check sees. Today the application must return claims itself.
+**Designed, not built: a prose adapter.** For an application that produces free text, the application would return `{"answer": "<prose>", "sources": ["<chunk id>", ...]}` and a splitter would turn the prose into claims. Today the application must return claims itself.
+
+- **Where it plugs in.** `eval.Assistant` is a one-method interface (`Answer ask(String question, String runId)`), and `AssistantClient` implements it. A `ProseAssistantClient` would implement the same interface. It calls the application, sends the prose and the sources to the splitter (one LLM call), which returns atomic claims with citations drawn only from `sources`, and returns an `Answer`. No check changes.
+- **Refusal.** The splitter can detect it, or the application keeps a `refused` flag. The flag is cheaper and preferred.
+- **How the splitter can go wrong:**
+
+| Splitter mistake | Effect | Severity |
+|---|---|---|
+| Drops a claim | An invented statement never reaches Groundedness: the hallucination is hidden | Worst: a silent pass |
+| Wrong citation attribution | Groundedness fails a correct claim | Fails safe |
+| Merges or over-splits claims | Coverage and Groundedness noise | Minor |
+
+- **Calibration before use.** Hand-label about 20 prose answers with their correct claim lists. Measure completeness (every assertion in the prose appears as a claim, gating) and attribution accuracy. An optional safeguard is one extra judge call per answer, asking whether the prose asserts anything the claims do not cover.
+- **Cost.** One splitter call per case, plus the optional safeguard. That is small next to Groundedness, which makes one call per claim per cited chunk.
+- **Limit.** It does not help applications that are not question answering (extraction, classification). They need different checks (see the table at the top of this document).
+- **Why it was cut from v1.** The splitter is itself an LLM judgement that needs its own calibration, and shipping it uncalibrated would contradict "a judge you have not measured is not evidence".
 
 **Fallback for a team that cannot expose an endpoint**: export answers to a JSON file and have the harness score the file. This is designed but **not built in v1**. Today you need a live endpoint, even a thin wrapper around your application.
 
@@ -120,8 +148,9 @@ A case is a YAML entry. Cases live in `*.yaml` files in one folder, with any num
 
 - **`facts`** are plain-language key points the answer must contain. They are not tied to a sentence count or wording, because the application may split one fact across several claims.
 - **`chunks`** are the **gold chunks**: chunks a human has verified support the fact. They are alternatives, so citing any one of them is enough. Citing another chunk is not automatically wrong. It is just not pre-verified. Gold chunks are used by Coverage and Source, not to skip Groundedness.
-- **`keywords`** are optional tokens that must all appear in a claim before it can count as covering the fact. Use them for a checkable token such as a version number. They are a cheap filter that catches near-misses ("Safari 13" for "Safari 14") without a model call. They are never sufficient on their own, because they cannot detect negation ("all Safari versions except 14"), so a judge confirms every keyword hit.
-- Leave `keywords` out when there is no single token to check. A judge then decides which claims cover the fact.
+- **`keywords`** are optional, and allowed only for an exact value or identifier that any correct answer must contain verbatim: a version number (`14`, `0.11.4`), an API, variable, event or attribute name (`getTCData`, `UC_AB_VARIANT`, `data-tcf-enabled`), a literal config value (`denied`) or a product acronym (`TCF`). A claim must contain all of them before it can count as covering the fact. They are a cheap filter that catches near-misses ("Safari 13" for "Safari 14") without a model call. They are never sufficient on their own, because they cannot detect negation ("all Safari versions except 14"), so a judge confirms every keyword hit.
+- **Never use an ordinary word or phrase** ("invalid", "delete", "default", "before", "all users", "v2"). A correct answer can paraphrase it ("no longer valid", "version 2"). When a claim lacks a keyword, no judge is called and the fact counts as missed, so the paraphrase is a false negative. All keywords must also appear in one claim, so a fact the application splits across two claims fails too. For a value a miss is a real miss; for a word it is not.
+- Leave `keywords` out when there is no such value or identifier. A judge then decides which claims cover the fact. If a fact mixes both, keep the values and drop the words.
 - A `refuse` case has no `facts`. An `answer` case must have at least one.
 
 ### The four categories to start with
@@ -166,9 +195,7 @@ The principle is to use a deterministic check whenever the property is determini
 
 ### Which checks suit which application
 
-- **Customer-facing or high-stakes answers** (the Implementation Assistant): all of them. Groundedness and Refusal matter most, because a wrong answer that sounds right reaches a customer.
-- **An internal summariser** with no citations to check: Coverage and Relevance are the meaningful ones.
-- **An application not grounded in documents**: Refusal and Coverage. It cannot use Citation integrity, Groundedness or Source.
+The table at the top of this document says which checks fit which application shape. For a customer-facing or high-stakes application such as the Implementation Assistant, run all of them: Groundedness and Refusal matter most, because a wrong answer that sounds right reaches a customer. An application that cannot cite cannot use Citation integrity, Groundedness or Source.
 
 **App types and turning checks off.** Set `appType` in the config: `cited` (Refusal, Citation integrity, Coverage, Groundedness, Source), `uncited` (Refusal, Coverage; for an application that cannot cite) or `smoke` (Refusal, Citation integrity; no judge calls). The type is the least an application of that kind must run. The application can add with `addChecks: [Relevance]` but cannot remove; lowering a type's floor is a change in `Checks.java`, so it goes through the platform team. Without `appType`, `checks: [Refusal, Coverage]` (or `--checks "Refusal,Coverage"`) names an explicit list, and with neither all six run. Setting `appType` and `checks` together is an error. Names are as in the table, any case. Order is always the table's order. A check that needs another pulls it in (Source needs Coverage), and the console says `Checks added because another check needs them`. Startup fails with exit 2, before any call, on an unknown name or app type, an empty list, `addChecks` without `appType`, a list with no gating check, or `Refusal` off while the cases include out-of-scope ones. The calibration for a check that is off is skipped, the console prints `Checks off: ...`, and a baseline that ran a different set gets a warning.
 
@@ -197,9 +224,11 @@ The run exits **0** when everything passes, **1** when it fails, and **2** for a
 3. **A regression against the baseline**: a case that passed in the baseline and fails now, even when the overall rate is above the floor.
 4. **The judge fails calibration** (section 3).
 
+In CI, the exit code is what blocks a merge, floor included. Until your application reaches its tier floor, set `passFloor` in your CI config to your current baseline pass rate and raise it as the application improves (a ratchet: it only goes up). The tier floor is the release bar. The calibration runs on every run by default, so CI and local runs pass `--skip-calibration` and a weekly job runs it; that split is a config choice, not a built schedule.
+
 ### The baseline
 
-A **baseline** is a previous report that you promote as the known-good reference. Every run writes a timestamped JSON report to `caseResults/`. To promote one:
+A **baseline** is a previous run's report that later runs are compared against. Normally it is a run you trust. In this repo it is the latest stub run (19 of 28): a reference for change, not a known-good run. Every run writes a timestamped JSON report to `caseResults/`. To promote one:
 
 ```
 cp caseResults/<run id>.json caseResults/baseline.json
@@ -251,7 +280,7 @@ The goal is a first honest report, not a complete set. Start with about 10 cases
 | Minutes | Step |
 |---|---|
 | 15 | Expose the endpoint from a test instance and return the contract in section 1. This takes 15 minutes only if the application already produces structured, cited output; if it produces prose, splitting it into cited claims is the main integration work and takes longer. Make a config file like the one in section 5. Check that `curl` returns claims with citations and that a refusal is `{"refused": true, "claims": []}`. |
-| 25 | Write the 10 cases. Pick real questions. For every fact, look up the chunk in your documents and confirm it says the fact. Put a `keywords` list on the facts with a checkable token. |
+| 25 | Write the 10 cases. Pick real questions. For every fact, look up the chunk in your documents and confirm it says the fact. Put a `keywords` list only on facts with an exact value or identifier (section 2). |
 | 10 | Run the harness and read the report (section 7). |
 | 10 | Fix mistakes in the **cases**, not the application. The first run mostly exposes case errors: a wrong gold chunk, a fact that two chunks state, a question that is only partly answerable. |
 

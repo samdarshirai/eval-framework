@@ -26,7 +26,7 @@ A chunk a human has verified supports an expected fact. A fact's gold chunks are
 A gating check can fail an eval case. An advisory check is reported and counted but never fails a case. Relevance is advisory until its judge is calibrated.
 
 **Baseline**
-A previous run's results, promoted as the known-good reference that later runs are compared against.
+A baseline is a previous run's report that later runs are compared against. Normally it is a run you trust. In this repo it is the latest stub run (19 of 28): a reference for change, not a known-good run.
 
 **Regression**
 An eval case that passed in the baseline and fails now. Any regression fails the run, even if the overall pass rate is above the floor. Separately, any failing out-of-scope case fails the run.
