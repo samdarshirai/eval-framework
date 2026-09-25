@@ -61,4 +61,15 @@ class EvalConfigTest {
     assertTrue(
         error.getMessage().startsWith(file + ": 'judgeModel' is required"), error.getMessage());
   }
+
+  @Test
+  void labeledSampleFileIsNullByDefaultAndResolvedAgainstTheConfigFolderWhenSet() throws Exception {
+    String base = "endpoint: http://x\npassFloor: 0.9\ncategories: [out-of-scope]\njudgeModel: m\n";
+    Path plain = Files.writeString(dir.resolve("plain.yaml"), base);
+    assertNull(EvalConfig.loadFile(plain, null).labeledSampleFile());
+    Path custom =
+        Files.writeString(
+            dir.resolve("custom.yaml"), base + "calibration:\n  labeledSample: pairs.yaml\n");
+    assertEquals(dir.resolve("pairs.yaml"), EvalConfig.loadFile(custom, null).labeledSampleFile());
+  }
 }

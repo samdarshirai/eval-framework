@@ -71,8 +71,14 @@ class HarnessConfigFileTest {
   void everythingResolvesAgainstTheConfigDirNotTheWorkingRoot() throws Exception {
     Files.writeString(
         team.resolve("traps.yaml"), "- {name: same, fact: F, claim: F, agree: true}\n");
+    Files.writeString(team.resolve("empty-sample.yaml"), "[]\n");
     Path configFile =
-        config("cases: mycases\noutputDir: out\ncalibration:\n  trapPairs: traps.yaml\n");
+        config(
+            "cases: mycases\n"
+                + "outputDir: out\n"
+                + "calibration:\n"
+                + "  trapPairs: traps.yaml\n"
+                + "  labeledSample: empty-sample.yaml\n");
     int[] code = new int[1];
     String output = run(code, "--config", configFile.toString(), "--endpoint", url());
     assertEquals(0, code[0], output);
