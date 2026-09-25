@@ -47,14 +47,20 @@ final class ConsoleReport {
     out.println("Baseline: " + baseline.file());
     if (baseline.reruns().isEmpty()) {
       out.println("  no case that passed there failed now");
-      return;
+    } else {
+      out.println("  re-run once: " + baseline.reruns().size());
+      for (SuiteReport.Comparison.Rerun rerun : baseline.reruns()) {
+        out.println(
+            rerun.passedOnRerun()
+                ? "  flaky      " + rerun.id() + " (failed, then passed on the re-run)"
+                : "  REGRESSION " + rerun.id() + " (passed in the baseline, failed twice now)");
+      }
     }
-    out.println("  re-run once: " + baseline.reruns().size());
-    for (SuiteReport.Comparison.Rerun rerun : baseline.reruns()) {
+    if (!baseline.improved().isEmpty()) {
       out.println(
-          rerun.passedOnRerun()
-              ? "  flaky      " + rerun.id() + " (failed, then passed on the re-run)"
-              : "  REGRESSION " + rerun.id() + " (passed in the baseline, failed twice now)");
+          "  improved since baseline: "
+              + String.join(", ", baseline.improved())
+              + " (promote a newer report to guard them)");
     }
   }
 

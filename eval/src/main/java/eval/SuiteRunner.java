@@ -42,6 +42,11 @@ final class SuiteRunner {
       results.set(index, secondAttempt);
       reruns.add(new SuiteReport.Comparison.Rerun(firstAttempt.id(), secondAttempt.passed()));
     }
-    return new Outcome(results, new SuiteReport.Comparison(baseline.name(), reruns));
+    List<String> improved =
+        results.stream()
+            .filter(result -> result.passed() && baseline.failed(result.id()))
+            .map(CaseResult::id)
+            .toList();
+    return new Outcome(results, new SuiteReport.Comparison(baseline.name(), reruns, improved));
   }
 }

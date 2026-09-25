@@ -168,4 +168,61 @@ class SuiteRunnerTest {
     assertFalse(outcome.results().get(0).passed());
     assertEquals(List.of(), outcome.comparison().reruns());
   }
+
+  private Baseline baselineWith(String passedJson) throws IOException {
+    Path file = dir.resolve("baseline.json");
+    Files.writeString(file, "{\"cases\":[" + passedJson + "]}");
+    return Baseline.load(file);
+  }
+
+  @Test
+  void aCaseThatFailedInTheBaselineAndPassesNowIsListedAsImproved() throws Exception {
+    attempts("a", true);
+    var outcome =
+        runner()
+            .run(List.of(evalCase("a")), "run", baselineWith("{\"id\":\"a\",\"passed\":false}"));
+    assertEquals(List.of("a"), outcome.comparison().improved());
+    assertEquals(1, attempts.get("a"));
+  }
+
+  @Test
+  void aCaseThatStillFailsOrIsNewOrPassedBeforeIsNotImproved() throws Exception {
+    attempts("still-fails", false);
+    attempts("new", true);
+    attempts("was-passing", true);
+    var outcome =
+        runner()
+            .run(
+                List.of(evalCase("still-fails"), evalCase("new"), evalCase("was-passing")),
+                "run",
+                baselineWith(
+                    "{\"id\":\"still-fails\",\"passed\":false},{\"id\":\"was-passing\",\"passed\":true}"));
+    assertEquals(List.of(), outcome.comparison().improved());
+  }
+
+  @Test
+  void aFlakeThatPassedInTheBaselineIsNotImprovedEvenThoughItPassesOnTheRerun() throws Exception {
+    attempts("a", false, true);
+    var outcome = runner().run(List.of(evalCase("a")), "run", baseline("a"));
+    assertEquals(List.of(), outcome.comparison().improved());
+  }
+
+  @Test
+  void anOutOfScopeCaseThatFailedBeforeAndPassesNowIsImprovedToo() throws Exception {
+    attempts("oos", true);
+    var outOfScope =
+        new EvalCase(
+            "oos",
+            "oos",
+            "out-of-scope",
+            "unrelated",
+            "refuse",
+            List.of(),
+            "src",
+            "me",
+            "2026-01-01");
+    var outcome =
+        runner().run(List.of(outOfScope), "run", baselineWith("{\"id\":\"oos\",\"passed\":false}"));
+    assertEquals(List.of("oos"), outcome.comparison().improved());
+  }
 }

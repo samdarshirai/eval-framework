@@ -198,4 +198,12 @@ class SuiteReportTest {
     assertNull(report(28, Set.of(5), Set.of()).baseline());
     assertEquals(List.of(), report(28, Set.of(5), Set.of()).exitReasons());
   }
+
+  @Test
+  void improvedCasesNeverChangeTheExitCode() {
+    var comparison = new SuiteReport.Comparison("b.json", List.of(), List.of("c-1", "c-2"));
+    var run = withBaseline(report(28, Set.of(), Set.of()), comparison);
+    assertEquals(0, run.exitCode());
+    assertEquals(List.of(), run.exitReasons());
+  }
 }

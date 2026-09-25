@@ -68,6 +68,11 @@ final class Baseline {
     return passedById.getOrDefault(caseId, false);
   }
 
+  /** True only when the case is in the baseline and failed there. */
+  boolean failed(String caseId) {
+    return Boolean.FALSE.equals(passedById.get(caseId));
+  }
+
   /** True when the case is in the baseline, whether it passed there or not. */
   boolean knows(String caseId) {
     return passedById.containsKey(caseId);

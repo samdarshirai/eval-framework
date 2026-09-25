@@ -843,4 +843,28 @@ class HarnessTest {
     assertTrue(output.contains("Usage"), output);
     assertEquals(0, requests.get());
   }
+
+  @Test
+  void aCaseThatFailedInTheBaselineAndPassesNowIsReportedAsImprovedAndDoesNotChangeTheExit()
+      throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":false}]}");
+    replyFor = GOOD_ANSWER;
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("improved since baseline: c1"), output);
+    assertEquals(2, requests.get(), "ping plus one attempt, no re-run");
+    assertEquals("c1", reportJson(output).get("baseline").get("improved").get(0).asText());
+  }
+
+  @Test
+  void nothingImprovedMeansNoImprovedLine() throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
+    replyFor = GOOD_ANSWER;
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertFalse(output.contains("improved since baseline"), output);
+  }
 }

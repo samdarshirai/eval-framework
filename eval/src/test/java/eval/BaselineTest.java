@@ -98,4 +98,14 @@ class BaselineTest {
           body + " -> " + failure.getMessage());
     }
   }
+
+  @Test
+  void failedIsTrueOnlyForACaseThatIsInTheBaselineAndFailedThere() throws Exception {
+    Baseline baseline =
+        Baseline.load(
+            write("{\"cases\":[{\"id\":\"a\",\"passed\":true},{\"id\":\"b\",\"passed\":false}]}"));
+    assertTrue(baseline.failed("b"));
+    assertFalse(baseline.failed("a"));
+    assertFalse(baseline.failed("not-in-baseline"));
+  }
 }
