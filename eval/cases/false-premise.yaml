@@ -11,3 +11,71 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "c67625fc78fb"
+
+- id: fp-tcf-gettcdata
+  question: "How do I call getTCData through __tcfapi in TCF 2.2 to read the consent state as soon as the CMP has loaded?"
+  category: false-premise
+  expected_behavior: answer
+  facts:
+    # the correction is the fact; "call getTCData like this" contains the keyword too, the judge tells them apart
+    - fact: "The getTCData command is not available anymore in TCF 2.2"
+      chunks: [tcf2#iab-vendors]
+      keywords: ["getTCData"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "70afa36c376f"
+
+- id: fp-consent-mode-blocking
+  question: "I use Google Consent Mode. I should still block Google Analytics with the Google Tag Manager blocking setup so it does not fire before consent, right?"
+  category: false-premise
+  expected_behavior: answer
+  facts:
+    # no keywords on purpose: nothing checkable, so the judge reads the whole answer
+    - fact: "With Google Consent Mode the supported Google tags should not be adjusted as in the Google Tag Manager blocking guide, because Google adjusts the tag behaviour from the consent signal instead of the tag being blocked"
+      chunks: [consent-mode#general-information]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "4bfeceba979f"
+
+- id: fp-geo-regional-settings
+  question: "For Geolocation Rules I set each configuration's regional setting to show the CMP only to EU visitors. Is that the right way to combine them?"
+  category: false-premise
+  expected_behavior: answer
+  facts:
+    - fact: "When using Geolocation Rules the regional settings of a configuration must be set to Display CMP to all users (default), and for CCPA configurations to Display CCPA CMP to all users"
+      chunks: [geolocation-rules#prerequisites]
+      keywords: ["all users"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "8609428e9e39"
+
+- id: fp-tcf20-still-valid
+  question: "My CMP still runs TCF 2.0 and I never migrated. TC strings from 2.0 stay valid, so there is nothing to do, right?"
+  category: false-premise
+  expected_behavior: answer
+  facts:
+    - fact: "TC strings obtained under TCF v2.0 after 20 November 2023 are considered invalid, so the CMP has to be migrated to TCF 2.2"
+      chunks: [tcf2#tcf-2-0-vs-tcf-2-2]
+      keywords: ["invalid"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "b713c5025f42"
+
+- id: fp-ab-tcf-properties
+  question: "I can A/B test any property from the general properties table in my TCF 2.2 CMP, right? I want to change the first-layer button colours."
+  category: false-premise
+  expected_behavior: answer
+  facts:
+    # the same note appears in two chunks, so either one is a gold chunk (D5 any-of)
+    - fact: "For a TCF 2.2 CMP only the specific TCF 2.2 properties can be used for A/B testing, not every property"
+      chunks: [ab-test#defining-the-variants, ab-test#available-properties-for-a-b-testing]
+      keywords: ["TCF"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "5129f0d8e17f"

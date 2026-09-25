@@ -111,6 +111,25 @@ class HarnessTest {
   }
 
   @Test
+  void aStaleCaseWarnsByNameAndStillRuns() throws Exception {
+    cases(
+        "- id: c1\n"
+            + "  question: What is A?\n"
+            + "  category: single-source\n"
+            + "  expected_behavior: answer\n"
+            + "  facts:\n"
+            + "    - {fact: A is body, chunks: [d#a], keywords: [body]}\n"
+            + "  confirmed_hash: \"000000000000\"\n");
+    replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("WARNING: case 'c1':"), output);
+    assertTrue(output.contains("PASS") && output.contains("c1"), output);
+    assertTrue(requests.get() > 0, "the stale case must still run");
+  }
+
+  @Test
   void reportHasQuestionAndExpectedNextToActualAndListsChecksOnce() throws Exception {
     cases(
         "- id: c1\n"

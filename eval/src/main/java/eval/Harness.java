@@ -41,6 +41,9 @@ public final class Harness {
     if (baseline != null) {
       baseline.requireAnyOf(cases);
     }
+    for (String warning : StaleCases.warnings(cases, kb)) {
+      out.println("WARNING: " + warning);
+    }
 
     // Throws with the export hint if the API key is missing.
     Judge judge = new Judge(judgeLlm.apply(config.requireJudgeModel()));

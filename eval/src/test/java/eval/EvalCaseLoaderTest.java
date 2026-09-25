@@ -45,6 +45,16 @@ class EvalCaseLoaderTest {
         assertTrue(m.contains("c1") && m.contains("d#nope"), m);
     }
 
+    @Test void readsTheOptionalConfirmedHash() throws Exception {
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: F, chunks: [d#a]}\n" + META + "  confirmed_hash: \"a1b2c3d4e5f6\"\n");
+        assertEquals("a1b2c3d4e5f6", EvalCaseLoader.load(dir, kb, CATEGORIES).get(0).confirmedHash());
+    }
+
+    @Test void aCaseWithoutAConfirmedHashLoadsWithNull() throws Exception {
+        write("a.yaml", "- id: c1\n  question: Q?\n  category: single-source\n  expected_behavior: answer\n  facts:\n    - {fact: F, chunks: [d#a]}\n" + META);
+        assertNull(EvalCaseLoader.load(dir, kb, CATEGORIES).get(0).confirmedHash());
+    }
+
     @Test void unquotedYamlDateIsAccepted() throws Exception {
         write("a.yaml", "- id: c1\n  question: Q?\n  category: out-of-scope\n  expected_behavior: refuse\n  source: authored\n  owner: platform\n  added: 2026-09-24\n");
         assertEquals("2026-09-24", EvalCaseLoader.load(dir, kb, CATEGORIES).get(0).added());

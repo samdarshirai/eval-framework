@@ -30,6 +30,7 @@ final class ConsoleReport {
       }
     }
     printBaseline(report.baseline(), out);
+    printRollups(report, out);
     out.printf(
         "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
         report.passed(), report.cases().size(), report.passRate() * 100, report.passFloor() * 100);
@@ -38,6 +39,24 @@ final class ConsoleReport {
     } else {
       report.exitReasons().forEach(reason -> out.println("RESULT: FAIL - " + reason));
     }
+  }
+
+  private static void printRollups(SuiteReport report, PrintStream out) {
+    out.println("By category");
+    report
+        .byCategory()
+        .forEach(
+            (category, rollup) ->
+                out.printf("  %-24s %d/%d%n", category, rollup.passed(), rollup.total()));
+    if (report.outOfScopeBySubtype().isEmpty()) {
+      return;
+    }
+    out.println("Out-of-scope by subtype");
+    report
+        .outOfScopeBySubtype()
+        .forEach(
+            (subtype, rollup) ->
+                out.printf("  %-24s %d/%d%n", subtype, rollup.passed(), rollup.total()));
   }
 
   private static void printBaseline(SuiteReport.Comparison baseline, PrintStream out) {

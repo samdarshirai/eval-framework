@@ -12,3 +12,84 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "c5f60d0bdf80"
+
+- id: ms-tcf-version-and-consent-default
+  question: "I am adding TCF to a site that already uses Google Consent Mode. Which CMP version does TCF require, and should I still set the Consent Mode default state?"
+  category: multi-source
+  expected_behavior: answer
+  facts:
+    - fact: "To support TCF you must be using the Usercentrics CMP v2"
+      chunks: [tcf2#general-information]
+      keywords: ["v2"]
+    - fact: "Implementing the Consent Mode default state is also recommended when you use a TCF implementation"
+      chunks: [consent-mode#general-information]
+      keywords: ["default"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "d48f3b09cd03"
+
+- id: ms-geo-delete-and-consent-default
+  question: "Can I delete a company that still has geolocation rulesets, and what does the Consent Mode default snippet set ad_storage to?"
+  category: multi-source
+  expected_behavior: answer
+  facts:
+    - fact: "A company that has rulesets cannot be deleted: the ruleset has to be deleted first"
+      chunks: [geolocation-rules#constraints]
+      keywords: ["ruleset", "delete"]
+    - fact: "The Consent Mode default snippet sets ad_storage to denied"
+      chunks: [consent-mode#step-1-adjust-the-existing-google-tag-manager-code]
+      keywords: ["ad_storage", "denied"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "bec13a81f284"
+
+- id: ms-ruleset-and-tcf-attributes
+  question: "I am rolling out a TCF banner with Geolocation Rules. Which attribute does the script tag generated for a ruleset contain, and which one enables TCF?"
+  category: multi-source
+  expected_behavior: answer
+  facts:
+    - fact: "The script tag generated for a ruleset carries the data-ruleset-id attribute"
+      chunks: [geolocation-rules#create-rulesets]
+      keywords: ["data-ruleset-id"]
+    - fact: "The TCF script tag carries the data-tcf-enabled attribute"
+      chunks: [tcf2#integrate-the-tcf-cmp-into-your-website]
+      keywords: ["data-tcf-enabled"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "a636e2676cfe"
+
+- id: ms-ab-and-consent-script-order
+  question: "Where should the Google Consent Mode default script go in the head, and where does my A/B testing tool script go relative to the CMP?"
+  category: multi-source
+  expected_behavior: answer
+  facts:
+    - fact: "The Consent Mode scripts must be put at the very top of the head, in the order shown"
+      chunks: [consent-mode#step-1-adjust-the-existing-google-tag-manager-code]
+      keywords: ["top", "head"]
+    - fact: "The A/B testing tool script goes in the head section before the Usercentrics CMP"
+      chunks: [ab-test#a-b-testing-with-third-party-tool]
+      keywords: ["head", "before"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "09f9a9143a70"
+
+- id: ms-tcstring-and-google-vendor
+  question: "What does the tcString encode, and under which vendor ID is Google registered on the IAB Global Vendor List?"
+  category: multi-source
+  expected_behavior: answer
+  facts:
+    - fact: "The tcString encodes the consent information in a machine readable format"
+      chunks: [tcf2#general-information]
+      keywords: ["tcString"]
+    - fact: "Google is registered as a vendor with ID 755 on the IAB Global Vendor List"
+      chunks: [consent-mode#general-information]
+      keywords: ["755"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "d48f3b09cd03"
