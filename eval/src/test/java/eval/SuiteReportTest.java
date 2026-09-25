@@ -251,4 +251,60 @@ class SuiteReportTest {
     assertEquals(0, run.exitCode());
     assertEquals(List.of(), run.exitReasons());
   }
+
+  private static CaseResult resultWith(String id, boolean passed, CheckOutcome... outcomes) {
+    return new CaseResult(
+        id,
+        "q",
+        "single-source",
+        null,
+        new Expected(false, List.of()),
+        passed,
+        null,
+        null,
+        List.of(outcomes));
+  }
+
+  @Test
+  void advisoryFlagsCountCasesWhereAnAdvisoryCheckFailedAndNeverTouchThePassRate() {
+    SuiteReport report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(new CheckInfo("Refusal", true), new CheckInfo("Relevance", false)),
+            SuiteReport.Calibration.SKIPPED,
+            List.of(
+                resultWith(
+                    "a",
+                    true,
+                    new CheckOutcome("Refusal", true, null),
+                    new CheckOutcome("Relevance", false, "off-topic")),
+                resultWith(
+                    "b",
+                    true,
+                    new CheckOutcome("Refusal", true, null),
+                    new CheckOutcome("Relevance", true, null)),
+                resultWith(
+                    "c",
+                    true,
+                    new CheckOutcome("Refusal", true, null),
+                    new CheckOutcome("Relevance", false, "check error: boom"))));
+    assertEquals(Map.of("Relevance", 2L), report.advisoryFlags());
+    assertEquals(1.0, report.passRate());
+    assertEquals(0, report.exitCode());
+  }
+
+  @Test
+  void aGatingCheckIsNeverListedAsAdvisory() {
+    SuiteReport report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(new CheckInfo("Refusal", true)),
+            SuiteReport.Calibration.SKIPPED,
+            List.of(resultWith("a", false, new CheckOutcome("Refusal", false, "bad"))));
+    assertTrue(report.advisoryFlags().isEmpty());
+  }
 }

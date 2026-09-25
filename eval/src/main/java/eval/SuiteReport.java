@@ -71,6 +71,31 @@ public record SuiteReport(
         .orElse(true);
   }
 
+  /**
+   * For each advisory check (D12), in registration order, the number of cases where it failed. A
+   * {@code check error} counts, so a broken advisory judge is visible. Never part of pass/fail.
+   */
+  @JsonProperty("advisoryFlags")
+  public Map<String, Long> advisoryFlags() {
+    Map<String, Long> flags = new LinkedHashMap<>();
+    for (CheckInfo info : checks) {
+      if (info.gating()) {
+        continue;
+      }
+      long flaggedCases =
+          cases.stream()
+              .filter(
+                  caseResult ->
+                      caseResult.checks().stream()
+                          .anyMatch(
+                              outcome ->
+                                  outcome.check().equals(info.name()) && !outcome.passed()))
+              .count();
+      flags.put(info.name(), flaggedCases);
+    }
+    return flags;
+  }
+
   public long passed() {
     return cases.stream().filter(CaseResult::passed).count();
   }

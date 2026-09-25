@@ -42,4 +42,36 @@ class ConsoleReportTest {
     assertTrue(output.contains("By category"), output);
     assertFalse(output.contains("Out-of-scope by subtype"), output);
   }
+
+  @Test
+  void printsHowManyCasesEachAdvisoryCheckFlaggedBeforeThePassRate() {
+    CaseResult flagged =
+        new CaseResult(
+            "a",
+            "q",
+            "single-source",
+            null,
+            new Expected(false, List.of()),
+            true,
+            null,
+            null,
+            List.of(new CheckOutcome("Relevance", false, "off-topic claim(s): \"x\"")));
+    SuiteReport report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(new CheckInfo("Relevance", false)),
+            SuiteReport.Calibration.SKIPPED,
+            List.of(flagged, result("b", "single-source", null, true)));
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    ConsoleReport.print(report, new PrintStream(buffer));
+    String output = buffer.toString();
+    assertTrue(output.contains("Relevance (advisory): off-topic claim(s)"), output);
+    assertTrue(
+        output.contains("Advisory Relevance (never fails a case): flagged on 1 of 2 case(s)"),
+        output);
+    assertTrue(output.indexOf("Advisory Relevance") < output.indexOf("Pass rate:"), output);
+    assertTrue(output.contains("RESULT: OK"), output);
+  }
 }

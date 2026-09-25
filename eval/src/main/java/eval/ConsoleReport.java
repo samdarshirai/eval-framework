@@ -31,6 +31,7 @@ final class ConsoleReport {
     }
     printBaseline(report.baseline(), out);
     printRollups(report, out);
+    printAdvisory(report, out);
     out.printf(
         "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
         report.passed(), report.cases().size(), report.passRate() * 100, report.passFloor() * 100);
@@ -39,6 +40,16 @@ final class ConsoleReport {
     } else {
       report.exitReasons().forEach(reason -> out.println("RESULT: FAIL - " + reason));
     }
+  }
+
+  private static void printAdvisory(SuiteReport report, PrintStream out) {
+    report
+        .advisoryFlags()
+        .forEach(
+            (check, flaggedCases) ->
+                out.printf(
+                    "Advisory %s (never fails a case): flagged on %d of %d case(s)%n",
+                    check, flaggedCases, report.cases().size()));
   }
 
   private static void printRollups(SuiteReport report, PrintStream out) {

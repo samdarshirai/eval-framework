@@ -887,4 +887,29 @@ class HarnessTest {
     String output = out(code, "--baseline", "caseResults/baseline.json")[0];
     assertFalse(output.contains("improved since baseline"), output);
   }
+
+  @Test
+  void aRelevanceNoIsReportedButTheCaseAndTheRunStillPass() throws Exception {
+    cases(
+        "- id: c1\n"
+            + "  question: q\n"
+            + "  category: single-source\n"
+            + "  expected_behavior: answer\n"
+            + "  facts:\n"
+            + "    - {fact: A is body, chunks: [d#a], keywords: [body]}\n");
+    replyFor = "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
+    var buf = new ByteArrayOutputStream();
+    int code =
+        Harness.run(
+            new String[0],
+            root,
+            new PrintStream(buf),
+            model -> (system, user) -> system.contains("pertinent") ? "NO" : "YES");
+    String output = buf.toString();
+    assertEquals(0, code, output);
+    assertTrue(output.contains("PASS") && output.contains("c1"), output);
+    assertTrue(output.contains("Relevance (advisory): off-topic claim(s)"), output);
+    assertTrue(output.contains("flagged on 1 of 1 case(s)"), output);
+    assertTrue(output.contains("RESULT: OK"), output);
+  }
 }
