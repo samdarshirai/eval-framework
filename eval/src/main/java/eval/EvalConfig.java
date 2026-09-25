@@ -236,6 +236,8 @@ final class EvalConfig {
     if (block instanceof Map<?, ?> pricing
         && pricing.get("inputPerMillion") instanceof Number input
         && pricing.get("outputPerMillion") instanceof Number output
+        && Double.isFinite(input.doubleValue())
+        && Double.isFinite(output.doubleValue())
         && input.doubleValue() >= 0
         && output.doubleValue() >= 0) {
       return new UsageMeter.Pricing(input.doubleValue(), output.doubleValue());

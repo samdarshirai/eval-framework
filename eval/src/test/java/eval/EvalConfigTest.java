@@ -181,7 +181,9 @@ class EvalConfigTest {
           "judgePricing: 5\n",
           "judgePricing:\n  inputPerMillion: 5\n",
           "judgePricing:\n  inputPerMillion: -1\n  outputPerMillion: 25\n",
-          "judgePricing:\n  inputPerMillion: cheap\n  outputPerMillion: 25\n"
+          "judgePricing:\n  inputPerMillion: cheap\n  outputPerMillion: 25\n",
+          "judgePricing:\n  inputPerMillion: .inf\n  outputPerMillion: 25\n",
+          "judgePricing:\n  inputPerMillion: 5\n  outputPerMillion: .nan\n"
         }) {
       EvalConfig config = EvalConfig.loadFile(write(bad), null);
       IllegalArgumentException error =

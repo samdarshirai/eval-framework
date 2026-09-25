@@ -70,4 +70,11 @@ class UsageMeterTest {
     assertEquals(0.0, usage.judgeCostUsd(), 1e-9);
     assertTrue(usage.byCheck().isEmpty());
   }
+
+  @Test
+  void callsThatReportedNoTokensGiveNoCostRatherThanZero() {
+    UsageMeter meter = new UsageMeter();
+    meter.judgeCall(0, 0);
+    assertNull(meter.usage(0, new UsageMeter.Pricing(5.0, 25.0)).judgeCostUsd());
+  }
 }

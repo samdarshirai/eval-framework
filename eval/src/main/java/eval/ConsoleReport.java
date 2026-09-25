@@ -67,10 +67,15 @@ final class ConsoleReport {
             "  assistant: %d calls, %.1f s (its tokens are not visible over HTTP)",
             usage.assistantCalls(),
             usage.assistantMillis() / 1000.0));
-    String cost =
-        usage.judgeCostUsd() == null
-            ? "cost not estimated (set judgePricing in the config)"
-            : String.format(Locale.ROOT, "est. $%.4f", usage.judgeCostUsd());
+    String cost;
+    if (usage.judgeCostUsd() != null) {
+      cost = String.format(Locale.ROOT, "est. $%.4f", usage.judgeCostUsd());
+    } else if (usage.judgeCalls() > 0
+        && usage.judgePromptTokens() + usage.judgeCompletionTokens() == 0) {
+      cost = "tokens not reported, cost not estimated";
+    } else {
+      cost = "cost not estimated (set judgePricing in the config)";
+    }
     out.println(
         String.format(
             Locale.ROOT,

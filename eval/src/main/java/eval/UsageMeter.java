@@ -56,7 +56,10 @@ final class UsageMeter {
         byCheck.stream().mapToLong(SuiteReport.Usage.CheckUsage::promptTokens).sum();
     long completionTokens =
         byCheck.stream().mapToLong(SuiteReport.Usage.CheckUsage::completionTokens).sum();
-    Double cost = pricing == null ? null : pricing.cost(promptTokens, completionTokens);
+    // Calls that reported no tokens would price to zero, which reads as free: no estimate instead.
+    boolean tokensUnknown = !byCheck.isEmpty() && promptTokens + completionTokens == 0;
+    Double cost =
+        pricing == null || tokensUnknown ? null : pricing.cost(promptTokens, completionTokens);
     return new SuiteReport.Usage(wallClockMillis, assistantCalls, assistantMillis, byCheck, cost);
   }
 }

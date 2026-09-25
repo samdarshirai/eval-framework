@@ -126,4 +126,19 @@ class ConsoleReportTest {
   void aReportWithNoUsageLeavesTheBlockOut() {
     assertFalse(printWithUsage(null).contains("Cost and time"));
   }
+
+  @Test
+  void callsWithNoReportedTokensSayTokensNotReportedInsteadOfAZeroCost() {
+    String output =
+        printWithUsage(
+            new SuiteReport.Usage(
+                1000,
+                1,
+                100,
+                List.of(new SuiteReport.Usage.CheckUsage("Coverage", 3, 0, 0)),
+                null));
+    assertTrue(output.contains("tokens not reported"), output);
+    assertFalse(output.contains("$0.0000"), output);
+    assertFalse(output.contains("set judgePricing"), output);
+  }
 }
