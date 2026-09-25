@@ -16,7 +16,7 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 | Build | **Maven, multi-module**: `kb`, `llm`, `assistant`, `eval` under one parent POM | The module graph enforces the HTTP-only boundary (D28, D37): `eval` has no dependency on `assistant`. |
 | Testing/running | JUnit 5 for deterministic code; the harness itself is a plain `main()` | The harness is the eval framework; JUnit only guards its own deterministic parts. |
 
-**Two commands:** `mvn -q -DskipTests package`, then start the stub (`java -jar assistant/target/assistant.jar`) and run the harness (`java -jar eval/target/eval.jar`), which is the one command the brief asks for. Both run from the repo root. `--config <file>` runs it with another team's config (paths in it resolve against the config file's directory, from any working directory); every setting in the config can be overridden for one run with `--<setting> <value>` (`--endpoint <url>` points the harness at any other app, `--skipCalibration true` skips the judge trap pairs and the Groundedness sample that otherwise run first, `--baseline <file>` compares with a previous report, promoted by copying it to `caseResults/baseline.json`, and fails the run on a regression after one re-run; `--skip-calibration` is a shorthand).
+**Two commands:** `mvn -q -DskipTests package`, then start the stub (`java -jar assistant/target/assistant.jar`) and run the harness (`java -jar eval/target/eval.jar`), which is the one command the brief asks for. Both run from the repo root. `--config <file>` runs it with another team's config (paths in it resolve against the config file's directory, from any working directory); every setting in the config can be overridden for one run with `--<setting> <value>` (`--endpoint <url>` points the harness at any other app, `--skipCalibration true` skips the judge trap pairs and the Groundedness sample that otherwise run first, `--baseline <file>` compares with a previous report, promoted by copying it to `caseResults/baseline.json`, and fails the run on a regression after one re-run; `--skip-calibration` is a shorthand, and `--case <id>[,<id>...]` runs only the named cases (D52)).
 
 **Models:** the assistant model and the judge model are separate config values (both routed through OpenRouter, D39), with the judge stronger than the assistant. The Coverage confirm step uses the main judge. Temperature is 0 everywhere.
 
@@ -34,9 +34,9 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 
 ```
 usercentrics-eval-harness/
-├── README.md                      # NOT WRITTEN YET (unit 26): 2-3 min orientation, how to start the stub, how to run the harness
-├── PATTERN.md                     # NOT WRITTEN YET (unit 24): the reusable pattern doc (was planned as docs-pattern/PATTERN.md)
-├── SCALE-PLAN.md                  # NOT WRITTEN YET (unit 25): one-pager for the live session
+├── README.md                      # 2-3 min orientation: how to start the stub, how to run the harness
+├── PATTERN.md                     # the reusable pattern doc (was planned as docs-pattern/PATTERN.md)
+├── SCALE-PLAN.md                  # the one-pager for the live session
 ├── pom.xml                        # parent POM: modules kb, llm, assistant, eval
 ├── CONTEXT.md                     # glossary of domain terms
 ├── scope.md                       # what is in and out, and the cut list

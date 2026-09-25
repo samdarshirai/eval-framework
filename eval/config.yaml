@@ -23,6 +23,9 @@ passFloor: 0.90
 # Set but no file at the path (or the file is unusable): an error, exit code 2.
 # Pass --baseline "" to switch it off for one run.
 # baseline: caseResults/baseline.json
+# Run only these cases, comma-separated ids: --case ss-zonejs,oos-pricing (D52). Not set: every case.
+# An unknown id exits 2. The pass rate, floor and out-of-scope rule then apply to the selected cases only.
+# case: ss-zonejs,oos-pricing
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
 # What the judge costs, USD per million tokens, so the report can estimate cost from measured tokens (D17).

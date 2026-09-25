@@ -1,7 +1,7 @@
 # Grilling Decisions — Eval Harness Plan
 
 Decisions settled while stress-testing `usercentrics-eval-harness-plan.md`. Terms are defined in `CONTEXT.md`.
-Status: D1-D51 are settled and built (units 1-22 of `build-order.md`, plus `--debug`). Still open: the pattern document, the scale plan and the README (units 24-26).
+Status: D1-D52 are settled and built (units 1-22 of `build-order.md`, plus `--debug` and `--case`). The pattern document, scale plan and README (units 24-26) are written (`PATTERN.md`, `SCALE-PLAN.md`, `README.md`). Still open: the live-change rehearsal (unit 23).
 
 ## Contract and cases
 
@@ -103,13 +103,13 @@ Status: D1-D51 are settled and built (units 1-22 of `build-order.md`, plus `--de
 
 51. **`--debug` prints a `[debug]` trace on the report stream.** `debug` is a config key like the rest (D47); `--debug` alone is the shorthand for `--debug true` (same idea as `--skip-calibration`), and `--debug false` still works. With it on, the run prints one `[debug]` line per event, in run order, on stdout with the report: resolved config, chunk count, cases per category, calibration start and end, and per case the assistant answer summary (refused, claims, cited chunks), every check with its gating flag, verdict and reason, every judge call (check, latency, tokens, prompt size, reply), every assistant call (status, latency, body) and baseline re-runs. Question, answer and judge text are cut to 200 characters on one line; the API key and headers are never logged. Off by default, and then the output is unchanged. No logging library: `DebugLog` is passed by constructor and `DebugLog.OFF` is the default, so existing callers and tests did not change. Not logged: the 429 retries inside `OpenRouterLlm` (the `llm` module cannot see `DebugLog`; add a callback if rate limits become the question).
 
+52. **`--case <id>[,<id>...]` runs only the named cases.** `case` is a config key like the rest (D47), read as a comma-separated list, or a YAML list in a config file; empty or absent means every case. Selection happens after the loader has validated all of the cases against the docs (D8), so a broken case elsewhere in the set still stops the run. An id that is not a case exits 2 before any assistant call, naming the id and listing the known ones. The run prints `Partial run: N of M cases [ids]` and the report covers only the selected cases, so the pass rate, the floor and the out-of-scope rule apply to that subset. Baseline comparison works on any overlap (D46). Reason: a builder iterating on one prompt change needs a one-case run, about $0.04 and 20 s, not a 5-minute full run (`SCALE-PLAN.md`, local runs).
+
 ## Open
 
-- Baseline: `caseResults/baseline.json` is an early 8-case run. Promote a current report once the multi-source failures (0/6 in the latest run) are diagnosed as retrieval miss or model miss.
 - The live-change rehearsal (unit 23) has not been done out loud yet.
+- `caseResults/baseline.json` is a 28-case run at 71.4% (20 of 28), promoted as the reference for the demo. It is not a "green" baseline: the multi-source failures are the stub's retrieval misses (traced in `scope.md`), kept as evidence.
 
 ## Not yet grilled
 
-- Pattern document structure and worked example (unit 24)
-- Scale plan content and the assistant-cost hand calculation (unit 25)
 - Time budget and the "what I cut and why" list (`scope.md` covers the cut list)
