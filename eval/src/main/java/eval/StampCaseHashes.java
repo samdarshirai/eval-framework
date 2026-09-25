@@ -4,8 +4,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Writes {@code confirmed_hash} into the case files so nobody computes a hash by hand (D21, unit
@@ -33,20 +36,78 @@ public final class StampCaseHashes {
         hashByCaseId.put(evalCase.id(), hash);
       }
     }
+    List<Path> caseFiles;
+    try (var files = Files.list(config.casesDir())) {
+      caseFiles =
+          files
+              .filter(file -> file.toString().endsWith(".yaml") || file.toString().endsWith(".yml"))
+              .sorted()
+              .toList();
+    }
+    Set<String> foundIds = new HashSet<>();
+    for (Path caseFile : caseFiles) {
+      foundIds.addAll(caseIdsIn(Files.readString(caseFile)));
+    }
+    try {
+      requireEveryIdFound(hashByCaseId.keySet(), foundIds);
+    } catch (IllegalArgumentException problem) {
+      System.out.println("ERROR: " + problem.getMessage());
+      System.exit(2);
+    }
     int filesChanged = 0;
-    try (var caseFiles = Files.list(config.casesDir())) {
-      for (Path caseFile :
-          caseFiles.filter(file -> file.toString().endsWith(".yaml")).sorted().toList()) {
-        String before = Files.readString(caseFile);
-        String after = stamp(before, hashByCaseId);
-        if (!after.equals(before)) {
-          Files.writeString(caseFile, after);
-          filesChanged++;
-        }
+    for (Path caseFile : caseFiles) {
+      String before = Files.readString(caseFile);
+      String after = stamp(before, hashByCaseId);
+      if (!after.equals(before)) {
+        Files.writeString(caseFile, after);
+        filesChanged++;
       }
     }
     System.out.println(
         "stamped " + hashByCaseId.size() + " case(s), " + filesChanged + " file(s) changed");
+  }
+
+  /** The ids of the cases written as a {@code - id: <id>} line at column 0. */
+  static Set<String> caseIdsIn(String yaml) {
+    Set<String> ids = new HashSet<>();
+    yaml.lines()
+        .forEach(
+            line -> {
+              String id = idOf(line);
+              if (id != null) {
+                ids.add(id);
+              }
+            });
+    return ids;
+  }
+
+  /**
+   * Throws when a case that needs a hash has no {@code - id:} line to stamp under (a case written
+   * with the id not first, or inline as {@code - {id: ...}}), instead of stamping it wrongly or not
+   * at all.
+   */
+  static void requireEveryIdFound(Set<String> hashedIds, Set<String> foundIds) {
+    Set<String> missing = new TreeSet<>(hashedIds);
+    missing.removeAll(foundIds);
+    if (!missing.isEmpty()) {
+      throw new IllegalArgumentException(
+          "cannot find a '- id: <id>' line at column 0 to stamp under for: "
+              + String.join(", ", missing)
+              + ". Write each case with its id first, or add confirmed_hash by hand.");
+    }
+  }
+
+  /**
+   * The case id on a {@code - id: <id>} line (quotes and a trailing comment removed), else null.
+   */
+  private static String idOf(String line) {
+    if (!line.startsWith(CASE_START)) {
+      return null;
+    }
+    return line.substring(CASE_START.length())
+        .replaceAll("\\s+#.*$", "")
+        .trim()
+        .replaceAll("^[\"']|[\"']$", "");
   }
 
   /**
@@ -57,7 +118,8 @@ public final class StampCaseHashes {
     List<String> lines = new ArrayList<>(yaml.lines().toList());
     List<Integer> caseStarts = new ArrayList<>();
     for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
-      if (lines.get(lineIndex).startsWith(CASE_START)) {
+      // Any list item at column 0 ends the previous case, whatever key it starts with.
+      if (lines.get(lineIndex).startsWith("- ") || lines.get(lineIndex).equals("-")) {
         caseStarts.add(lineIndex);
       }
     }
@@ -65,9 +127,8 @@ public final class StampCaseHashes {
     for (int caseIndex = caseStarts.size() - 1; caseIndex >= 0; caseIndex--) {
       int start = caseStarts.get(caseIndex);
       int end = caseIndex + 1 < caseStarts.size() ? caseStarts.get(caseIndex + 1) : lines.size();
-      String caseId =
-          lines.get(start).substring(CASE_START.length()).trim().replaceAll("^[\"']|[\"']$", "");
-      String hash = hashByCaseId.get(caseId);
+      String caseId = idOf(lines.get(start));
+      String hash = caseId == null ? null : hashByCaseId.get(caseId);
       if (hash == null) {
         continue;
       }

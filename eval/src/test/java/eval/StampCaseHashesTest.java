@@ -55,6 +55,33 @@ class StampCaseHashesTest {
   }
 
   @Test
+  void aCaseWithTheIdNotFirstNeverReceivesAnotherCasesHash() {
+    String yaml = "- id: c1\n  added: \"x\"\n- question: Q2\n  id: c2\n  added: \"y\"\n";
+    assertEquals(
+        "- id: c1\n  added: \"x\"\n  confirmed_hash: \"aaaaaaaaaaaa\"\n"
+            + "- question: Q2\n  id: c2\n  added: \"y\"\n",
+        StampCaseHashes.stamp(yaml, Map.of("c1", "aaaaaaaaaaaa")));
+  }
+
+  @Test
+  void findsCaseIdsOnlyOnIdLinesAndIgnoresATrailingComment() {
+    String yaml = "- id: c1  # note\n  a: b\n- {id: c2, q: x}\n- id: \"c3\"\n";
+    assertEquals(java.util.Set.of("c1", "c3"), StampCaseHashes.caseIdsIn(yaml));
+  }
+
+  @Test
+  void refusesToStampWhenAHashedCaseHasNoIdLineToStampUnder() {
+    var error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                StampCaseHashes.requireEveryIdFound(
+                    java.util.Set.of("c1", "c2"), java.util.Set.of("c1")));
+    assertTrue(error.getMessage().contains("c2"), error.getMessage());
+    StampCaseHashes.requireEveryIdFound(java.util.Set.of("c1"), java.util.Set.of("c1", "c9"));
+  }
+
+  @Test
   void aQuotedIdIsMatched() {
     String stamped =
         StampCaseHashes.stamp("- id: \"c1\"\n  added: \"x\"\n", Map.of("c1", "a1b2c3d4e5f6"));
