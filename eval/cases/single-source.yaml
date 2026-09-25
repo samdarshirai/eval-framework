@@ -48,3 +48,52 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+
+- id: ss-loader-chrome
+  question: "What is the minimum Chrome version that Loader.js supports on desktop?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    # bundle.js needs Chrome 69 and Loader.js needs 43: a claim about the wrong script has the right words and the wrong number
+    - fact: "Loader.js supports Chrome starting from version 43"
+      chunks: [browser-support#browser-support]
+      keywords: ["Chrome", "43"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: ss-geo-global-fallback
+  question: "Why do I have to pick a global configuration when I create a geolocation ruleset?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    # a reason, not a value: no keywords, so the judge picks the covering claim
+    - fact: "The global configuration is mandatory because it acts as the fallback rule when no other rule is specified for a region"
+      chunks: [geolocation-rules#create-rulesets]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: ss-tcf-privacy-button
+  question: "Where can the Privacy Button be rendered in the TCF layout options?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "The Privacy Button can be rendered at the Bottom Left or the Bottom Right"
+      chunks: [tcf2#layout]
+      keywords: ["Bottom Left", "Bottom Right"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: ss-consent-mode-v2-bits
+  question: "Which two extra signals did Google Consent Mode v2 add?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "Consent Mode v2 introduces two additional bits, ad_user_data and ad_personalization"
+      chunks: [consent-mode#google-consent-mode]
+      keywords: ["ad_user_data", "ad_personalization"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
