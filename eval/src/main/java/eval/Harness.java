@@ -129,7 +129,8 @@ public final class Harness {
             calibration,
             outcome.results(),
             outcome.comparison(),
-            usage);
+            usage,
+            Provenance.capture(config, root));
     ConsoleReport.print(report, out);
     ReportWriter.writeAndAnnounce(config.outputDir(), report, root, out);
     return report.exitCode();

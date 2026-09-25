@@ -49,6 +49,7 @@ final class EvalConfig {
           "endpoint",
           "passFloor",
           "judgeModel",
+          "assistantVersion",
           "judgePricing",
           "categories",
           "cases",

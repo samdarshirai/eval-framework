@@ -28,6 +28,9 @@ passFloor: 0.90
 # case: ss-zonejs,oos-pricing
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
+# Optional label for the assistant build under test (model, prompt version, git tag). Recorded in the report's
+# provenance block, because the harness cannot see inside the assistant.
+# assistantVersion: stub-haiku-4.5-prompt-v1
 # What the judge costs, USD per million tokens, so the report can estimate cost from measured tokens (D17).
 # Prices of judgeModel on its OpenRouter route (D40: azure/global). Not set: tokens are reported, cost is not estimated.
 judgePricing:

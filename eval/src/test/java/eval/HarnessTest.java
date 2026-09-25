@@ -1027,6 +1027,19 @@ class HarnessTest {
   }
 
   @Test
+  void theReportRecordsProvenance() throws Exception {
+    config(defaultConfig() + "assistantVersion: stub-v1\n");
+    cases(ONE_ANSWER_CASE);
+    replyFor = ONE_CLAIM_REPLY;
+    var provenance = reportJson(runWithReportingJudge()).get("provenance");
+    assertEquals(Judge.promptHash(), provenance.get("judgePromptHash").asText());
+    assertEquals(12, provenance.get("judgePromptHash").asText().length());
+    assertEquals("stub-v1", provenance.get("assistantVersion").asText());
+    assertFalse(provenance.get("judgeModel").asText().isBlank());
+    assertTrue(provenance.get("gitSha").isNull(), "the temp root is not a git checkout");
+  }
+
+  @Test
   void aBadJudgePricingExitsTwoBeforeAnyAssistantCall() throws Exception {
     config(defaultConfig() + "judgePricing:\n  inputPerMillion: 5.0\n");
     cases(ONE_ANSWER_CASE);
