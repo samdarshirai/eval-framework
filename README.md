@@ -30,7 +30,7 @@ java -jar eval/target/eval.jar
 
 You get a summary on the terminal and a full JSON report in `caseResults/`. If the stub is not running, the harness stops at once and tells you how to start it.
 
-A full run of the 28 cases takes about 6 minutes and costs about $0.21 in judge calls (the calibration is about $0.04 of that). To try it fast, run a few cases and skip the judge calibration:
+A full run of the 28 cases takes about 6 minutes and costs about $0.21 in judge calls (the calibration is about $0.04 of that). The calibration runs on every run by default. To try it fast, run a few cases and skip it:
 
 ```bash
 java -jar eval/target/eval.jar --case ss-safari-bundle,oos-pricing --skip-calibration
@@ -55,7 +55,7 @@ java -jar eval/target/eval.jar --case fp-tcf-gettcdata --debug           # one c
 java -jar eval/target/eval.jar --skip-calibration                        # skip the judge calibration
 ```
 
-A **baseline** is a previous report you trust, and `eval/config.yaml` sets `caseResults/baseline.json` by default, so every run includes the regression check. Promote a new one with `cp caseResults/<run id>.json caseResults/baseline.json`. A case that passed in the baseline and fails now fails the run, after one re-run. `eval/config.yaml` documents every key.
+A **baseline** is a previous run's report that later runs are compared against. Normally it is a run you trust. In this repo it is the latest stub run (19 of 28): a reference for change, not a known-good run. `eval/config.yaml` sets `caseResults/baseline.json` by default, so every run includes the regression check. Promote a new one with `cp caseResults/<run id>.json caseResults/baseline.json`. A case that passed in the baseline and fails now fails the run, after one re-run. `eval/config.yaml` documents every key.
 
 ### Another team's app, cases and documents
 
@@ -65,7 +65,7 @@ A **baseline** is a previous report you trust, and `eval/config.yaml` sets `case
 java -jar eval/target/eval.jar --config my-team/eval.yaml
 ```
 
-`eval/testing-config-param.md` walks through this with a throwaway team folder. `PATTERN.md` explains how to write the config and the cases.
+The Quickstart in `PATTERN.md` walks through this with a small team folder, and the rest of `PATTERN.md` explains how to write the config and the cases.
 
 ## What is where
 
