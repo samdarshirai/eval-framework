@@ -2,6 +2,8 @@
 
 Sliced from `usercentrics-eval-harness-plan.md` (the spec), with `grilling-decisions.md` as the ADR layer (numbered decisions win over any older plan text) and `CONTEXT.md` for vocabulary. There are no `docs/adr/` files, so decisions are cited as **D<n>**.
 
+**Status (2026-09-25):** units 1-22 and 24-26 are built or written (24-26 are `PATTERN.md`, the scale plan and `README.md`). Unit 23, the live-change rehearsal, is not done. `--case` (D52) is an addition to unit 4 and has no unit of its own.
+
 Each unit is an observable outcome you can demo alone. Units marked **Cut n** map to the cut order in D30 (1 = cut first). Units marked **Never cut** are the floor that answers the brief's stated risk.
 
 **Cross-cutting rules, applied as criteria in each relevant unit, not built as units:** temperature 0 for the assistant and judges (D14); assistant and judge models are separate config values, judge stronger (D15); `eval/` never imports `Assistant` and talks to the app only over HTTP (D28).

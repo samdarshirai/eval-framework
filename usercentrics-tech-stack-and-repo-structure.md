@@ -16,7 +16,7 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 | Build | **Maven, multi-module**: `kb`, `llm`, `assistant`, `eval` under one parent POM | The module graph enforces the HTTP-only boundary (D28, D37): `eval` has no dependency on `assistant`. |
 | Testing/running | JUnit 5 for deterministic code; the harness itself is a plain `main()` | The harness is the eval framework; JUnit only guards its own deterministic parts. |
 
-**Two commands:** `mvn -q -DskipTests package`, then start the stub (`java -jar assistant/target/assistant.jar`) and run the harness (`java -jar eval/target/eval.jar`), which is the one command the brief asks for. Both run from the repo root. `--config <file>` runs it with another team's config (paths in it resolve against the config file's directory, from any working directory); every setting in the config can be overridden for one run with `--<setting> <value>` (`--endpoint <url>` points the harness at any other app, `--skipCalibration true` skips the judge trap pairs and the Groundedness sample that otherwise run first, `--baseline <file>` compares with a previous report, promoted by copying it to `caseResults/baseline.json`, and fails the run on a regression after one re-run; `--skip-calibration` is a shorthand).
+**Two commands:** `mvn -q -DskipTests package`, then start the stub (`java -jar assistant/target/assistant.jar`) and run the harness (`java -jar eval/target/eval.jar`), which is the one command the brief asks for. Both run from the repo root. `--config <file>` runs it with another team's config (paths in it resolve against the config file's directory, from any working directory); every setting in the config can be overridden for one run with `--<setting> <value>` (`--endpoint <url>` points the harness at any other app, `--skipCalibration true` skips the judge trap pairs and the Groundedness sample that otherwise run first, `--baseline <file>` compares with a previous report, promoted by copying it to `caseResults/baseline.json`, and fails the run on a regression after one re-run; `--skip-calibration` is a shorthand, and `--case <id>[,<id>...]` runs only the named cases (D52)).
 
 **Models:** the assistant model and the judge model are separate config values (both routed through OpenRouter, D39), with the judge stronger than the assistant. The Coverage confirm step uses the main judge. Temperature is 0 everywhere.
 
@@ -30,78 +30,49 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 
 ## Repo structure
 
-**Module layout (D37, supersedes the paths in the tree below):** `kb/` (Chunk, Chunker), `llm/` (Llm, OpenRouterLlm), `assistant/` (Spring Boot: Assistant, BM25Index, StubServer, AnswerController), `eval/` (harness sources under `eval/src`, plus `eval/config.yaml` and `eval/cases/`). `docs/`, `config/application.yaml` and `caseResults/` stay at the repo root. `Chunk` and `Chunker` are in package `kb`, not `assistant`.
+**Module layout (D37):** `kb/` (Chunk, Chunker), `llm/` (Llm, OpenRouterLlm), `assistant/` (Spring Boot: Assistant, BM25Index, StubServer, AnswerController), `eval/` (harness sources under `eval/src`, plus `eval/config.yaml` and `eval/cases/`). `docs/`, `config/application.yaml` and `caseResults/` stay at the repo root. `Chunk` and `Chunker` are in package `kb`, not `assistant`.
 
 ```
 usercentrics-eval-harness/
-├── README.md                      # 2–3 min orientation: how to start the stub, how to run the harness
-├── pom.xml                        # or build.gradle
+├── README.md                      # 2-3 min orientation: how to start the stub, how to run the harness
+├── PATTERN.md                     # the reusable pattern doc (was planned as docs-pattern/PATTERN.md)
+├── the scale plan                  # the one-pager for the live session
+├── pom.xml                        # parent POM: modules kb, llm, assistant, eval
 ├── CONTEXT.md                     # glossary of domain terms
-├── grilling-decisions.md          # decision log behind the plan
+├── scope.md                       # what is in and out, and the cut list
+├── build-order.md                 # units 1-26 with acceptance criteria
+├── grilling-decisions.md          # decision log (D1-D51)
+├── usercentrics-eval-harness-plan.md
 │
-├── docs/                          # Step 1 — the knowledge base
-│   ├── browser-support.md
-│   ├── ab-test.md
-│   ├── geolocation-rules.md
-│   ├── consent-mode.md
-│   └── tcf2.md
-│   # each file: source URL in a comment/frontmatter at the top,
-│   # content copied/cleaned from the live page
+├── docs/                          # the knowledge base: 5 public pages, each with a source URL in front matter
+│   ├── browser-support.md  ab-test.md  geolocation-rules.md  consent-mode.md  tcf2.md
 │
-├── src/main/java/assistant/       # the app under test — a separate service
-│   ├── Chunk.java                 # id (doc#heading), sourceDoc, text
-│   ├── Chunker.java               # splits docs/*.md into Chunks with heading-based IDs
-│   ├── BM25Index.java             # hand-rolled BM25 over the chunks
-│   ├── Claim.java                 # claim text + citations (chunk IDs)
-│   ├── AssistantResponse.java     # refused flag + List<Claim>; no free-text field
-│   ├── Assistant.java             # question -> retrieve -> generate -> AssistantResponse
-│   └── StubServer.java            # main() — HttpServer exposing POST /answer
+├── config/application.yaml        # Spring config for the stub (127.0.0.1)
+├── kb/                            # Chunk, Chunker: heading-based chunk IDs, shared by stub and harness
+├── llm/                           # Llm, Completion, OpenRouterLlm (temperature 0, require_parameters)
+├── assistant/                     # the app under test: Spring Boot stub
+│   └── src/main/java/assistant/   # Assistant, BM25Index, AssistantResponse, Claim, AnswerController, StubServer
 │
-├── src/main/java/eval/            # the evaluation layer
-│   ├── EvalCase.java               # question, category, expected_behavior, expected facts, source/owner/added
-│   ├── ExpectedFact.java           # fact, chunks (gold, any-of), optional keywords
-│   ├── EvalCaseLoader.java         # reads eval/cases/*.yaml; fails loudly on a gold chunk that doesn't exist
-│   ├── KnowledgeBase.java          # loads docs/ via Chunker; chunk lookup for integrity and groundedness
-│   ├── AssistantClient.java        # HTTP adapter: POST question, parse AssistantResponse
-│   ├── MeteredLlm.java             # wraps the judge's Llm; records each call and its tokens in the UsageMeter
-│   ├── UsageMeter.java             # judge calls/tokens per check, assistant calls/time, cost from judgePricing (D50)
-│   ├── Judge.java                  # shared LLM-judge call wrapper (Coverage confirm, Groundedness fallback, Relevance)
-│   ├── checks/
-│   │   ├── Check.java              # the one interface: (case, response) -> pass/fail + reason
-│   │   ├── Checks.java             # the single registration list, with a gating flag per check
-│   │   ├── CoverageCheck.java      # keyword filter, then judge confirm; finds covering claims
-│   │   ├── CitationIntegrityCheck.java  # deterministic: ≥1 citation, every cited ID exists
-│   │   ├── GroundednessCheck.java  # gold-chunk match passes; otherwise judge
-│   │   ├── SourceCheck.java        # deterministic: cited docs match the fact's gold-chunk docs
-│   │   ├── RelevanceCheck.java     # judge; advisory (not gating)
-│   │   └── RefusalCheck.java       # deterministic: refused flag + claim count vs expected_behavior
-│   ├── CaseResult.java             # per-case pass/fail + per-check detail
-│   ├── SuiteReport.java            # overall + by-category (and out-of-scope subtype) pass rate; call/token/cost/time totals
-│   ├── Baseline.java               # loads a previous results file; finds pass→fail flips (with one re-run)
-│   └── Harness.java                # main() — endpoint pre-check, loops cases, runs checks, prints + writes report, sets exit code
+├── eval/                          # the evaluation layer (never depends on assistant)
+│   ├── config.yaml                # endpoint, passFloor, judgeModel, judgePricing, categories, knowledgeBase, ...
+│   ├── cases/                     # single-source, multi-source, false-premise, out-of-scope, edge-case (.yaml, 28 cases)
+│   └── src/main/java/eval/
+│       ├── Harness, CliArgs, EvalConfig      # main(), --config and --<setting> overrides
+│       ├── SuiteRunner, CaseRunner, CaseState, CaseResult, SuiteReport, ConsoleReport, ReportWriter
+│       ├── AssistantClient, Assistant, Answer, Claim   # HTTP adapter and contract types
+│       ├── Judge, MeteredLlm, UsageMeter     # judge calls and the measured cost report
+│       ├── Baseline, StaleCases, CaseHash, StampCaseHashes   # regression and doc-hash warning
+│       ├── DebugLog, CalibrationRun          # --debug trace, judge calibration run
+│       ├── EvalCaseLoader, EvalCase, Expected, ExpectedFact, KnowledgeBase
+│       ├── knowledge/                        # KnowledgeSource: docs (built), http and manifest (placeholders)
+│       ├── calibration/                      # LabeledSample, TrapPairs
+│       └── checks/                           # Check, Checks (the registration list), Registered, and one class per check:
+│                                             #   Refusal, CitationIntegrity, Coverage, Groundedness, Source, Relevance (advisory)
+│   └── src/main/resources/calibration/       # trap-pairs.yaml (7 pairs), labeled-sample.yaml (20 pairs), bundled in the jar
 │
-├── eval/
-│   ├── config.yaml                 # endpoint, assistant model, judge model, pass floor
-│   └── cases/
-│       ├── single-source.yaml      # 8 cases
-│       ├── multi-source.yaml       # 6 cases
-│       ├── out-of-scope.yaml       # 5 cases (~2 unrelated, ~3 plausible-nonexistent)
-│       ├── false-premise.yaml      # 6 cases
-│       └── edge-cases.yaml         # 3 cases: exact-value, multi-ask, light paraphrase
-│
-├── calibration/
-│   ├── labeled-sample.yaml         # 20 hand-labeled claim/chunk pairs: 10 subtly unsupported, 5 supported, 5 hard-supported
-│   ├── trap-pairs.yaml             # ~5 negation traps for the Coverage confirm step
-│   └── calibration-notes.md        # agreement rate, false-"supported" count, what you adjusted
-│
-├── caseResults/
-│   ├── .gitkeep                    # harness writes timestamped JSON reports here
-│   └── baseline.json               # a previous report promoted by copying it (the known-good run)
-│
-├── docs-pattern/
-│   └── PATTERN.md                  # Step 5 deliverable — the reusable pattern doc
-│
-└── the scale plan                   # Step 6 deliverable — one-pager for the live session
+├── calibration/calibration-notes.md          # measured agreement, false-"supported" count, limits
+├── caseResults/                              # timestamped JSON reports; baseline.json is the promoted reference
+└── .github/workflows/test.yml                # mvn test on every PR (LLM mocked, no key needed)
 ```
 
 **A couple of structural notes worth keeping in mind while building:**

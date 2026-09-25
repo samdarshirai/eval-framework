@@ -1,724 +1,1427 @@
 {
-  "runId": "20260925-053104",
-  "endpoint": "http://localhost:8080/answer",
-  "passFloor": 0.85,
-  "checks": [
-    {
-      "name": "Refusal",
-      "gating": true
+  "runId" : "20260925-190721",
+  "endpoint" : "http://localhost:8080/answer",
+  "passFloor" : 0.9,
+  "checks" : [ {
+    "name" : "Refusal",
+    "gating" : true
+  }, {
+    "name" : "Citation integrity",
+    "gating" : true
+  }, {
+    "name" : "Coverage",
+    "gating" : true
+  }, {
+    "name" : "Groundedness",
+    "gating" : true
+  }, {
+    "name" : "Source",
+    "gating" : true
+  }, {
+    "name" : "Relevance",
+    "gating" : false
+  } ],
+  "calibration" : {
+    "ran" : false,
+    "pairs" : [ ],
+    "groundedness" : {
+      "pairs" : [ ],
+      "agreed" : 0,
+      "unsupportedPairs" : 0,
+      "falseUnsupported" : 0,
+      "agreement" : 1.0,
+      "falseSupported" : 0,
+      "errors" : 0
     },
-    {
-      "name": "Citation integrity",
-      "gating": true
-    },
-    {
-      "name": "Coverage",
-      "gating": true
-    },
-    {
-      "name": "Groundedness",
-      "gating": true
-    },
-    {
-      "name": "Source",
-      "gating": true
-    }
-  ],
-  "calibration": {
-    "ran": true,
-    "pairs": [
-      {
-        "name": "all-except-14",
-        "passed": true,
-        "detail": null
-      },
-      {
-        "name": "safari-13-not-14",
-        "passed": true,
-        "detail": null
-      },
-      {
-        "name": "safari-14-not-supported",
-        "passed": true,
-        "detail": null
-      },
-      {
-        "name": "paraphrase-onward",
-        "passed": true,
-        "detail": null
-      },
-      {
-        "name": "paraphrase-from",
-        "passed": true,
-        "detail": null
-      },
-      {
-        "name": "covering-negated-and-different-value",
-        "passed": true,
-        "detail": null
-      },
-      {
-        "name": "covering-picks-only-the-real-one",
-        "passed": true,
-        "detail": null
-      }
-    ],
-    "groundedness": {
-      "pairs": [
-        {
-          "name": "wrong-safari-version",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "wrong-zonejs-version",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "swapped-chrome-version",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "custom-ab-split",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "variant-set-after-cmp",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "tool-after-cmp",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "default-for-all-customers",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "added-exception",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "extra-analytics-js",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "wrong-consent-signal",
-          "kind": "unsupported",
-          "labeledSupported": false,
-          "judged": false,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "plain-chrome-version",
-          "kind": "supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "plain-even-split",
-          "kind": "supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "plain-ruleset-delete",
-          "kind": "supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "plain-variant-before-cmp",
-          "kind": "supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "plain-default-for-new-customers",
-          "kind": "supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "hard-oldest-safari",
-          "kind": "hard-supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "hard-split-across-sentences",
-          "kind": "hard-supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "hard-half-of-visitors",
-          "kind": "hard-supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "hard-gdpr-and-tcf",
-          "kind": "hard-supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        },
-        {
-          "name": "hard-update-analytics-js",
-          "kind": "hard-supported",
-          "labeledSupported": true,
-          "judged": true,
-          "detail": null,
-          "agreed": true
-        }
-      ],
-      "agreed": 20,
-      "agreement": 1.0,
-      "falseSupported": 0,
-      "unsupportedPairs": 10,
-      "falseUnsupported": 0,
-      "errors": 0
-    },
-    "misses": 0
+    "misses" : 0
   },
-  "cases": [
-    {
-      "id": "fp-ab-script-after-cmp",
-      "question": "I want my A/B testing tool to load after the Usercentrics CMP. Where do I add the tool's script?",
-      "category": "false-premise",
-      "subtype": null,
-      "expected": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "The A/B testing tool script must be added in the head section before the Usercentrics CMP script, so the tool is loaded before the CMP and can split properly",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool"
-            ],
-            "keywords": [
-              "head",
-              "before"
-            ]
-          }
-        ]
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool"
-            ]
-          },
-          {
-            "claim": "The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool"
-            ]
-          }
-        ]
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": "grounded (gold chunk): \"The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.\"; grounded (judge): \"The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.\""
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+  "cases" : [ {
+    "id" : "edge-exact-value-bundle-edge",
+    "question" : "Which is the first Edge version that bundle.js supports?",
+    "category" : "edge-case",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "bundle.js supports Edge starting from version 79",
+        "citations" : [ "browser-support#browser-support" ],
+        "keywords" : [ "Edge", "79" ]
+      } ]
     },
-    {
-      "id": "ms-geo-tcf-and-consent-mode",
-      "question": "Can I put a GDPR configuration and a TCF configuration in the same geolocation ruleset, and which Google tag libraries does Google Consent Mode require?",
-      "category": "multi-source",
-      "subtype": null,
-      "expected": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "Configurations supporting TCF 2.2 should belong to a single ruleset, so a GDPR configuration and a TCF configuration should not be combined in one rule",
-            "citations": [
-              "geolocation-rules#constraints"
-            ],
-            "keywords": [
-              "TCF"
-            ]
-          },
-          {
-            "claim": "Google Consent Mode requires gtag.js or Google Tag Manager",
-            "citations": [
-              "consent-mode#prerequisites"
-            ],
-            "keywords": [
-              "gtag.js"
-            ]
-          }
-        ]
-      },
-      "passed": false,
-      "error": null,
-      "actual": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected.",
-            "citations": [
-              "geolocation-rules#constraints"
-            ]
-          },
-          {
-            "claim": "The documentation does not specify which Google tag libraries Google Consent Mode requires.",
-            "citations": []
-          }
-        ]
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": false,
-          "reason": "no citation for claim: \"The documentation does not specify which Google tag libraries Google Consent Mode requires.\""
-        },
-        {
-          "check": "Coverage",
-          "passed": false,
-          "reason": "not covered: \"Google Consent Mode requires gtag.js or Google Tag Manager\""
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": "grounded (gold chunk): \"Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected.\"; skipped, no existing citation (see Citation integrity): \"The documentation does not specify which Google tag libraries Google Consent Mode requires.\""
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "bundle.js supports Edge starting from version 79",
+        "citations" : [ "browser-support#browser-support" ]
+      } ]
     },
-    {
-      "id": "oos-pricing",
-      "question": "How much does a Usercentrics Web CMP v2 subscription cost per month?",
-      "category": "out-of-scope",
-      "subtype": "unrelated",
-      "expected": {
-        "refused": true,
-        "claims": []
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": true,
-        "claims": []
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"bundle.js supports Edge starting from version 79\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "edge-multi-ask",
+    "question" : "Two things: from which zone.js version do the script tags work, and which custom event lets an A/B testing tool track how users interact with the CMP?",
+    "category" : "edge-case",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The script tags support zone.js starting from version 0.11.4",
+        "citations" : [ "browser-support#libraries-support" ],
+        "keywords" : [ "zone.js", "0.11.4" ]
+      }, {
+        "claim" : "The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP, so the tool can track them",
+        "citations" : [ "ab-test#available-ui-events", "ab-test#a-b-testing-with-third-party-tool" ],
+        "keywords" : [ "UC_UI_CMP_EVENT" ]
+      } ]
     },
-    {
-      "id": "oos-geo-language",
-      "question": "How do I configure a Geolocation Rules ruleset to show a different banner based on the visitor's browser language?",
-      "category": "out-of-scope",
-      "subtype": "plausible-nonexistent",
-      "expected": {
-        "refused": true,
-        "claims": []
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": true,
-        "claims": []
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
     },
-    {
-      "id": "ss-safari-bundle",
-      "question": "Which Safari version does bundle.js support?",
-      "category": "single-source",
-      "subtype": null,
-      "expected": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "bundle.js supports Safari starting from version 14",
-            "citations": [
-              "browser-support#browser-support"
-            ],
-            "keywords": [
-              "Safari",
-              "14"
-            ]
-          }
-        ]
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "bundle.js supports Safari version 14 and above",
-            "citations": [
-              "browser-support#browser-support"
-            ]
-          }
-        ]
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": "grounded (gold chunk): \"bundle.js supports Safari version 14 and above\""
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"The script tags support zone.js starting from version 0.11.4\"; \"The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP, so the tool can track them\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "edge-light-paraphrase",
+    "question" : "How can I stop my TCF banner from using legitimate interest as the legal basis?",
+    "category" : "edge-case",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "To disable legitimate interest for the TCF CMP, restrict all purposes to consent in the Admin Interface",
+        "citations" : [ "tcf2#publisher-restrictions" ],
+        "keywords" : [ "consent" ]
+      } ]
     },
-    {
-      "id": "ss-zonejs",
-      "question": "From which zone.js version do the Usercentrics script tags work?",
-      "category": "single-source",
-      "subtype": null,
-      "expected": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "The script tags support zone.js starting from version 0.11.4",
-            "citations": [
-              "browser-support#libraries-support"
-            ],
-            "keywords": [
-              "zone.js",
-              "0.11.4"
-            ]
-          }
-        ]
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4",
-            "citations": [
-              "browser-support#libraries-support"
-            ]
-          }
-        ]
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": "grounded (gold chunk): \"The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4\""
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "To disable legitimate interest for your TCF CMP, you need to restrict all purposes to consent in the Admin Interface.",
+        "citations" : [ "tcf2#publisher-restrictions" ]
+      } ]
     },
-    {
-      "id": "ss-ab-internal-split",
-      "question": "When Usercentrics runs the A/B test itself, how are visitors split between the variants?",
-      "category": "single-source",
-      "subtype": null,
-      "expected": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants",
-            "citations": [
-              "ab-test#usercentrics-internal-a-b-testing"
-            ],
-            "keywords": []
-          }
-        ]
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).",
-            "citations": [
-              "ab-test#usercentrics-internal-a-b-testing"
-            ]
-          }
-        ]
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": "grounded (gold chunk): \"When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).\""
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"To disable legitimate interest for your TCF CMP, you need to restrict all purposes to consent in the Admin Interface.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "fp-ab-script-after-cmp",
+    "question" : "I want my A/B testing tool to load after the Usercentrics CMP. Where do I add the tool's script?",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The A/B testing tool script must be added in the head section before the Usercentrics CMP script, so the tool is loaded before the CMP and can split properly",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ],
+        "keywords" : [ "head", "before" ]
+      } ]
     },
-    {
-      "id": "ss-ab-third-party-events",
-      "question": "I use a third-party A/B testing tool with Usercentrics. Which variable must be set before the CMP loads, and which custom event can the tool listen to in order to track how users interact with the variants?",
-      "category": "single-source",
-      "subtype": null,
-      "expected": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "The UC_AB_VARIANT variable must be set before the Usercentrics CMP is loaded",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool"
-            ],
-            "keywords": [
-              "UC_AB_VARIANT"
-            ]
-          },
-          {
-            "claim": "The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP (for example ACCEPT_ALL or SAVE), so the tool can track them",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool",
-              "ab-test#available-ui-events"
-            ],
-            "keywords": []
-          }
-        ]
-      },
-      "passed": true,
-      "error": null,
-      "actual": {
-        "refused": false,
-        "claims": [
-          {
-            "claim": "The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool"
-            ]
-          },
-          {
-            "claim": "UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).",
-            "citations": [
-              "ab-test#a-b-testing-with-third-party-tool"
-            ]
-          }
-        ]
-      },
-      "checks": [
-        {
-          "check": "Refusal",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Citation integrity",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Coverage",
-          "passed": true,
-          "reason": null
-        },
-        {
-          "check": "Groundedness",
-          "passed": true,
-          "reason": "grounded (gold chunk): \"The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.\"; grounded (gold chunk): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
-        },
-        {
-          "check": "Source",
-          "passed": true,
-          "reason": null
-        }
-      ]
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      }, {
+        "claim" : "The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.\"; grounded (judge): \"The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : false,
+      "reason" : "off-topic claim(s): \"The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.\"; \"The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.\""
+    } ]
+  }, {
+    "id" : "fp-tcf-gettcdata",
+    "question" : "How do I call getTCData through __tcfapi in TCF 2.2 to read the consent state as soon as the CMP has loaded?",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The getTCData command is not available anymore in TCF 2.2",
+        "citations" : [ "tcf2#iab-vendors" ],
+        "keywords" : [ "getTCData" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"The getTCData command is not available anymore in TCF 2.2\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "fp-consent-mode-blocking",
+    "question" : "I use Google Consent Mode. I should still block Google Analytics with the Google Tag Manager blocking setup so it does not fire before consent, right?",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "With Google Consent Mode the supported Google tags should not be adjusted as in the Google Tag Manager blocking guide, because Google adjusts the tag behaviour from the consent signal instead of the tag being blocked",
+        "citations" : [ "consent-mode#general-information" ],
+        "keywords" : [ ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "When using Google Consent Mode, the respective tags may not be adjusted as described in the Google Tag Manager blocking guide, because Google will use the consent signal to adjust the behavior of their tags based on the user's consent in the Usercentrics CMP instead of having them blocked when no consent is given.",
+        "citations" : [ "consent-mode#general-information" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"When using Google Consent Mode, the respective tags may not be adjusted as described in the Google Tag Manager blocking guide, because Google will use the consent signal to adjust the behavior of their tags based on the user's consent in the Usercentrics CMP instead of having them blocked when no consent is given.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "fp-geo-regional-settings",
+    "question" : "For Geolocation Rules I set each configuration's regional setting to show the CMP only to EU visitors. Is that the right way to combine them?",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "When using Geolocation Rules the regional settings of a configuration must be set to Display CMP to all users (default), and for CCPA configurations to Display CCPA CMP to all users",
+        "citations" : [ "geolocation-rules#prerequisites" ],
+        "keywords" : [ "all users" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Within your configurations, no regional settings must be in place when using Geolocation Rules. Regional settings in the Admin Interface / Configuration / Legal Specifications should be set to 'Display CMP to all users (default)' and for CCPA configurations to 'Display CCPA CMP to all users'.",
+        "citations" : [ "geolocation-rules#prerequisites" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"Within your configurations, no regional settings must be in place when using Geolocation Rules. Regional settings in the Admin Interface / Configuration / Legal Specifications should be set to 'Display CMP to all users (default)' and for CCPA configurations to 'Display CCPA CMP to all users'.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "fp-tcf20-still-valid",
+    "question" : "My CMP still runs TCF 2.0 and I never migrated. TC strings from 2.0 stay valid, so there is nothing to do, right?",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "TC strings obtained under TCF v2.0 after 20 November 2023 are considered invalid, so the CMP has to be migrated to TCF 2.2",
+        "citations" : [ "tcf2#tcf-2-0-vs-tcf-2-2" ],
+        "keywords" : [ "invalid" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "If you do not migrate from TCF 2.0 by November 20, 2023, any TC strings obtained under TCF v2.0 after that date will be considered invalid.",
+        "citations" : [ "tcf2#tcf-2-0-vs-tcf-2-2" ]
+      }, {
+        "claim" : "Invalid TC strings could adversely affect your agreements with advertisers, potentially resulting in a decrease in your ad revenues.",
+        "citations" : [ "tcf2#tcf-2-0-vs-tcf-2-2" ]
+      }, {
+        "claim" : "CMPs and publishers were given until November 20, 2023 to implement the new TCF 2.2 policies and specifications.",
+        "citations" : [ "tcf2#tcf-2-0-vs-tcf-2-2" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"If you do not migrate from TCF 2.0 by November 20, 2023, any TC strings obtained under TCF v2.0 after that date will be considered invalid.\"; grounded (judge): \"Invalid TC strings could adversely affect your agreements with advertisers, potentially resulting in a decrease in your ad revenues.\"; grounded (judge): \"CMPs and publishers were given until November 20, 2023 to implement the new TCF 2.2 policies and specifications.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "fp-ab-tcf-properties",
+    "question" : "I can A/B test any property from the general properties table in my TCF 2.2 CMP, right? I want to change the first-layer button colours.",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "For a TCF 2.2 CMP only the specific TCF 2.2 properties can be used for A/B testing, not every property",
+        "citations" : [ "ab-test#defining-the-variants", "ab-test#available-properties-for-a-b-testing" ],
+        "keywords" : [ "TCF" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "For TCF 2.2 CMP, only specific TCF 2.2 properties can be used for A/B testing, not all general properties.",
+        "citations" : [ "ab-test#available-properties-for-a-b-testing", "ab-test#defining-the-variants" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"For TCF 2.2 CMP, only specific TCF 2.2 properties can be used for A/B testing, not all general properties.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-geo-tcf-and-consent-mode",
+    "question" : "Can I combine a GDPR configuration and a TCF configuration in one geolocation rule, and which Google tag libraries does Google Consent Mode require?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Configurations supporting TCF 2.2 should belong to a single ruleset, and a GDPR configuration and a TCF configuration should not be combined in one rule (not applicable to In-App SDK)",
+        "citations" : [ "geolocation-rules#constraints" ],
+        "keywords" : [ "TCF" ]
+      }, {
+        "claim" : "Google Consent Mode requires gtag.js or Google Tag Manager",
+        "citations" : [ "consent-mode#prerequisites" ],
+        "keywords" : [ "gtag.js" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected (not applicable to In-App SDK).",
+        "citations" : [ "geolocation-rules#constraints" ]
+      }, {
+        "claim" : "Google Consent Mode is supported by the following Google tag libraries: Conversion Linker, Display & Video 360, Doubleclick Ad, DoubleClick Floodlight, Google Ads, Google Ads Conversion Tracking, Google Ads Remarketing, Google Analytics, Google Analytics 4, Google Campaign Manager, Google Campaign Manager 360, and Search Ads 360.",
+        "citations" : [ "consent-mode#general-information" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"Google Consent Mode requires gtag.js or Google Tag Manager\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected (not applicable to In-App SDK).\"; grounded (judge): \"Google Consent Mode is supported by the following Google tag libraries: Conversion Linker, Display & Video 360, Doubleclick Ad, DoubleClick Floodlight, Google Ads, Google Ads Conversion Tracking, Google Ads Remarketing, Google Analytics, Google Analytics 4, Google Campaign Manager, Google Campaign Manager 360, and Search Ads 360.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-tcf-version-and-consent-default",
+    "question" : "I am adding TCF to a site that already uses Google Consent Mode. Which CMP version does TCF require, and should I still set the Consent Mode default state?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "To support TCF you must be using the Usercentrics CMP v2",
+        "citations" : [ "tcf2#general-information" ],
+        "keywords" : [ "v2" ]
+      }, {
+        "claim" : "Implementing the Consent Mode default state is also recommended when you use a TCF implementation",
+        "citations" : [ "consent-mode#general-information" ],
+        "keywords" : [ "default" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Consent Mode is meant to be used by advertisers not using a TCF CMP implementation",
+        "citations" : [ "consent-mode#general-information" ]
+      }, {
+        "claim" : "It is recommended to implement the Consent Mode default state into your website even if you are using a TCF implementation",
+        "citations" : [ "consent-mode#general-information" ]
+      }, {
+        "claim" : "The recommendation to implement Consent Mode default state with TCF is due to the fact that necessary consent signals for ad_user_data and ad_personalization in some Google Tags cannot be guaranteed through the TCF API due to varying network loading times",
+        "citations" : [ "consent-mode#general-information" ]
+      }, {
+        "claim" : "Google is registered as a vendor with ID 755 on IAB Global Vendor List, and it is mandatory to select it from the Global Vendor List to ensure accurate signaling of Consent Mode",
+        "citations" : [ "consent-mode#general-information" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"To support TCF you must be using the Usercentrics CMP v2\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (judge): \"Consent Mode is meant to be used by advertisers not using a TCF CMP implementation\"; grounded (gold chunk): \"It is recommended to implement the Consent Mode default state into your website even if you are using a TCF implementation\"; grounded (judge): \"The recommendation to implement Consent Mode default state with TCF is due to the fact that necessary consent signals for ad_user_data and ad_personalization in some Google Tags cannot be guaranteed through the TCF API due to varying network loading times\"; grounded (judge): \"Google is registered as a vendor with ID 755 on IAB Global Vendor List, and it is mandatory to select it from the Global Vendor List to ensure accurate signaling of Consent Mode\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-geo-delete-and-consent-default",
+    "question" : "Can I delete a company that still has geolocation rulesets, and what does the Consent Mode default snippet set ad_storage to?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "A company that has rulesets cannot be deleted: the ruleset has to be deleted first",
+        "citations" : [ "geolocation-rules#constraints" ],
+        "keywords" : [ "ruleset", "delete" ]
+      }, {
+        "claim" : "The Consent Mode default snippet sets ad_storage to denied",
+        "citations" : [ "consent-mode#step-1-adjust-the-existing-google-tag-manager-code" ],
+        "keywords" : [ "ad_storage", "denied" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"A company that has rulesets cannot be deleted: the ruleset has to be deleted first\"; \"The Consent Mode default snippet sets ad_storage to denied\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-ruleset-and-tcf-attributes",
+    "question" : "I am rolling out a TCF banner with Geolocation Rules. Which attribute does the script tag generated for a ruleset contain, and which one enables TCF?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The script tag generated for a ruleset carries the data-ruleset-id attribute",
+        "citations" : [ "geolocation-rules#create-rulesets" ],
+        "keywords" : [ "data-ruleset-id" ]
+      }, {
+        "claim" : "The TCF script tag carries the data-tcf-enabled attribute",
+        "citations" : [ "tcf2#integrate-the-tcf-cmp-into-your-website" ],
+        "keywords" : [ "data-tcf-enabled" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"The script tag generated for a ruleset carries the data-ruleset-id attribute\"; \"The TCF script tag carries the data-tcf-enabled attribute\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-ab-and-consent-script-order",
+    "question" : "Where should the Google Consent Mode default script go in the head, and where does my A/B testing tool script go relative to the CMP?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The Consent Mode scripts must be put at the very top of the head, in the order shown",
+        "citations" : [ "consent-mode#step-1-adjust-the-existing-google-tag-manager-code" ],
+        "keywords" : [ "top", "head" ]
+      }, {
+        "claim" : "The A/B testing tool script goes in the head section before the Usercentrics CMP",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ],
+        "keywords" : [ "head", "before" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"The Consent Mode scripts must be put at the very top of the head, in the order shown\"; \"The A/B testing tool script goes in the head section before the Usercentrics CMP\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-tcstring-and-google-vendor",
+    "question" : "What does the tcString encode, and under which vendor ID is Google registered on the IAB Global Vendor List?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The tcString encodes the consent information in a machine readable format",
+        "citations" : [ "tcf2#general-information" ],
+        "keywords" : [ "tcString" ]
+      }, {
+        "claim" : "Google is registered as a vendor with ID 755 on the IAB Global Vendor List",
+        "citations" : [ "consent-mode#general-information" ],
+        "keywords" : [ "755" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"The tcString encodes the consent information in a machine readable format\"; \"Google is registered as a vendor with ID 755 on the IAB Global Vendor List\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-pricing",
+    "question" : "How much does a Usercentrics Web CMP v2 subscription cost per month?",
+    "category" : "out-of-scope",
+    "subtype" : "unrelated",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-geo-language",
+    "question" : "How do I configure a Geolocation Rules ruleset to show a different banner based on the visitor's browser language?",
+    "category" : "out-of-scope",
+    "subtype" : "plausible-nonexistent",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-python-script",
+    "question" : "Can you write me a Python script that reads a CSV file and prints the total of the second column?",
+    "category" : "out-of-scope",
+    "subtype" : "unrelated",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-ab-significance",
+    "question" : "How many visitors per variant does Usercentrics recommend before an A/B test result is statistically significant?",
+    "category" : "out-of-scope",
+    "subtype" : "plausible-nonexistent",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-tcf-vendor-limit",
+    "question" : "What is the maximum number of IAB vendors I can activate in one TCF configuration?",
+    "category" : "out-of-scope",
+    "subtype" : "plausible-nonexistent",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-safari-bundle",
+    "question" : "Which Safari version does bundle.js support?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "bundle.js supports Safari starting from version 14",
+        "citations" : [ "browser-support#browser-support" ],
+        "keywords" : [ "Safari", "14" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "bundle.js supports Safari version 14 and above",
+        "citations" : [ "browser-support#browser-support" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"bundle.js supports Safari version 14 and above\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-zonejs",
+    "question" : "From which zone.js version do the Usercentrics script tags work?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The script tags support zone.js starting from version 0.11.4",
+        "citations" : [ "browser-support#libraries-support" ],
+        "keywords" : [ "zone.js", "0.11.4" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4",
+        "citations" : [ "browser-support#libraries-support" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-ab-internal-split",
+    "question" : "When Usercentrics runs the A/B test itself, how are visitors split between the variants?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants",
+        "citations" : [ "ab-test#usercentrics-internal-a-b-testing" ],
+        "keywords" : [ ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).",
+        "citations" : [ "ab-test#usercentrics-internal-a-b-testing" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-ab-third-party-events",
+    "question" : "I use a third-party A/B testing tool with Usercentrics. Which variable must be set before the CMP loads, and which custom event can the tool listen to in order to track how users interact with the variants?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The UC_AB_VARIANT variable must be set before the Usercentrics CMP is loaded",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ],
+        "keywords" : [ "UC_AB_VARIANT" ]
+      }, {
+        "claim" : "The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP (for example ACCEPT_ALL or SAVE), so the tool can track them",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool", "ab-test#available-ui-events" ],
+        "keywords" : [ ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      }, {
+        "claim" : "UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.\"; grounded (gold chunk): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : false,
+      "reason" : "off-topic claim(s): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
+    } ]
+  }, {
+    "id" : "ss-loader-chrome",
+    "question" : "What is the minimum Chrome version that Loader.js supports on desktop?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Loader.js supports Chrome starting from version 43",
+        "citations" : [ "browser-support#browser-support" ],
+        "keywords" : [ "Chrome", "43" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Loader.js supports Chrome version 43 and above on desktop",
+        "citations" : [ "browser-support#browser-support" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"Loader.js supports Chrome version 43 and above on desktop\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-geo-global-fallback",
+    "question" : "Why do I have to pick a global configuration when I create a geolocation ruleset?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The global configuration is mandatory because it acts as the fallback rule when no other rule is specified for a region",
+        "citations" : [ "geolocation-rules#create-rulesets" ],
+        "keywords" : [ ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "A global configuration is mandatory when creating a ruleset because it acts as a fallback rule when no other rule is specified for that region.",
+        "citations" : [ "geolocation-rules#create-rulesets" ]
+      }, {
+        "claim" : "The global configuration allows you to decide whether to display the banner or not for regions that don't have specific regional rules defined.",
+        "citations" : [ "geolocation-rules#create-rulesets" ]
+      }, {
+        "claim" : "A global configuration needs to be defined in order to collect consents.",
+        "citations" : [ "geolocation-rules#create-rulesets" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"A global configuration is mandatory when creating a ruleset because it acts as a fallback rule when no other rule is specified for that region.\"; grounded (judge): \"The global configuration allows you to decide whether to display the banner or not for regions that don't have specific regional rules defined.\"; grounded (judge): \"A global configuration needs to be defined in order to collect consents.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-tcf-privacy-button",
+    "question" : "Where can the Privacy Button be rendered in the TCF layout options?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The Privacy Button can be rendered at the Bottom Left or the Bottom Right",
+        "citations" : [ "tcf2#layout" ],
+        "keywords" : [ "Bottom Left", "Bottom Right" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The Privacy Button can be rendered on Bottom Left or Bottom Right",
+        "citations" : [ "tcf2#layout" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The Privacy Button can be rendered on Bottom Left or Bottom Right\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-consent-mode-v2-bits",
+    "question" : "Which two extra signals did Google Consent Mode v2 add?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Consent Mode v2 introduces two additional bits, ad_user_data and ad_personalization",
+        "citations" : [ "consent-mode#google-consent-mode" ],
+        "keywords" : [ "ad_user_data", "ad_personalization" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Google Consent Mode v2 introduced two additional bits: ad_user_data and ad_personalization",
+        "citations" : [ "consent-mode#google-consent-mode" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"Google Consent Mode v2 introduced two additional bits: ad_user_data and ad_personalization\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
+  } ],
+  "baseline" : null,
+  "usage" : {
+    "wallClockMillis" : 227071,
+    "assistantCalls" : 28,
+    "assistantMillis" : 54688,
+    "byCheck" : [ {
+      "check" : "Coverage",
+      "calls" : 20,
+      "promptTokens" : 4294,
+      "completionTokens" : 84
+    }, {
+      "check" : "Relevance",
+      "calls" : 27,
+      "promptTokens" : 5524,
+      "completionTokens" : 200
+    }, {
+      "check" : "Groundedness",
+      "calls" : 9,
+      "promptTokens" : 10321,
+      "completionTokens" : 36
+    } ],
+    "judgeCostUsd" : 0.108695,
+    "judgeCalls" : 56,
+    "judgePromptTokens" : 20139,
+    "judgeCompletionTokens" : 320
+  },
+  "outOfScopeBySubtype" : {
+    "unrelated" : {
+      "passed" : 2,
+      "total" : 2
+    },
+    "plausible-nonexistent" : {
+      "passed" : 3,
+      "total" : 3
     }
-  ],
-  "passRate": 0.875,
-  "exitReasons": [
-    "pass rate 87.5% is below floor 90.0%"
-  ]
+  },
+  "passRate" : 0.7142857142857143,
+  "exitReasons" : [ "pass rate 71.4% is below floor 90.0%" ],
+  "advisoryFlags" : {
+    "Relevance" : 2
+  },
+  "byCategory" : {
+    "edge-case" : {
+      "passed" : 2,
+      "total" : 3
+    },
+    "false-premise" : {
+      "passed" : 5,
+      "total" : 6
+    },
+    "multi-source" : {
+      "passed" : 0,
+      "total" : 6
+    },
+    "out-of-scope" : {
+      "passed" : 5,
+      "total" : 5
+    },
+    "single-source" : {
+      "passed" : 8,
+      "total" : 8
+    }
+  }
 }

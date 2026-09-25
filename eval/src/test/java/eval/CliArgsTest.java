@@ -37,6 +37,11 @@ class CliArgsTest {
   }
 
   @Test
+  void caseIdsBecomeAnOverride() {
+    assertEquals(Map.of("case", "a,b"), CliArgs.parse(new String[] {"--case", "a,b"}).overrides());
+  }
+
+  @Test
   void debugIsABareFlagOrTakesAnExplicitValue() {
     assertEquals(Map.of("debug", "true"), CliArgs.parse(new String[] {"--debug"}).overrides());
     assertEquals(

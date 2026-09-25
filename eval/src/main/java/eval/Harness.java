@@ -30,6 +30,24 @@ public final class Harness {
     }
   }
 
+  /** The cases named by ids, in file order; all of them when ids is empty. Unknown id throws. */
+  static List<EvalCase> selectCases(List<EvalCase> cases, List<String> ids) {
+    if (ids.isEmpty()) {
+      return cases;
+    }
+    List<String> known = cases.stream().map(EvalCase::id).toList();
+    List<String> unknown = ids.stream().filter(id -> !known.contains(id)).toList();
+    if (!unknown.isEmpty()) {
+      throw new IllegalArgumentException(
+          "unknown case id(s): "
+              + String.join(", ", unknown)
+              + " (known: "
+              + String.join(", ", known)
+              + ")");
+    }
+    return cases.stream().filter(evalCase -> ids.contains(evalCase.id())).toList();
+  }
+
   /** Wiring only: parse args, load config and cases, preflight, run each case, report. */
   private static int runInner(
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
@@ -61,7 +79,14 @@ public final class Harness {
     // Validate cases against the docs BEFORE contacting the assistant.
     KnowledgeBase kb = KnowledgeBase.from(config);
     debug.log("knowledge base: " + kb.ids().size() + " chunks");
-    List<EvalCase> cases = EvalCaseLoader.load(config.casesDir(), kb, config.categories());
+    List<EvalCase> allCases = EvalCaseLoader.load(config.casesDir(), kb, config.categories());
+    List<EvalCase> cases = selectCases(allCases, config.caseIds());
+    if (cases.size() < allCases.size()) {
+      String partial =
+          "Partial run: " + cases.size() + " of " + allCases.size() + " cases " + config.caseIds();
+      out.println(partial);
+      debug.log(partial);
+    }
     debug.log(
         "cases: "
             + cases.size()

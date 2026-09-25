@@ -70,18 +70,21 @@ The set has 28 cases (unit 21).
 | **Regression against a baseline** (`--baseline`): a case that passed there and fails now fails the run, after one re-run | Blocks a silent slide even when the pass rate stays above the floor; the re-run keeps flakes from crying wolf (D13, D14, D46) |
 | **Exit-code rules**: pass floor 90%, and any failing out-of-scope case fails the run | Blocks a hallucination even when the pass rate is high (D13, D34) |
 | **Relevance** (LLM judge, advisory): flags off-topic claims, never fails a case; uncalibrated | Reported and counted so padding is visible without a noisy judge gating releases (D12, D49) |
-| **Measured cost and time**: judge calls and tokens per check, estimated cost from `judgePricing`, wall-clock time; one measured run is $0.15 and 382 s | The scale plan's cost line comes from a measured run, not a guess; assistant tokens are not visible over HTTP (D17, D28, D50) |
-| **Reusable by other teams**: `--config`, a `--<setting> <value>` override for every config key, pluggable knowledge source | The "pattern for thirty more" (D38, D42) |
+| **Measured cost and time**: judge calls and tokens per check, estimated cost from `judgePricing`, wall-clock time; two measured full runs cost $0.15 (382 s) and $0.14 (295 s), about 82 judge calls each | The scale plan's cost line comes from a measured run, not a guess; assistant tokens are not visible over HTTP (D17, D28, D50) |
+| **Reusable by other teams**: `--config`, a `--<setting> <value>` override for every config key (including `--case` to run selected cases), pluggable knowledge source | The "pattern for thirty more" (D38, D42, D52) |
 
-## In scope, planned and not built yet
+## In scope, written
 
-These are committed to the plan; say plainly that they are unfinished.
+| What | Unit | Where |
+|---|---|---|
+| **Pattern document** for an engineer with one hour | 24 | `PATTERN.md` (deliverable 4) |
+| **README**, clone to first result | 26 | `README.md` |
+
+## In scope, not done yet
 
 | What | Unit | Note |
 |---|---|---|
-| **Pattern document** for an engineer with one hour | 24 | Deliverable 4 |
-| **Scale plan**, one page | 25 | The five questions in the brief |
-| README and the live-change rehearsal | 26, 23 | |
+| The live-change rehearsal (add a check, flip the floor or a gating flag, add a case) | 23 | The code supports all three; none has been done out loud |
 
 Cut order if time runs out (D30): cost detail, automatic re-run, trap-pair run, Source, Relevance. Never cut: claims-only contract, Citation integrity, Groundedness with calibration, Refusal, Coverage, the exit code, the eval set, the pattern document.
 
@@ -109,6 +112,8 @@ Described in the pattern document and scale plan, not coded in v1 (D22, D23).
 | A separate model for the Coverage confirm step | The main judge is enough; one judge setting is simpler (D24) |
 | promptfoo / DeepEval, Elasticsearch or a vector DB | A ~300-line runner I know line by line fits the live-change requirement; BM25 in memory suffices for 5 pages |
 
-## Known open item
+## Known open items
 
-The first full run of the 28 cases (2026-09-25) passes 19 and exits 1 at 67.9%. Out-of-scope is 5/5 and single-source 8/8, but multi-source is 0/6: the stub over-refuses or retrieves only one of the two documents, and it once wrote an uncited claim. `edge-multi-ask` and `fp-tcf-gettcdata` fail the same way. `fp-geo-regional-settings` failed on a case wording mistake that is now fixed (D48), so 20 pass by composition. All the stub failures are kept as evidence, not tuned to pass. Telling a retrieval miss from a model miss is exactly what the retrieval metric above would do (D44).
+The latest full run of the 28 cases (2026-09-25, `caseResults/20260925-175406.json`) passes 20 and exits 1 at 71.4%. The first full run passed 19 (67.9%); the difference is the `fp-geo-regional-settings` wording fix (D48). Out-of-scope is 5/5 and single-source 8/8, but multi-source is 0/6: the stub over-refuses or retrieves only one of the two documents, and it once wrote an uncited claim. `edge-multi-ask` and `fp-tcf-gettcdata` fail the same way. All the stub failures are kept as evidence, not tuned to pass. Telling a retrieval miss from a model miss is exactly what the retrieval metric above would do (D44).
+
+`caseResults/baseline.json` is a 28-case run at 71.4% (20 of 28), promoted so a later run can show `improved since baseline` and regressions. It is a reference for change, not a known-good run. The stub's failures are diagnosed: 7 of the 8 are retrieval misses (the top 3 chunks miss one of the two needed documents, checked by replaying the search against each case's gold chunks), and 1 (`fp-tcf-gettcdata`) is a model miss, since its gold chunk was retrieved first and the stub still refused.
