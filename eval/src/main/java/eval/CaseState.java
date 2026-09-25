@@ -5,8 +5,8 @@ import java.util.*;
 /**
  * Scratch space shared by all the checks for one eval case: {@code CaseRunner} creates one per case
  * and passes the same instance to every check, in list order, so earlier checks leave findings for
- * later ones. Today only Coverage writes (the covering claims per fact), and Groundedness and
- * Source read, so they must run after Coverage. Not part of the report.
+ * later ones. Today only Coverage writes (the covering claims per fact), and only Source reads,
+ * so Source must run after Coverage (Checks enforces it). Not part of the report.
  */
 public final class CaseState {
   private final Map<ExpectedFact, List<Claim>> covering = new LinkedHashMap<>();

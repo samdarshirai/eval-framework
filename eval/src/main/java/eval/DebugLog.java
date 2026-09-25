@@ -34,4 +34,39 @@ final class DebugLog {
     String oneLine = text.replaceAll("\\s+", " ").strip();
     return oneLine.length() <= CLIP ? oneLine : oneLine.substring(0, CLIP) + "…";
   }
+
+  /** The settings this run uses. */
+  void config(EvalConfig config) {
+    log(
+        "config: endpoint="
+            + config.endpoint()
+            + ", judgeModel="
+            + config.raw().get("judgeModel")
+            + ", passFloor="
+            + config.passFloor()
+            + ", categories="
+            + config.categories()
+            + ", cases="
+            + config.casesDir()
+            + ", outputDir="
+            + config.outputDir()
+            + ", skipCalibration="
+            + config.skipCalibration()
+            + ", baseline="
+            + config.baselineFile());
+  }
+
+  /** How many cases run, by category. */
+  void cases(java.util.List<EvalCase> cases) {
+    if (out != null) {
+      log(
+          "cases: "
+              + cases.size()
+              + " loaded, by category "
+              + cases.stream()
+                  .collect(
+                      java.util.stream.Collectors.groupingBy(
+                          EvalCase::category, java.util.TreeMap::new, java.util.stream.Collectors.counting())));
+    }
+  }
 }

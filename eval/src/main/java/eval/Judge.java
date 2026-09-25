@@ -49,6 +49,25 @@ Answer NO if the claim is off-topic padding: it may be true, but it does not hel
 Reply with exactly one word: YES or NO.\
 """;
 
+  /** 12 hex characters of SHA-256 over the four system prompts, to tell which wording a run used. */
+  static String promptHash() {
+    String all =
+        String.join(
+            "\n---\n",
+            AGREE_SYSTEM_PROMPT,
+            COVERING_SYSTEM_PROMPT,
+            SUPPORTS_SYSTEM_PROMPT,
+            RELEVANT_SYSTEM_PROMPT);
+    try {
+      byte[] digest =
+          java.security.MessageDigest.getInstance("SHA-256")
+              .digest(all.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      return java.util.HexFormat.of().formatHex(digest).substring(0, 12);
+    } catch (java.security.NoSuchAlgorithmException missingAlgorithm) {
+      throw new IllegalStateException(missingAlgorithm);
+    }
+  }
+
   private final Llm llm;
 
   public Judge(Llm llm) {

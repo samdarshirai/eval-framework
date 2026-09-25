@@ -50,4 +50,79 @@ class ChecksTest {
       assertTrue(others.gating(), others.check().name());
     }
   }
+
+  private static List<String> selected(String... names) {
+    return Checks.registered(
+            new KnowledgeBase(List.of()), new Judge((system, user) -> "YES"), List.of(names))
+        .stream()
+        .map(registered -> registered.check().name())
+        .toList();
+  }
+
+  private static String error(String... names) {
+    return assertThrows(IllegalArgumentException.class, () -> selected(names)).getMessage();
+  }
+
+  @Test
+  void noListMeansAllSixInRegistryOrder() {
+    var all =
+        Checks.registered(new KnowledgeBase(List.of()), new Judge((s, u) -> "YES"), null).stream()
+            .map(registered -> registered.check().name())
+            .toList();
+    assertEquals(names(), all);
+    assertEquals(6, all.size());
+  }
+
+  @Test
+  void aSubsetKeepsRegistryOrderAndIgnoresCaseAndDuplicates() {
+    assertEquals(List.of("Refusal", "Coverage"), selected("coverage", "REFUSAL", "Coverage"));
+  }
+
+  @Test
+  void unknownEmptyAndNoGatingCheckAreErrors() {
+    assertTrue(error("Refusal", "Nope").startsWith("unknown check(s): Nope (known: Refusal,"));
+    assertEquals("'checks' must name at least one check", error());
+    assertTrue(error("Relevance").contains("at least one gating check"));
+  }
+
+  @Test
+  void groundednessDoesNotNeedCoverage() {
+    assertEquals(List.of("Groundedness"), selected("Groundedness"));
+  }
+
+  @Test
+  void aCheckPullsInTheCheckItNeeds() {
+    assertEquals(List.of("Refusal", "Coverage", "Source"), selected("Refusal", "Source"));
+  }
+
+  @Test
+  void appTypeIsTheFloorAndAddChecksAddsToIt() {
+    assertEquals(List.of("Refusal", "Coverage"), Checks.requested("uncited", null, null));
+    assertEquals(
+        List.of("Refusal", "Coverage", "Relevance"),
+        Checks.requested("UNCITED", List.of("Relevance"), null));
+    assertNull(Checks.requested(null, null, null));
+    assertEquals(List.of("Source"), Checks.requested(null, null, List.of("Source")));
+  }
+
+  @Test
+  void everyAppTypeIsClosedOverRequiresAndAddsNothingExtra() {
+    for (String type : List.of("cited", "uncited", "smoke")) {
+      List<String> floor = Checks.requested(type, null, null);
+      assertEquals(floor, selected(floor.toArray(String[]::new)), type);
+    }
+  }
+
+  @Test
+  void badAppTypeCombinationsAreErrors() {
+    assertTrue(
+        assertThrows(
+                IllegalArgumentException.class, () -> Checks.requested("nope", null, null))
+            .getMessage()
+            .contains("known: cited, smoke, uncited"));
+    assertThrows(
+        IllegalArgumentException.class, () -> Checks.requested("cited", null, List.of("Refusal")));
+    assertThrows(
+        IllegalArgumentException.class, () -> Checks.requested(null, List.of("Relevance"), null));
+  }
 }

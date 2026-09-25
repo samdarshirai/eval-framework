@@ -53,20 +53,6 @@
   added: "2026-09-24"
   confirmed_hash: "ef07f42a46f6"
 
-- id: ss-loader-chrome
-  question: "What is the minimum Chrome version that Loader.js supports on desktop?"
-  category: single-source
-  expected_behavior: answer
-  facts:
-    # bundle.js needs Chrome 69 and Loader.js needs 43: a claim about the wrong script has the right words and the wrong number
-    - fact: "Loader.js supports Chrome starting from version 43"
-      chunks: [browser-support#browser-support]
-      keywords: ["Chrome", "43"]
-  source: authored
-  owner: platform
-  added: "2026-09-25"
-  confirmed_hash: "86a09c1d14c5"
-
 - id: ss-geo-global-fallback
   question: "Why do I have to pick a global configuration when I create a geolocation ruleset?"
   category: single-source
@@ -105,3 +91,18 @@
   owner: platform
   added: "2026-09-25"
   confirmed_hash: "b0915dc035f1"
+
+# Written from a failure the stub showed in a real run: in ms-tcf-version-and-consent-default it never stated the
+# CMP version TCF needs. This isolates that half of the question (source: the run report, not an author's guess).
+- id: ss-tcf-cmp-version
+  question: "Which Usercentrics CMP version do I need to support TCF?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "To support TCF you must be using the Usercentrics CMP v2"
+      chunks: [tcf2#general-information]
+      keywords: ["v2"]
+  source: stub-run-20260925-210303
+  owner: platform
+  added: "2026-09-25"
+  confirmed_hash: "3ed4e99bf2b6"

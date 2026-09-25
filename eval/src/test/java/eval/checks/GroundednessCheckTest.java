@@ -44,15 +44,28 @@ class GroundednessCheckTest {
   }
 
   @Test
-  void coveringClaimCitingAGoldChunkPassesWithZeroJudgeCalls() {
-    var llm = new FakeLlm("never");
+  void coveringClaimCitingAGoldChunkIsStillJudgedAndPassesWhenSupported() {
+    var llm = new FakeLlm("Safari");
     var claim = new Claim("Safari 14 works", List.of("d#safari"));
     var state = new CaseState();
     state.setCovering(SAFARI, List.of(claim));
     var result = run(llm, state, claim);
     assertTrue(result.passed(), result.reason());
-    assertTrue(result.reason().contains("grounded (gold chunk)"), result.reason());
-    assertEquals(0, llm.calls);
+    assertTrue(result.reason().contains("grounded (judge)"), result.reason());
+    assertEquals(1, llm.calls);
+  }
+
+  @Test
+  void inventedExtraDetailOnACorrectFactCitingTheGoldChunkFails() {
+    // The judge sees the cited chunk, which does not contain the iOS detail, so it answers NO.
+    var llm = new FakeLlm("iOS 15.4");
+    var claim = new Claim("Safari 14 works, and on iOS it requires 15.4", List.of("d#safari"));
+    var state = new CaseState();
+    state.setCovering(SAFARI, List.of(claim));
+    var result = run(llm, state, claim);
+    assertFalse(result.passed());
+    assertTrue(result.reason().contains("iOS it requires 15.4"), result.reason());
+    assertEquals(1, llm.calls);
   }
 
   @Test
@@ -82,7 +95,7 @@ class GroundednessCheckTest {
 
   @Test
   void anExtraClaimThatCoversNoFactIsJudgedToo() {
-    var llm = new FakeLlm("Chrome 99");
+    var llm = new FakeLlm("Safari");
     var covering = new Claim("Safari 14 works", List.of("d#safari"));
     var extra = new Claim("Chrome 99 works", List.of("d#chrome"));
     var state = new CaseState();
@@ -90,7 +103,7 @@ class GroundednessCheckTest {
     var result = run(llm, state, covering, extra);
     assertFalse(result.passed());
     assertTrue(result.reason().contains("Chrome 99 works"), result.reason());
-    assertEquals(1, llm.calls);
+    assertEquals(2, llm.calls);
   }
 
   @Test

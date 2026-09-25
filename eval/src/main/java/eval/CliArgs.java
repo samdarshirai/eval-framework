@@ -13,7 +13,7 @@ record CliArgs(String configFile, Map<String, String> overrides) {
       """
       Usage: Harness [--config <file>] [--<setting> <value>]... [--skip-calibration] [--debug]
       Settings (same names as in the config file; a value here beats the file):
-        endpoint passFloor judgeModel categories cases case outputDir skipCalibration baseline debug
+        endpoint passFloor judgeModel categories cases case checks appType addChecks outputDir skipCalibration baseline debug
         calibration.trapPairs calibration.labeledSample knowledgeBase.type ...\
       """;
 
