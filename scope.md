@@ -62,7 +62,7 @@ The set has 28 cases (unit 21).
 | **Refusal** (deterministic) | Out-of-scope behaviour is the main hallucination risk (D25) |
 | **Citation integrity** (deterministic): every claim cites, every cited chunk exists | Catches fabricated citations at zero cost (D26) |
 | **Coverage**: keyword filter, then an LLM judge confirms | Catches wrong values ("Safari 13" vs "14") cheaply and negation with the judge (D24) |
-| **Groundedness** (LLM judge, gold-chunk shortcut): does the cited chunk support the claim? | Deliverable 3, the check that is not a string match. Chosen first because "a wrong answer that sounds right reaches a customer" (D10, D43) |
+| **Groundedness** (LLM judge on every claim): does the cited chunk support the claim? | Deliverable 3, the check that is not a string match. Chosen first because "a wrong answer that sounds right reaches a customer" (D10, D43) |
 | **28-case eval set** (8 / 6 / 5 / 6 / 3) with a per-category and per-subtype rollup | Deliverable 2, and the worked example for `PATTERN.md` (D2-D8, D48) |
 | **Doc-hash warning**: a case whose gold chunks changed since it was confirmed warns by name and still runs | The staleness rule of the growth plan (D21, D48) |
 | **Source** (deterministic, document-level) | Proves a multi-source answer used the required documents (D11) |

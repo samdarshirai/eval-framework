@@ -994,17 +994,16 @@ class HarnessTest {
     cases(ONE_ANSWER_CASE);
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge();
-    // 1 trap pair (calibration) + Coverage confirm + Relevance; Groundedness shortcuts on the gold
-    // chunk
+    // 1 trap pair (calibration) + Coverage confirm + Groundedness + Relevance
     assertTrue(output.contains("Cost and time"), output);
     assertTrue(
-        output.contains("judge: 3 calls, 300 prompt + 15 completion tokens, est. $0.0019"), output);
+        output.contains("judge: 4 calls, 400 prompt + 20 completion tokens, est. $0.0025"), output);
     var usage = reportJson(output).get("usage");
-    assertEquals(3, usage.get("judgeCalls").asInt());
+    assertEquals(4, usage.get("judgeCalls").asInt());
     assertEquals(1, usage.get("assistantCalls").asInt());
     assertEquals(
-        (300 * 5.0 + 15 * 25.0) / 1_000_000.0, usage.get("judgeCostUsd").asDouble(), 1e-12);
-    assertEquals(java.util.List.of("calibration", "Coverage", "Relevance"), checkNames(usage));
+        (400 * 5.0 + 20 * 25.0) / 1_000_000.0, usage.get("judgeCostUsd").asDouble(), 1e-12);
+    assertEquals(java.util.List.of("calibration", "Coverage", "Groundedness", "Relevance"), checkNames(usage));
   }
 
   @Test
@@ -1024,7 +1023,7 @@ class HarnessTest {
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge("--skipCalibration", "true");
     assertEquals(
-        java.util.List.of("Coverage", "Relevance"), checkNames(reportJson(output).get("usage")));
+        java.util.List.of("Coverage", "Groundedness", "Relevance"), checkNames(reportJson(output).get("usage")));
   }
 
   @Test
