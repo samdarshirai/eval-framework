@@ -1,9 +1,9 @@
 - id: ms-geo-tcf-and-consent-mode
-  question: "Can I put a GDPR configuration and a TCF configuration in the same geolocation ruleset, and which Google tag libraries does Google Consent Mode require?"
+  question: "Can I combine a GDPR configuration and a TCF configuration in one geolocation rule, and which Google tag libraries does Google Consent Mode require?"
   category: multi-source
   expected_behavior: answer
   facts:
-    - fact: "Configurations supporting TCF 2.2 should belong to a single ruleset, so a GDPR configuration and a TCF configuration should not be combined in one rule"
+    - fact: "Configurations supporting TCF 2.2 should belong to a single ruleset, and a GDPR configuration and a TCF configuration should not be combined in one rule (not applicable to In-App SDK)"
       chunks: [geolocation-rules#constraints]
       keywords: ["TCF"]
     - fact: "Google Consent Mode requires gtag.js or Google Tag Manager"

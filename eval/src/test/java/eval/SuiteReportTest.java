@@ -146,4 +146,64 @@ class SuiteReportTest {
             "r", "http://x", 0.90, List.of(), SuiteReport.Calibration.SKIPPED, List.of());
     assertTrue(report.exitReasons().stream().noneMatch(reason -> reason.contains("groundedness")));
   }
+
+  private static SuiteReport withBaseline(SuiteReport base, SuiteReport.Comparison comparison) {
+    return new SuiteReport(
+        base.runId(),
+        base.endpoint(),
+        base.passFloor(),
+        base.checks(),
+        base.calibration(),
+        base.cases(),
+        comparison);
+  }
+
+  @Test
+  void aRegressionFailsTheRunEvenWhenTheRateIsAboveTheFloor() {
+    var comparison =
+        new SuiteReport.Comparison(
+            "baseline.json", List.of(new SuiteReport.Comparison.Rerun("c-3", false)));
+    var run = withBaseline(report(28, Set.of(3), Set.of()), comparison);
+    assertEquals(1, run.exitCode());
+    assertEquals(List.of("regression vs baseline (baseline.json): c-3"), run.exitReasons());
+  }
+
+  @Test
+  void aCaseThatPassedOnTheRerunIsNotARegression() {
+    var comparison =
+        new SuiteReport.Comparison(
+            "baseline.json", List.of(new SuiteReport.Comparison.Rerun("c-3", true)));
+    var run = withBaseline(report(28, Set.of(), Set.of()), comparison);
+    assertEquals(0, run.exitCode());
+    assertEquals(List.of(), comparison.regressions());
+  }
+
+  @Test
+  void regressionsListOnlyTheCasesThatFailedTheRerunInOrder() {
+    var comparison =
+        new SuiteReport.Comparison(
+            "b.json",
+            List.of(
+                new SuiteReport.Comparison.Rerun("x", false),
+                new SuiteReport.Comparison.Rerun("y", true),
+                new SuiteReport.Comparison.Rerun("z", false)));
+    assertEquals(List.of("x", "z"), comparison.regressions());
+    assertEquals(
+        List.of("regression vs baseline (b.json): x, z"),
+        withBaseline(report(28, Set.of(), Set.of()), comparison).exitReasons());
+  }
+
+  @Test
+  void noBaselineMeansNoComparisonAndNoRegressionReason() {
+    assertNull(report(28, Set.of(5), Set.of()).baseline());
+    assertEquals(List.of(), report(28, Set.of(5), Set.of()).exitReasons());
+  }
+
+  @Test
+  void improvedCasesNeverChangeTheExitCode() {
+    var comparison = new SuiteReport.Comparison("b.json", List.of(), List.of("c-1", "c-2"));
+    var run = withBaseline(report(28, Set.of(), Set.of()), comparison);
+    assertEquals(0, run.exitCode());
+    assertEquals(List.of(), run.exitReasons());
+  }
 }

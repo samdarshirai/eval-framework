@@ -11,7 +11,38 @@ public record SuiteReport(
     double passFloor,
     List<CheckInfo> checks,
     Calibration calibration,
-    List<CaseResult> cases) {
+    List<CaseResult> cases,
+    Comparison baseline) {
+
+  public SuiteReport(
+      String runId,
+      String endpoint,
+      double passFloor,
+      List<CheckInfo> checks,
+      Calibration calibration,
+      List<CaseResult> cases) {
+    this(runId, endpoint, passFloor, checks, calibration, cases, null);
+  }
+
+  /**
+   * The run compared with a baseline (unit 18): every case that passed there and failed on the
+   * first attempt was re-run once (unit 19). {@code passedOnRerun} false means it failed both
+   * attempts, which is a regression. {@code improved} lists the cases that failed in the baseline
+   * and pass now: worth a new baseline, never a reason to change the exit code.
+   */
+  public record Comparison(String file, List<Rerun> reruns, List<String> improved) {
+    public Comparison(String file, List<Rerun> reruns) {
+      this(file, reruns, List.of());
+    }
+
+    public record Rerun(String id, boolean passedOnRerun) {}
+
+    @JsonProperty("regressions")
+    public List<String> regressions() {
+      return reruns.stream().filter(rerun -> !rerun.passedOnRerun()).map(Rerun::id).toList();
+    }
+  }
+
   /** Judge trap pairs and the Groundedness sample: {@code ran} false means --skip-calibration. */
   public record Calibration(
       boolean ran, List<TrapResult> pairs, LabeledSample.Result groundedness) {
@@ -63,6 +94,13 @@ public record SuiteReport(
             .toList();
     if (!oos.isEmpty()) {
       reasons.add("out-of-scope case failed: " + String.join(", ", oos));
+    }
+    if (baseline != null && !baseline.regressions().isEmpty()) {
+      reasons.add(
+          "regression vs baseline ("
+              + baseline.file()
+              + "): "
+              + String.join(", ", baseline.regressions()));
     }
     if (calibration.misses() > 0) {
       reasons.add("judge calibration: " + calibration.misses() + " trap pair miss(es)");

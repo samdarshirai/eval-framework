@@ -1,5 +1,25 @@
+# Settings for the eval harness. This file holds the defaults.
+#
+# One-time override: pass --<key> <value> to the jar. The value beats this file for that run only.
+#   java -jar eval.jar --passFloor 0.8 --baseline caseResults/baseline.json
+#
+# How overrides work:
+#   - Every key in this file can be overridden. --config <file> is not a key: it picks this file.
+#   - The value is read as YAML, so it has the same type as here: true, 0.8, a path, [a, b].
+#   - A nested key uses dots: --calibration.trapPairs my-traps.yaml
+#   - An unknown key is an error. If a key is repeated, the last value wins.
+#   - --skip-calibration is a shorthand for --skipCalibration true.
+#   - A relative path, from this file or from the command line, resolves against this file's directory.
+#
 endpoint: http://localhost:8080/answer
 passFloor: 0.90
+# Skip the judge trap pairs and the Groundedness sample that normally run first. Default: false.
+# skipCalibration: false
+# A previous report to compare with. A case that passed there and fails now fails the run, after one re-run.
+# Not set: this is logged and the run goes ahead without a regression check.
+# Set but no file at the path (or the file is unusable): an error, exit code 2.
+# Pass --baseline "" to switch it off for one run.
+# baseline: caseResults/baseline.json
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.

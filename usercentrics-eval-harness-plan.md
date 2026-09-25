@@ -112,7 +112,7 @@ Philosophy: use a deterministic check wherever the property is deterministic (ci
 **Exit code.** Non-zero if any of:
 
 1. the overall pass rate is below the floor (**90%**, i.e. at most 2 failing cases out of 28);
-2. there is a **regression**: a case that passed in the **baseline** (a previous results file promoted by copying it, passed via `--baseline`) and fails now, even when the overall rate is above the floor;
+2. there is a **regression**: a case that passed in the **baseline** (a previous results file promoted by copying it, passed via `--baseline` or the `baseline` config key) and fails now, even when the overall rate is above the floor;
 3. **any out-of-scope case fails**, because that is the brief's headline risk (a confident wrong answer reaching a customer).
 
 **Non-determinism.** Temperature 0 for the assistant and every judge. A suspected regression is re-run once and only counts if it fails both attempts; the report notes which cases needed a re-run, a free signal of how flaky the suite is. If the re-run rate turns out high, the upgrade is majority-of-N runs.

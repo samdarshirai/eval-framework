@@ -72,4 +72,82 @@ class EvalConfigTest {
             dir.resolve("custom.yaml"), base + "calibration:\n  labeledSample: pairs.yaml\n");
     assertEquals(dir.resolve("pairs.yaml"), EvalConfig.loadFile(custom, null).labeledSampleFile());
   }
+
+  @Test
+  void skipCalibrationIsOffByDefaultAndReadsTheConfigKey() throws Exception {
+    assertFalse(EvalConfig.loadFile(write(""), null).skipCalibration());
+    assertTrue(EvalConfig.loadFile(write("skipCalibration: true\n"), null).skipCalibration());
+    assertFalse(EvalConfig.loadFile(write("skipCalibration: false\n"), null).skipCalibration());
+  }
+
+  @Test
+  void skipCalibrationMustBeABooleanAndTheErrorNamesTheFile() throws Exception {
+    var failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                EvalConfig.loadFile(write("skipCalibration: \"yes please\"\n"), null)
+                    .skipCalibration());
+    assertTrue(
+        failure.getMessage().contains("team.yaml")
+            && failure.getMessage().contains("skipCalibration"),
+        failure.getMessage());
+  }
+
+  @Test
+  void baselineFileIsNullByDefaultAndResolvedAgainstTheConfigDirWhenSet() throws Exception {
+    assertNull(EvalConfig.loadFile(write(""), null).baselineFile());
+    assertEquals(
+        dir.resolve("results/baseline.json"),
+        EvalConfig.loadFile(write("baseline: results/baseline.json\n"), null).baselineFile());
+    assertNull(EvalConfig.loadFile(write("baseline: \"\"\n"), null).baselineFile());
+  }
+
+  @Test
+  void anOverrideReplacesTheConfigValueAndIsTypedLikeYaml() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(
+            write("skipCalibration: false\n"),
+            java.util.Map.of(
+                "skipCalibration", "true", "passFloor", "0.8", "endpoint", "http://y/a"));
+    assertTrue(config.skipCalibration());
+    assertEquals(0.8, config.passFloor());
+    assertEquals("http://y/a", config.endpoint());
+  }
+
+  @Test
+  void aDottedOverrideSetsANestedKeyAndKeepsItsSiblings() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(
+            write("calibration:\n  labeledSample: pairs.yaml\n"),
+            java.util.Map.of("calibration.trapPairs", "traps.yaml"));
+    assertEquals(dir.resolve("traps.yaml"), config.trapPairsFile());
+    assertEquals(dir.resolve("pairs.yaml"), config.labeledSampleFile());
+  }
+
+  @Test
+  void aDottedOverrideThroughAValueThatIsNotAMapIsAnError() throws Exception {
+    var failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> EvalConfig.loadFile(write(""), java.util.Map.of("endpoint.host", "x")));
+    assertTrue(failure.getMessage().contains("endpoint.host"), failure.getMessage());
+  }
+
+  @Test
+  void anEmptyBaselineOverrideMeansNoBaseline() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(write("baseline: old.json\n"), java.util.Map.of("baseline", ""));
+    assertNull(config.baselineFile());
+  }
+
+  @Test
+  void onlyKnownTopLevelKeysAreSettings() {
+    assertTrue(EvalConfig.isSetting("baseline"));
+    assertTrue(EvalConfig.isSetting("calibration.trapPairs"));
+    assertTrue(EvalConfig.isSetting("skipCalibration"));
+    assertFalse(EvalConfig.isSetting("skip-calibration"));
+    assertFalse(EvalConfig.isSetting("endpiont"));
+    assertFalse(EvalConfig.isSetting("endpoint=http://x"));
+  }
 }

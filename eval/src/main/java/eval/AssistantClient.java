@@ -19,6 +19,19 @@ public final class AssistantClient implements Assistant {
     this.endpoint = URI.create(endpoint);
   }
 
+  /** Throws, with how to start the stub, when nothing answers at the endpoint. */
+  public void requireReachable() {
+    if (!reachable()) {
+      throw new IllegalStateException(
+          "cannot reach the assistant at "
+              + endpoint
+              + "\nStart the stub in another terminal first:"
+              + "\n  export OPENROUTER_API_KEY=..."
+              + "\n  mvn -q -DskipTests package"
+              + "\n  java -jar assistant/target/assistant.jar");
+    }
+  }
+
   /** Any HTTP response counts as reachable; only a failed connection does not. */
   public boolean reachable() {
     try {
