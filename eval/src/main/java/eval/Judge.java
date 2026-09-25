@@ -6,8 +6,8 @@ import java.util.regex.*;
 import llm.Llm;
 
 /**
- * Four narrow judge questions used by Coverage, Groundedness and Relevance (D24, D10, D12). The prompts are the
- * only place judge wording lives.
+ * Four narrow judge questions used by Coverage, Groundedness and Relevance (D24, D10, D12). The
+ * prompts are the only place judge wording lives.
  */
 public final class Judge {
   private static final ObjectMapper MAPPER = new ObjectMapper();

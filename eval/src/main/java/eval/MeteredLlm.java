@@ -3,7 +3,9 @@ package eval;
 import llm.Completion;
 import llm.Llm;
 
-/** Passes every call to the real {@code Llm} and records it in the meter under the running check. */
+/**
+ * Passes every call to the real {@code Llm} and records it in the meter under the running check.
+ */
 final class MeteredLlm implements Llm {
   private final Llm delegate;
   private final UsageMeter meter;

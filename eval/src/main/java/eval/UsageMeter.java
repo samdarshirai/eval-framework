@@ -7,8 +7,8 @@ import java.util.Map;
 
 /**
  * Counts what a run spends (D17): judge calls and tokens per check, assistant calls and time. It
- * only counts calls that came back, so the numbers are a floor on spend: a call that failed
- * carries no usage from the provider.
+ * only counts calls that came back, so the numbers are a floor on spend: a call that failed carries
+ * no usage from the provider.
  */
 final class UsageMeter {
   /** USD per million tokens, from the {@code judgePricing} setting. */

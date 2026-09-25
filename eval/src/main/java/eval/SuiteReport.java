@@ -129,8 +129,7 @@ public record SuiteReport(
                   caseResult ->
                       caseResult.checks().stream()
                           .anyMatch(
-                              outcome ->
-                                  outcome.check().equals(info.name()) && !outcome.passed()))
+                              outcome -> outcome.check().equals(info.name()) && !outcome.passed()))
               .count();
       flags.put(info.name(), flaggedCases);
     }

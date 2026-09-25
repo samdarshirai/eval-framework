@@ -956,11 +956,11 @@ class HarnessTest {
     cases(ONE_ANSWER_CASE);
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge();
-    // 1 trap pair (calibration) + Coverage confirm + Relevance; Groundedness shortcuts on the gold chunk
+    // 1 trap pair (calibration) + Coverage confirm + Relevance; Groundedness shortcuts on the gold
+    // chunk
     assertTrue(output.contains("Cost and time"), output);
     assertTrue(
-        output.contains("judge: 3 calls, 300 prompt + 15 completion tokens, est. $0.0019"),
-        output);
+        output.contains("judge: 3 calls, 300 prompt + 15 completion tokens, est. $0.0019"), output);
     var usage = reportJson(output).get("usage");
     assertEquals(3, usage.get("judgeCalls").asInt());
     assertEquals(1, usage.get("assistantCalls").asInt());
@@ -985,7 +985,8 @@ class HarnessTest {
     cases(ONE_ANSWER_CASE);
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge("--skipCalibration", "true");
-    assertEquals(java.util.List.of("Coverage", "Relevance"), checkNames(reportJson(output).get("usage")));
+    assertEquals(
+        java.util.List.of("Coverage", "Relevance"), checkNames(reportJson(output).get("usage")));
   }
 
   @Test
