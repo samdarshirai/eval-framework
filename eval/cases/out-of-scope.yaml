@@ -15,3 +15,30 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+
+- id: oos-gdpr-fine
+  question: "What is the maximum fine for running a website without a consent banner under the GDPR?"
+  category: out-of-scope
+  subtype: unrelated
+  expected_behavior: refuse
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: oos-ab-significance
+  question: "How many visitors per variant does Usercentrics recommend before an A/B test result is statistically significant?"
+  category: out-of-scope
+  subtype: plausible-nonexistent
+  expected_behavior: refuse
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: oos-tcf-vendor-limit
+  question: "What is the maximum number of IAB vendors I can activate in one TCF configuration?"
+  category: out-of-scope
+  subtype: plausible-nonexistent
+  expected_behavior: refuse
+  source: authored
+  owner: platform
+  added: "2026-09-25"
