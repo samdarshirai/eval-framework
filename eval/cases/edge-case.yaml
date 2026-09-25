@@ -1,0 +1,41 @@
+- id: edge-exact-value-bundle-edge
+  question: "Which is the first Edge version that bundle.js supports?"
+  category: edge-case
+  expected_behavior: answer
+  facts:
+    # exact-value precision: Loader.js and bundle_legacy.js say Edge 77, bundle.js says 79. A near-miss is a confident wrong answer.
+    - fact: "bundle.js supports Edge starting from version 79"
+      chunks: [browser-support#browser-support]
+      keywords: ["Edge", "79"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: edge-multi-ask
+  question: "Two things: from which zone.js version do the script tags work, and which custom event lets an A/B testing tool track how users interact with the CMP?"
+  category: edge-case
+  expected_behavior: answer
+  facts:
+    # multi-ask: two unrelated answerable parts, every fact must be covered
+    - fact: "The script tags support zone.js starting from version 0.11.4"
+      chunks: [browser-support#libraries-support]
+      keywords: ["zone.js", "0.11.4"]
+    - fact: "The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP, so the tool can track them"
+      chunks: [ab-test#available-ui-events, ab-test#a-b-testing-with-third-party-tool]
+      keywords: ["UC_UI_CMP_EVENT"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
+
+- id: edge-light-paraphrase
+  question: "How can I stop my TCF banner from using legitimate interest as the legal basis?"
+  category: edge-case
+  expected_behavior: answer
+  facts:
+    # light paraphrase: the docs say "disable legitimate interest ... restrict all purposes to consent"; the question shares "legitimate interest" and "TCF" and no other wording
+    - fact: "To disable legitimate interest for the TCF CMP, restrict all purposes to consent in the Admin Interface"
+      chunks: [tcf2#publisher-restrictions]
+      keywords: ["consent"]
+  source: authored
+  owner: platform
+  added: "2026-09-25"
