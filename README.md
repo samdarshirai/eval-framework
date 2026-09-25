@@ -23,7 +23,7 @@ java -jar eval/target/eval.jar
 
 You get a summary on the terminal and a full JSON report in `caseResults/`. If the stub is not running, the harness stops at once and tells you how to start it.
 
-A full run of the 28 cases takes about 5 minutes and costs about $0.14 in judge calls. To try it fast, run a few cases and skip the judge calibration:
+A full run of the 28 cases takes about 8 minutes and costs about $0.22 in judge calls (the calibration is about $0.04 of that). To try it fast, run a few cases and skip the judge calibration:
 
 ```bash
 java -jar eval/target/eval.jar --case ss-safari-bundle,oos-pricing --skip-calibration
@@ -42,7 +42,8 @@ Every setting is a key in `eval/config.yaml`. `--<key> <value>` overrides it for
 ```bash
 java -jar eval/target/eval.jar --endpoint http://localhost:9000/answer   # point at another app
 java -jar eval/target/eval.jar --passFloor 0.8
-java -jar eval/target/eval.jar --baseline caseResults/1.json      # fail on any regression
+java -jar eval/target/eval.jar --baseline caseResults/baseline.json  # fail on any regression
+java -jar eval/target/eval.jar --appType uncited --addChecks Relevance   # an app that cannot cite: fewer checks
 java -jar eval/target/eval.jar --case fp-tcf-gettcdata --debug           # one case, with a trace
 java -jar eval/target/eval.jar --skip-calibration                        # skip the judge calibration
 ```

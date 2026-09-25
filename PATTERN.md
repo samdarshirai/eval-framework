@@ -2,7 +2,7 @@
 
 For an AI Enablement Engineer in another department who has never seen this code and has about one hour. The goal is a first evaluation report for your own application. Read sections 1 to 5, then do the one-hour path in section 6. Section 8 shows a mature example, and it is deliberately last.
 
-Decision numbers (D#) point to `grilling-decisions.md`, and terms in **bold** are defined in `CONTEXT.md`.
+Terms in **bold** are defined in `CONTEXT.md`. Why the harness works this way is logged in `grilling-decisions.md`; you do not need it to use this document.
 
 ## What you get
 
@@ -36,19 +36,19 @@ Your application exposes one HTTP endpoint.
 }
 ```
 
-Rules that the checks depend on (D1, D25):
+Rules that the checks depend on:
 
 - **There is no free-text answer field.** Everything the application asserts is a **claim**: one atomic factual statement plus the citations that support it. If your application produces prose today, your endpoint has to split it into claims. This is the main integration cost, and it is what makes every assertion checkable.
-- A **citation** is a chunk ID: the document name plus the section heading (`consent-mode#default-consent-states`). IDs use the heading, never a position number, so they survive re-chunking (D6). Duplicate headings in one document get `-1`, `-2` suffixes (D33).
+- A **citation** is a chunk ID: the document name plus the section heading (`consent-mode#default-consent-states`). IDs use the heading, never a position number, so they survive re-chunking. Duplicate headings in one document get `-1`, `-2` suffixes.
 - A refusal is `{"refused": true, "claims": []}`. `refused: true` together with claims is a contract violation and fails the case.
 - Any status other than 200, or a body that is not this shape, fails that case with the error text. A slow call fails after 60 seconds.
-- The harness sends an `X-Eval-Run: <run id>` header on every request so your gateway can exclude eval traffic from analytics (D32).
+- The harness sends an `X-Eval-Run: <run id>` header on every request so your gateway can exclude eval traffic from analytics.
 
-**Point the harness at an instance started for testing, never at live production** (D32). Production would mix eval traffic into real usage and cost figures, may have side effects (logging, connectors that write), can change in the middle of a run, and may not allow temperature 0. Use a candidate build for CI, or a dedicated instance with production's exact prompt, model and config for drift checks. The harness only knows a URL, so this is a deployment choice, not a code change.
+**Point the harness at an instance started for testing, never at live production**. Production would mix eval traffic into real usage and cost figures, may have side effects (logging, connectors that write), can change in the middle of a run, and may not allow temperature 0. Use a candidate build for CI, or a dedicated instance with production's exact prompt, model and config for drift checks. The harness only knows a URL, so this is a deployment choice, not a code change.
 
 Before it runs any case, the harness sends a GET to the endpoint. Any HTTP response counts as reachable, and a failed connection stops the run with a message.
 
-**Fallback for a team that cannot expose an endpoint** (D28): export answers to a JSON file and have the harness score the file. This is designed but **not built in v1**. Today you need a live endpoint, even a thin wrapper around your application.
+**Fallback for a team that cannot expose an endpoint**: export answers to a JSON file and have the harness score the file. This is designed but **not built in v1**. Today you need a live endpoint, even a thin wrapper around your application.
 
 **Chunk IDs must be resolvable.** The harness must know the chunks your application cites, so that it can check that a citation exists and read what it says. Section 5 shows how it gets them.
 
@@ -91,17 +91,17 @@ For false-premise, the expected fact is the correction itself. Going along with 
 
 ### The authoring rule
 
-**Every case must be fully answerable or fully out-of-scope.** A question the docs answer only in part (setup is documented, cost is not) has no expected outcome in the contract, because there is no way to say "here is what I know, and I cannot answer the rest". That is a known gap, not a tested behaviour (D7). The loader cannot enforce this rule, so it is a judgement you apply when you write the case.
+**Every case must be fully answerable or fully out-of-scope.** A question the docs answer only in part (setup is documented, cost is not) has no expected outcome in the contract, because there is no way to say "here is what I know, and I cannot answer the rest". That is a known gap, not a tested behaviour. The loader cannot enforce this rule, so it is a judgement you apply when you write the case.
 
 Where real questions come from: support tickets, Slack threads, and corrections that support staff give to the assistant. Do not use customer data. Only use public or synthetic material.
 
 ### What the loader checks before it calls your application
 
-The harness validates every case against your chunks first. A gold chunk that does not exist is a hard error that names the case and the chunk, and no calls are made (D6, D8). This is what stops a case from silently rotting when documents change. Your run fails at startup, not with a confusing result.
+The harness validates every case against your chunks first. A gold chunk that does not exist is a hard error that names the case and the chunk, and no calls are made. This is what stops a case from silently rotting when documents change. Your run fails at startup, not with a confusing result.
 
 ## 3. The menu of checks
 
-Each case runs the same checks, in this order. A case passes only if every **gating** check passes.
+Each case runs the enabled checks (all six unless `checks` says otherwise, section 5), in this order. A case passes only if every **gating** check passes.
 
 | Check | Type | What it decides | Gating |
 |---|---|---|---|
@@ -112,7 +112,7 @@ Each case runs the same checks, in this order. A case passes only if every **gat
 | **Source** | deterministic | A covering claim cites a document that holds one of the fact's gold chunks. This proves a multi-source answer used both documents. | yes |
 | **Relevance** | judge | The claim is pertinent to the question and not true-but-off-topic padding. | **no, advisory** |
 
-The principle is to use a deterministic check whenever the property is deterministic, and to use a model judge only where meaning has to be interpreted (D10 to D12, D24 to D26).
+The principle is to use a deterministic check whenever the property is deterministic, and to use a model judge only where meaning has to be interpreted.
 
 **Advisory** means reported and counted but never able to fail a case. Relevance is advisory because it is the most subjective judge and is not calibrated. Making it gating is a one-word change in the registration list, `eval/src/main/java/eval/checks/Checks.java`.
 
@@ -122,11 +122,11 @@ The principle is to use a deterministic check whenever the property is determini
 - **An internal summariser** with no citations to check: Coverage and Relevance are the meaningful ones.
 - **An application not grounded in documents**: Refusal and Coverage. It cannot use Citation integrity, Groundedness or Source.
 
-**Known limit of v1:** the harness runs **every** check for every application. The per-application `checks` list (default all, and removing one needs a written reason) is designed but **not built** (D23). Today an application whose claims carry no chunk citations fails Citation integrity on every case. Until that list exists, an application that cannot cite needs the checks list built first. Treat that as onboarding work, and raise it with the platform team.
+**App types and turning checks off.** Set `appType` in the config: `cited` (Refusal, Citation integrity, Coverage, Groundedness, Source), `uncited` (Refusal, Coverage; for an application that cannot cite) or `smoke` (Refusal, Citation integrity; no judge calls). The type is the least an application of that kind must run. The application can add with `addChecks: [Relevance]` but cannot remove; lowering a type's floor is a change in `Checks.java`, so it goes through the platform team. Without `appType`, `checks: [Refusal, Coverage]` (or `--checks "Refusal,Coverage"`) names an explicit list, and with neither all six run. Setting `appType` and `checks` together is an error. Names are as in the table, any case. Order is always the table's order. A check that needs another pulls it in (Source needs Coverage), and the console says `Checks added because another check needs them`. Startup fails with exit 2, before any call, on an unknown name or app type, an empty list, `addChecks` without `appType`, a list with no gating check, or `Refusal` off while the cases include out-of-scope ones. The calibration for a check that is off is skipped, the console prints `Checks off: ...`, and a baseline that ran a different set gets a warning.
 
 ### The judge, and why you should measure it
 
-Coverage (the model part), Groundedness and Relevance use a judge model, set with `judgeModel` and called at temperature 0. It should be stronger than the model your application uses (D15). **A judge you have not measured is not evidence**, so a run starts with a calibration (D16, D41, D43):
+Coverage (the model part), Groundedness and Relevance use a judge model, set with `judgeModel` and called at temperature 0. It should be stronger than the model your application uses. **A judge you have not measured is not evidence**, so a run starts with a calibration:
 
 - **7 trap pairs** guard Coverage: claims that a keyword filter would let through ("all Safari versions except 14") which the judge must reject.
 - **20 hand-labeled pairs** measure Groundedness: 10 subtly unsupported, 5 plain supported and 5 hard-supported. The run fails if agreement is below 90% or if any unsupported pair is judged supported, because a false "supported" lets a wrong claim through silently.
@@ -138,7 +138,7 @@ The bundled pairs are written from the Usercentrics documents. For your own appl
 The run exits **0** when everything passes, **1** when it fails, and **2** for a setup error (a bad config, a case that names a missing chunk, an unreadable baseline, no API key). It exits 1 when any of these is true:
 
 1. **The pass rate is below `passFloor`** (0.90 in this repo, which allows 2 failing cases out of 28). In v1 the floor is just a config value. The design for other applications (section 10) lets departments raise it and never lower it below a platform minimum.
-2. **Any out-of-scope case fails**, whatever the overall rate. A confident answer to a question the docs cannot answer is the headline risk, so it is never averaged away (D13).
+2. **Any out-of-scope case fails**, whatever the overall rate. A confident answer to a question the docs cannot answer is the headline risk, so it is never averaged away.
 3. **A regression against the baseline**: a case that passed in the baseline and fails now, even when the overall rate is above the floor.
 4. **The judge fails calibration** (section 3).
 
@@ -152,12 +152,12 @@ java -jar eval/target/eval.jar --baseline caseResults/baseline.json
 ```
 
 - A case that failed in the baseline and passes now is listed as `improved since baseline`, which is a hint to promote a newer baseline. It never changes the exit code.
-- A suspected regression is **re-run once** and only counts if it fails twice, and the report shows which cases needed a re-run (D14). Temperature 0 does not make runs identical, and a case near the edge can pass on one run and fail on the next. The re-run count is a free measure of how flaky your suite is.
+- A suspected regression is **re-run once** and only counts if it fails twice, and the report shows which cases needed a re-run. Temperature 0 does not make runs identical, and a case near the edge can pass on one run and fail on the next. The re-run count is a free measure of how flaky your suite is.
 - A baseline that is missing, unreadable, or shares no case with this run exits 2. It never reads as "no regressions".
 
 ## 5. Configuration
 
-Every setting is a key in a config file, and `--<key> <value>` overrides it for one run (D47). The value is read as YAML, so it has the same type as in the file. An unknown key is an error.
+Every setting is a key in a config file, and `--<key> <value>` overrides it for one run. The value is read as YAML, so it has the same type as in the file. An unknown key is an error.
 
 A minimal team config, `my-team/eval.yaml`:
 
@@ -171,26 +171,26 @@ knowledgeBase:
   path: docs                                # markdown files, relative to this file
 # cases: cases                              # default: a "cases" folder next to this file
 # outputDir: caseResults
-# baseline: caseResults/1.json
+# baseline: caseResults/baseline.json
 ```
 
 Run it from anywhere with `--config my-team/eval.yaml`. Every relative path in the file resolves against the file's folder. The judge needs `OPENROUTER_API_KEY` in the environment, and your own application can use any model provider.
 
-Useful overrides: `--case id1,id2` runs only those cases, `--skip-calibration` skips the judge calibration (the calibration is where most of a small run's judge calls go), `--debug` prints one `[debug]` line per config, case, check, assistant call and judge call, and `--baseline ""` switches a configured baseline off for one run. Keep `out-of-scope` in `categories`, because the exit rule depends on it.
+Useful overrides: `--case id1,id2` runs only those cases, `--checks "Refusal,Coverage"` runs only those checks, `--skip-calibration` skips the judge calibration (the calibration is where most of a small run's judge calls go), `--debug` prints one `[debug]` line per config, case, check, assistant call and judge call, and `--baseline ""` switches a configured baseline off for one run. Keep `out-of-scope` in `categories`, because the exit rule depends on it.
 
 ### Where the harness gets the chunks
 
-The harness needs the same chunk IDs and text your application has (D38). `knowledgeBase.type` chooses the source:
+The harness needs the same chunk IDs and text your application has. `knowledgeBase.type` chooses the source:
 
 - **`docs`** (built, the default): a folder of markdown files, chunked by heading. `browser-support.md` with a `## Browser Support` section gives the ID `browser-support#browser-support`. This works if your citations use the same `document#heading-slug` scheme.
 - **`http`** and **`manifest`** (placeholders, selecting one exits with "not implemented yet"): the application serves, or exports at build time, a list of `{id, text}`. This is the better fit for an application in any language, because the harness sees exactly what the application indexed.
 - **Your own source**: implement the one-method `KnowledgeSource` interface and add one line in `KnowledgeSources` (Java).
 
-Whatever the source, the application and the harness must see the **same version** of the documents. A case that names gold chunks whose text changed since it was confirmed produces a warning that names the case, and it still runs (D21, D48).
+Whatever the source, the application and the harness must see the **same version** of the documents. A case that names gold chunks whose text changed since it was confirmed produces a warning that names the case, and it still runs.
 
 ## 6. The one-hour path
 
-The goal is a first honest report, not a complete set. Start with about 10 cases: **4 single-source, 2 multi-source, 2 out-of-scope, 2 false-premise** (D31).
+The goal is a first honest report, not a complete set. Start with about 10 cases: **4 single-source, 2 multi-source, 2 out-of-scope, 2 false-premise**.
 
 | Minutes | Step |
 |---|---|
@@ -242,27 +242,27 @@ The latest full run (2026-09-25) passed 20 of 28 and exited 1:
 | edge-case | 2 of 3 |
 | multi-source | 0 of 6 |
 
-One run used 82 judge calls, cost about $0.14 and took about 295 seconds. The harness did its job on a deliberately thin assistant. Reading the failures showed:
+The baseline run (with calibration) used 101 judge calls, cost about $0.22 and took about 500 seconds. The harness did its job on a deliberately thin assistant. Reading the failures showed:
 
-- **7 failures are retrieval misses.** Each is a question about two topics, where the stub's top 3 chunks all came from one topic. The model then refused, or answered only half. The harness cannot see this itself, because it only sees claims and citations, never the chunks the application retrieved. Replaying the search against the gold chunks confirmed it. Measuring retrieval separately needs an optional `retrieved` field in the contract (D44).
+- **7 failures come with a retrieval gap.** Each is a question about two topics, where the stub's top 3 chunks all came from one topic. The model then refused, or answered only half. The harness cannot see this itself, because it only sees claims and citations, never the chunks the application retrieved. Replaying the search against the gold chunks showed the gap. It is not the whole cause: in one experiment, raising top-k from 3 to 6 made three cases pass (two multi-source, one edge) and three false-premise cases fail with over-refusals, and the score stayed 20 of 28. Regressions and improvements at once are what the baseline comparison is for. Telling a retrieval miss from a model miss needs an optional `retrieved` field in the contract.
 - **1 failure is a model miss** (`fp-tcf-gettcdata`). The right chunk was retrieved first, and the model still refused. With a modified prompt in a later experiment it answered, but added an invented detail ("deprecated from 2.0"), and Groundedness and Coverage both failed it. That is the failure the brief describes: a wrong answer that sounds right, caught by a check that is not a string match.
 
 The stub's failures are kept as evidence and not tuned away.
 
 ## 9. Growing the set without a maintenance burden
 
-1. **Every case records where it came from** (`source`, `owner`, `added`), so a stale case has someone to ask (D18).
-2. **A hard cap per category.** Adding a case means retiring or merging one, so the set stays small enough to run often. This is an authoring rule and the loader does not enforce it (D19, D35).
-3. **A candidate is admitted only if it adds a distinct failure.** If it would fail the same check for the same reason as an existing case, it becomes a note on that case (D20).
+1. **Every case records where it came from** (`source`, `owner`, `added`), so a stale case has someone to ask.
+2. **A hard cap per category.** Adding a case means retiring or merging one, so the set stays small enough to run often. This is an authoring rule and the loader does not enforce it.
+3. **A candidate is admitted only if it adds a distinct failure.** If it would fail the same check for the same reason as an existing case, it becomes a note on that case.
 4. **New cases come from real failures**: support corrections and questions the application got wrong, not an attempt to cover every page.
-5. **The loader flags rot.** A missing gold chunk is a hard error. A changed document is a warning (D21). Stamp cases with `confirmed_hash` using `eval.StampCaseHashes`.
+5. **The loader flags rot.** A missing gold chunk is a hard error. A changed document is a warning. Stamp cases with `confirmed_hash` using `eval.StampCaseHashes`.
 6. **Adding a case is data only**: one YAML entry and no code.
 
 ## 10. Designed for onboarding, not built in v1
 
-These are described here and in `SCALE-PLAN.md`, and none of them exists as code (D22, D23):
+These are described here and in `SCALE-PLAN.md`, and none of them exists as code:
 
-- **A per-application `checks` list** and **risk tiers**. The platform defines 2 or 3 tiers, each with a pass floor and mandatory checks. Every application starts in the top tier. Lowering a tier or removing a check needs a written reason and platform sign-off, and a change of audience (internal to customer-facing) triggers a re-review. Departments can only raise the floor. There is no per-release approval queue.
+- **Risk tiers and a sign-off rule for removing a check.** (The `checks` list itself is built; the rule around it is not.) The platform defines 2 or 3 tiers, each with a pass floor and mandatory checks. Every application starts in the top tier. Lowering a tier or removing a check needs a written reason and platform sign-off, and a change of audience (internal to customer-facing) triggers a re-review. Departments can only raise the floor. There is no per-release approval queue.
 - **Severity-tiered pass/fail** (critical, error, warning), a better rule than "every gating check must pass".
 - **The `http` and `manifest` knowledge sources**, **the replay-file fallback**, **majority-of-N runs** and **scheduled runs**.
 - **Cases for partially answerable and under-specified questions**, which need a contract field for what the application could not answer.
