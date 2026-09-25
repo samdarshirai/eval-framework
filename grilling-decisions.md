@@ -1,6 +1,6 @@
 # Grilling Decisions — Eval Harness Plan
 
-Decisions settled while stress-testing `usercentrics-eval-harness-plan.md`. Terms are defined in `CONTEXT.md`.
+Decisions settled while stress-testing the original harness plan. Terms are defined in `CONTEXT.md`.
 Status: D1-D52 are settled and built (units 1-22 of `build-order.md`, plus `--debug` and `--case`). The pattern document, scale plan and README (units 24-26) are written (`PATTERN.md`, `SCALE-PLAN.md`, `README.md`). Still open: the live-change rehearsal (unit 23).
 
 ## Contract and cases
