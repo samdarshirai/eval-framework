@@ -16,7 +16,10 @@ class HarnessTest {
   private final AtomicInteger requests = new AtomicInteger();
   private volatile String replyFor = "{\"refused\":true,\"claims\":[]}";
   private volatile int status = 200;
-  /** Reply used from the third request on: request 1 is the reachability ping, 2 the first attempt. */
+
+  /**
+   * Reply used from the third request on: request 1 is the reachability ping, 2 the first attempt.
+   */
   private volatile String replyFromRerun = null;
 
   @BeforeEach
@@ -30,10 +33,7 @@ class HarnessTest {
         exchange -> {
           requests.incrementAndGet();
           exchange.getRequestBody().readAllBytes();
-          String reply =
-              requests.get() >= 3 && replyFromRerun != null
-                  ? replyFromRerun
-                  : replyFor;
+          String reply = requests.get() >= 3 && replyFromRerun != null ? replyFromRerun : replyFor;
           byte[] replyBytes = reply.getBytes();
           exchange.sendResponseHeaders(status, replyBytes.length);
           exchange.getResponseBody().write(replyBytes);
