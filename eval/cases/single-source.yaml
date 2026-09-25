@@ -73,7 +73,6 @@
   facts:
     - fact: "The Privacy Button can be rendered at the Bottom Left or the Bottom Right"
       chunks: [tcf2#layout]
-      keywords: ["Bottom Left", "Bottom Right"]
   source: authored
   owner: platform
   added: "2026-09-25"
@@ -101,7 +100,6 @@
   facts:
     - fact: "To support TCF you must be using the Usercentrics CMP v2"
       chunks: [tcf2#general-information]
-      keywords: ["v2"]
   source: stub-run-20260925-210303
   owner: platform
   added: "2026-09-25"

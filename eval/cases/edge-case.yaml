@@ -37,7 +37,6 @@
     # light paraphrase: the docs say "disable legitimate interest ... restrict all purposes to consent"; the question shares "legitimate interest" and "TCF" and no other wording
     - fact: "To disable legitimate interest for the TCF CMP, restrict all purposes to consent in the Admin Interface"
       chunks: [tcf2#publisher-restrictions]
-      keywords: ["consent"]
   source: authored
   owner: platform
   added: "2026-09-25"

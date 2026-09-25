@@ -21,10 +21,8 @@
   facts:
     - fact: "To support TCF you must be using the Usercentrics CMP v2"
       chunks: [tcf2#general-information]
-      keywords: ["v2"]
     - fact: "Implementing the Consent Mode default state is also recommended when you use a TCF implementation"
       chunks: [consent-mode#general-information]
-      keywords: ["default"]
   source: authored
   owner: platform
   added: "2026-09-25"
@@ -37,7 +35,6 @@
   facts:
     - fact: "A company that has rulesets cannot be deleted: the ruleset has to be deleted first"
       chunks: [geolocation-rules#constraints]
-      keywords: ["ruleset", "delete"]
     - fact: "The Consent Mode default snippet sets ad_storage to denied"
       chunks: [consent-mode#step-1-adjust-the-existing-google-tag-manager-code]
       keywords: ["ad_storage", "denied"]
@@ -69,10 +66,8 @@
   facts:
     - fact: "The Consent Mode scripts must be put at the very top of the head, in the order shown"
       chunks: [consent-mode#step-1-adjust-the-existing-google-tag-manager-code]
-      keywords: ["top", "head"]
     - fact: "The A/B testing tool script goes in the head section before the Usercentrics CMP"
       chunks: [ab-test#a-b-testing-with-third-party-tool]
-      keywords: ["head", "before"]
   source: authored
   owner: platform
   added: "2026-09-25"

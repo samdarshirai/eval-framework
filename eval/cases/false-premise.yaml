@@ -3,11 +3,10 @@
   category: false-premise
   expected_behavior: answer
   facts:
-    # The correction is the fact. "put it in head, after the CMP" (going along with the premise) can still contain
-    # "head", and "not before the CMP" contains both keywords: keywords alone cannot tell them apart, the judge does.
+    # The correction is the fact. No keywords: "before" and "head" are ordinary words a correct answer can paraphrase,
+    # and going along with the premise ("put it in head, after the CMP") would contain them too. The judge decides.
     - fact: "The A/B testing tool script must be added in the head section before the Usercentrics CMP script, so the tool is loaded before the CMP and can split properly"
       chunks: [ab-test#a-b-testing-with-third-party-tool]
-      keywords: ["head", "before"]
   source: authored
   owner: platform
   added: "2026-09-24"
@@ -47,7 +46,6 @@
   facts:
     - fact: "When using Geolocation Rules the regional settings of a configuration must be set to Display CMP to all users (default), and for CCPA configurations to Display CCPA CMP to all users"
       chunks: [geolocation-rules#prerequisites]
-      keywords: ["all users"]
   source: authored
   owner: platform
   added: "2026-09-25"
@@ -60,7 +58,6 @@
   facts:
     - fact: "TC strings obtained under TCF v2.0 after 20 November 2023 are considered invalid, so the CMP has to be migrated to TCF 2.2"
       chunks: [tcf2#tcf-2-0-vs-tcf-2-2]
-      keywords: ["invalid"]
   source: authored
   owner: platform
   added: "2026-09-25"
