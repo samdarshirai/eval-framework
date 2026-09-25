@@ -71,6 +71,18 @@ final class EvalConfig {
     return read(root.resolve("eval/config.yaml"), root, true, "eval/config.yaml", overrides);
   }
 
+  /** The config file the command line names, or the default one; then the overrides on top. */
+  static EvalConfig from(Path root, CliArgs cli) throws IOException {
+    if (cli.configFile() == null) {
+      return load(root, cli.overrides());
+    }
+    Path configFile = root.resolve(cli.configFile());
+    if (!Files.isRegularFile(configFile)) {
+      throw new IllegalArgumentException("config file not found: " + cli.configFile());
+    }
+    return loadFile(configFile, cli.overrides());
+  }
+
   /**
    * Loads an explicit config file; every relative path in it resolves against the file's own
    * directory.

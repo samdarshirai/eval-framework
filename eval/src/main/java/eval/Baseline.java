@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +23,25 @@ final class Baseline {
   private Baseline(String name, Map<String, Boolean> passedById) {
     this.name = name;
     this.passedById = passedById;
+  }
+
+  /**
+   * The baseline named by the {@code baseline} setting. No path, or a path with no file behind it,
+   * is logged and the run goes ahead without a baseline (null); a file that exists but is unusable
+   * throws, and the run exits 2.
+   */
+  static Baseline resolve(EvalConfig config, PrintStream out) throws IOException {
+    Path file = config.baselineFile();
+    if (file == null) {
+      out.println("No baseline set, running without one (no regression check).");
+      return null;
+    }
+    if (!Files.isRegularFile(file)) {
+      out.println(
+          "Baseline file " + file + " not found, running without one (no regression check).");
+      return null;
+    }
+    return load(file);
   }
 
   static Baseline load(Path file) throws IOException {
@@ -61,6 +82,16 @@ final class Baseline {
       }
     }
     return new Baseline(name, passedById);
+  }
+
+  /** A baseline that shares no case with the run could never flag a regression: an error. */
+  void requireAnyOf(List<EvalCase> cases) {
+    if (cases.stream().noneMatch(evalCase -> knows(evalCase.id()))) {
+      throw new IllegalArgumentException(
+          "baseline "
+              + name
+              + " has none of this run's cases, so it could never flag a regression");
+    }
   }
 
   /** True only when the case is in the baseline and passed there. */

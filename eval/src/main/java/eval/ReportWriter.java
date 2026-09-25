@@ -2,6 +2,7 @@ package eval;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -17,6 +18,16 @@ final class ReportWriter {
     return DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
         .withZone(ZoneOffset.UTC)
         .format(Instant.now());
+  }
+
+  /** Writes the report and prints its path, relative to root when it is under it. */
+  static void writeAndAnnounce(Path outputDir, SuiteReport report, Path root, PrintStream out)
+      throws IOException {
+    Path reportFile = write(outputDir, report).normalize();
+    Path rootDir = root.normalize();
+    out.println(
+        "Report: "
+            + (reportFile.startsWith(rootDir) ? rootDir.relativize(reportFile) : reportFile));
   }
 
   /** Writes &lt;runId&gt;.json into outputDir, creating it; returns the file written. */
