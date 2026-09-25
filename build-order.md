@@ -59,7 +59,7 @@ Acceptance criteria:
 - Checks run from a single registration list; each check has a gating flag; a case passes only if every gating check passes (D12, D27).
 - The first check in the list is Refusal. A case with `expected_behavior: refuse` and a `refused: true` response, or `answer` and `refused: false`, passes.
 - A summary table prints to the terminal, and full per-case detail is written to a timestamped JSON file in `caseResults/`.
-- `--endpoint <url>` points the harness at any other app.
+- `--endpoint <url>` points the harness at any other app. It is one of the `--<setting> <value>` overrides of a config key (D47).
 
 ## 5. An out-of-scope question that gets a confident answer fails the case
 
@@ -219,9 +219,10 @@ Acceptance criteria:
 **Never cut**
 
 Acceptance criteria:
-- `--baseline <file>` loads a previous results JSON; a baseline is promoted by copying a report to `caseResults/baseline.json`.
+- The `baseline` setting (config key, or `--baseline <file>` for one run, D47) names a previous results JSON; a baseline is promoted by copying a report to `caseResults/baseline.json`. No path, or no file at the path, is logged and the run goes ahead without a baseline; a file that exists but is unusable exits 2 (D46).
 - Any case that passed in the baseline and fails now is a **regression**, listed by name; the exit code is non-zero even if the overall rate is above the floor.
-- Without `--baseline`, no regression check runs.
+- Without a baseline, no regression check runs.
+- Cases that failed in the baseline and pass now are listed as `improved since baseline` (a hint to promote a newer baseline); this never changes the exit code (D46).
 
 ## 19. A suspected regression is re-run once and only counts if it fails again
 
@@ -315,7 +316,7 @@ Acceptance criteria:
 
 Acceptance criteria:
 - Documents the two commands: start `StubServer`, then run `Harness`.
-- Explains `--endpoint` and `--baseline`.
+- Explains `--config` and the `--<setting> <value>` override for every config key, with `endpoint` and `baseline` as examples (D47).
 - Reads in 2–3 minutes and points to `PATTERN.md` and `SCALE-PLAN.md`.
 
 ---

@@ -1,15 +1,24 @@
+# Settings for the eval harness. This file holds the defaults.
+#
+# One-time override: pass --<key> <value> to the jar. The value beats this file for that run only.
+#   java -jar eval.jar --passFloor 0.8 --baseline caseResults/baseline.json
+#
+# How overrides work:
+#   - Every key in this file can be overridden. --config <file> is not a key: it picks this file.
+#   - The value is read as YAML, so it has the same type as here: true, 0.8, a path, [a, b].
+#   - A nested key uses dots: --calibration.trapPairs my-traps.yaml
+#   - An unknown key is an error. If a key is repeated, the last value wins.
+#   - --skip-calibration is a shorthand for --skipCalibration true.
+#   - A relative path, from this file or from the command line, resolves against this file's directory.
+#
 endpoint: http://localhost:8080/answer
 passFloor: 0.90
-# Every setting in this file can be overridden for ONE run from the command line with --<name> <value>,
-# e.g.  java -jar eval.jar --skipCalibration true --baseline caseResults/baseline.json --passFloor 0.8
-# The value is read as YAML, so it is typed the same as here (true, 0.8, a path, [a, b]); a nested
-# setting uses dots (--calibration.trapPairs file). The value on the command line beats this file.
-# --skip-calibration is kept as a shorthand for --skipCalibration true. --config <file> picks the file itself.
-# Relative paths, from here or from the command line, resolve against this file's directory.
-#   skipCalibration: false                 # true = skip the judge trap pairs and the Groundedness sample
-#   baseline: caseResults/baseline.json    # a previous report: a case that passed there and fails now fails the
-#                                          # run, after one re-run. Not set, or no file there: logged, and the run
-#                                          # goes ahead with no regression check. Pass --baseline "" to switch it off.
+# Skip the judge trap pairs and the Groundedness sample that normally run first. Default: false.
+# skipCalibration: false
+# A previous report to compare with. A case that passed there and fails now fails the run, after one re-run.
+# Not set, or no file at the path: this is logged and the run goes ahead without a regression check.
+# Pass --baseline "" to switch it off for one run.
+# baseline: caseResults/baseline.json
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.
