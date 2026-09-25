@@ -78,7 +78,6 @@ These are committed to the plan; say plainly that they are unfinished.
 | Full 28-case set | 21 | 8 exist today |
 | **Pattern document** for an engineer with one hour | 24 | Deliverable 4 |
 | **Scale plan**, one page | 25 | The five questions in the brief |
-| Re-run of a suspected regression once | 19 | Early cut candidate |
 | Measured calls, tokens, cost, wall-clock time | 20 | Feeds the scale plan cost line |
 | Relevance check (advisory, never fails a case) | 17 | Last on the cut list |
 | Doc-hash staleness warning | 22 | First to cut |
