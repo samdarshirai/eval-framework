@@ -150,4 +150,44 @@ class EvalConfigTest {
     assertFalse(EvalConfig.isSetting("endpiont"));
     assertFalse(EvalConfig.isSetting("endpoint=http://x"));
   }
+
+  @Test
+  void judgePricingIsNullWhenNotSet() throws Exception {
+    assertNull(EvalConfig.loadFile(write(""), null).judgePricing());
+  }
+
+  @Test
+  void judgePricingReadsBothPrices() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(
+            write("judgePricing:\n  inputPerMillion: 5\n  outputPerMillion: 25.5\n"), null);
+    assertEquals(new UsageMeter.Pricing(5.0, 25.5), config.judgePricing());
+  }
+
+  @Test
+  void judgePricingCanBeOverriddenOnTheCommandLineWithDots() throws Exception {
+    EvalConfig config =
+        EvalConfig.loadFile(
+            write("judgePricing:\n  inputPerMillion: 5\n  outputPerMillion: 25\n"),
+            java.util.Map.of("judgePricing.outputPerMillion", "10"));
+    assertEquals(new UsageMeter.Pricing(5.0, 10.0), config.judgePricing());
+    assertTrue(EvalConfig.isSetting("judgePricing.inputPerMillion"));
+  }
+
+  @Test
+  void aMalformedJudgePricingIsAConfigErrorNamingTheFile() throws Exception {
+    for (String bad :
+        new String[] {
+          "judgePricing: 5\n",
+          "judgePricing:\n  inputPerMillion: 5\n",
+          "judgePricing:\n  inputPerMillion: -1\n  outputPerMillion: 25\n",
+          "judgePricing:\n  inputPerMillion: cheap\n  outputPerMillion: 25\n"
+        }) {
+      EvalConfig config = EvalConfig.loadFile(write(bad), null);
+      IllegalArgumentException error =
+          assertThrows(IllegalArgumentException.class, config::judgePricing, bad);
+      assertTrue(error.getMessage().contains("team.yaml"), error.getMessage());
+      assertTrue(error.getMessage().contains("judgePricing"), error.getMessage());
+    }
+  }
 }

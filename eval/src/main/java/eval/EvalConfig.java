@@ -49,6 +49,7 @@ final class EvalConfig {
           "endpoint",
           "passFloor",
           "judgeModel",
+          "judgePricing",
           "categories",
           "cases",
           "outputDir",
@@ -221,6 +222,28 @@ final class EvalConfig {
           fileName + ": 'judgeModel' is required (an OpenRouter model slug)");
     }
     return judgeModel;
+  }
+
+  /**
+   * The {@code judgePricing:} block (USD per million tokens), or null when it is not set. A block
+   * that is set must be complete, so a typo cannot silently turn the estimate into zero.
+   */
+  UsageMeter.Pricing judgePricing() {
+    Object block = raw.get("judgePricing");
+    if (block == null) {
+      return null;
+    }
+    if (block instanceof Map<?, ?> pricing
+        && pricing.get("inputPerMillion") instanceof Number input
+        && pricing.get("outputPerMillion") instanceof Number output
+        && input.doubleValue() >= 0
+        && output.doubleValue() >= 0) {
+      return new UsageMeter.Pricing(input.doubleValue(), output.doubleValue());
+    }
+    throw new IllegalArgumentException(
+        fileName
+            + ": 'judgePricing' needs inputPerMillion and outputPerMillion, each a number of at"
+            + " least 0 (USD per million tokens)");
   }
 
   /**

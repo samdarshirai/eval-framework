@@ -60,6 +60,35 @@ public record SuiteReport(
     }
   }
 
+  /**
+   * What the run measured (D17). The judge is metered through its {@code Llm}; the assistant is a
+   * black box over HTTP (D28), so only its calls and time are known, never its tokens. {@code
+   * judgeCostUsd} is tokens times the configured prices, null when none are configured.
+   */
+  public record Usage(
+      long wallClockMillis,
+      int assistantCalls,
+      long assistantMillis,
+      List<CheckUsage> byCheck,
+      Double judgeCostUsd) {
+    public record CheckUsage(String check, int calls, long promptTokens, long completionTokens) {}
+
+    @JsonProperty("judgeCalls")
+    public int judgeCalls() {
+      return byCheck.stream().mapToInt(CheckUsage::calls).sum();
+    }
+
+    @JsonProperty("judgePromptTokens")
+    public long judgePromptTokens() {
+      return byCheck.stream().mapToLong(CheckUsage::promptTokens).sum();
+    }
+
+    @JsonProperty("judgeCompletionTokens")
+    public long judgeCompletionTokens() {
+      return byCheck.stream().mapToLong(CheckUsage::completionTokens).sum();
+    }
+  }
+
   public static final String OUT_OF_SCOPE = "out-of-scope";
 
   /** Whether the named check gates a case; unknown names count as gating. */
