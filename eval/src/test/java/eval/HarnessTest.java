@@ -16,6 +16,8 @@ class HarnessTest {
   private final AtomicInteger requests = new AtomicInteger();
   private volatile String replyFor = "{\"refused\":true,\"claims\":[]}";
   private volatile int status = 200;
+  /** Reply used from the third request on: request 1 is the reachability ping, 2 the first attempt. */
+  private volatile String replyFromRerun = null;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -28,7 +30,11 @@ class HarnessTest {
         exchange -> {
           requests.incrementAndGet();
           exchange.getRequestBody().readAllBytes();
-          byte[] replyBytes = replyFor.getBytes();
+          String reply =
+              requests.get() >= 3 && replyFromRerun != null
+                  ? replyFromRerun
+                  : replyFor;
+          byte[] replyBytes = reply.getBytes();
           exchange.sendResponseHeaders(status, replyBytes.length);
           exchange.getResponseBody().write(replyBytes);
           exchange.close();
@@ -548,6 +554,103 @@ class HarnessTest {
     assertEquals(2, code[0], output);
     assertTrue(
         output.contains("labeled-sample.yaml") && output.contains("--skip-calibration"), output);
+    assertEquals(0, requests.get());
+  }
+
+  private static final String CONFIDENT_ANSWER =
+      "{\"refused\":false,\"claims\":[{\"claim\":\"It costs 5 euro\",\"citations\":[\"d#a\"]}]}";
+
+  private void baseline(String json) throws IOException {
+    Files.createDirectories(root.resolve("caseResults"));
+    Files.writeString(root.resolve("caseResults/baseline.json"), json);
+  }
+
+  private com.fasterxml.jackson.databind.JsonNode reportJson(String output) throws IOException {
+    var reportMatcher = java.util.regex.Pattern.compile("Report: (\\S+)").matcher(output);
+    assertTrue(reportMatcher.find(), output);
+    return new com.fasterxml.jackson.databind.ObjectMapper()
+        .readTree(root.resolve(reportMatcher.group(1)).toFile());
+  }
+
+  @Test
+  void aRegressionIsRerunOnceFailsTheRunAndIsNamedInTheOutputAndTheReport() throws Exception {
+    cases(OOS);
+    baseline("{\"cases\":[{\"id\":\"oos-1\",\"passed\":true}]}");
+    replyFor = CONFIDENT_ANSWER;
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(1, code[0], output);
+    assertEquals(3, requests.get(), "reachability ping, one attempt, one re-run");
+    assertTrue(output.contains("REGRESSION oos-1"), output);
+    assertTrue(
+        output.contains("RESULT: FAIL - regression vs baseline (baseline.json): oos-1"), output);
+    var comparison = reportJson(output).get("baseline");
+    assertEquals("baseline.json", comparison.get("file").asText());
+    assertEquals("oos-1", comparison.get("regressions").get(0).asText());
+    assertFalse(comparison.get("reruns").get(0).get("passedOnRerun").asBoolean());
+  }
+
+  @Test
+  void aFlakeThatPassesOnTheRerunKeepsTheRunGreenAndIsListed() throws Exception {
+    cases(OOS);
+    baseline("{\"cases\":[{\"id\":\"oos-1\",\"passed\":true}]}");
+    replyFor = CONFIDENT_ANSWER;
+    replyFromRerun = "{\"refused\":true,\"claims\":[]}";
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(0, code[0], output);
+    assertEquals(3, requests.get());
+    assertTrue(output.contains("flaky      oos-1"), output);
+    assertTrue(output.contains("PASS") && output.contains("oos-1"), output);
+    assertEquals(0, reportJson(output).get("baseline").get("regressions").size());
+  }
+
+  @Test
+  void aCaseThatFailedInTheBaselineIsNotRerunAndIsNoRegression() throws Exception {
+    cases(OOS);
+    baseline("{\"cases\":[{\"id\":\"oos-1\",\"passed\":false}]}");
+    replyFor = CONFIDENT_ANSWER;
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(1, code[0], output); // the out-of-scope rule still fails the run
+    assertEquals(2, requests.get()); // ping plus one attempt
+    assertFalse(output.contains("regression vs baseline"), output);
+    assertTrue(output.contains("no case that passed there failed now"), output);
+  }
+
+  @Test
+  void withoutTheFlagThereIsNoBaselineSectionAndNoRerun() throws Exception {
+    cases(OOS);
+    replyFor = CONFIDENT_ANSWER;
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(2, requests.get()); // ping plus one attempt
+    assertFalse(output.contains("Baseline:"), output);
+    assertTrue(reportJson(output).get("baseline").isNull());
+  }
+
+  @Test
+  void aBadBaselineFileExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/missing.json")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("missing.json"), output);
+    baseline("{not json");
+    output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("baseline.json"), output);
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void baselineWithoutAValueExitsTwoWithUsage() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--baseline")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(
+        output.contains("ERROR: --baseline needs a value") && output.contains("Usage"), output);
     assertEquals(0, requests.get());
   }
 }

@@ -36,6 +36,7 @@ public final class Harness {
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
     String endpointArg = null;
     String configArg = null;
+    String baselineArg = null;
     boolean skipCalibration = false;
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
@@ -44,15 +45,23 @@ public final class Harness {
           && i + 1 < args.length
           && !args[i + 1].startsWith("--")) {
         configArg = args[++i];
+      } else if (args[i].equals("--baseline")
+          && i + 1 < args.length
+          && !args[i + 1].startsWith("--")) {
+        baselineArg = args[++i];
       } else if (args[i].equals("--skip-calibration")) {
         skipCalibration = true;
       } else {
         out.println(
             "ERROR: "
-                + (args[i].equals("--endpoint") || args[i].equals("--config")
+                + (args[i].equals("--endpoint")
+                        || args[i].equals("--config")
+                        || args[i].equals("--baseline")
                     ? args[i] + " needs a value"
                     : "unknown argument '" + args[i] + "'"));
-        out.println("Usage: Harness [--config <file>] [--endpoint <url>] [--skip-calibration]");
+        out.println(
+            "Usage: Harness [--config <file>] [--endpoint <url>] [--baseline <file>]"
+                + " [--skip-calibration]");
         return 2;
       }
     }
@@ -67,6 +76,7 @@ public final class Harness {
       }
       config = EvalConfig.loadFile(configFile, endpointArg);
     }
+    Baseline baseline = baselineArg == null ? null : Baseline.load(root.resolve(baselineArg));
     Path trapFile = config.trapPairsFile(); // null: use the trap pairs bundled in the jar
     if (!skipCalibration && trapFile != null && !Files.isReadable(trapFile)) {
       out.println("ERROR: cannot read the judge trap pairs at " + trapFile);
@@ -110,11 +120,8 @@ public final class Harness {
     }
 
     String runId = ReportWriter.newRunId();
-    CaseRunner runner = new CaseRunner(client, checks);
-    List<CaseResult> caseResults = new ArrayList<>();
-    for (EvalCase evalCase : cases) {
-      caseResults.add(runner.run(evalCase, runId));
-    }
+    SuiteRunner.Outcome outcome =
+        new SuiteRunner(new CaseRunner(client, checks)).run(cases, runId, baseline);
     SuiteReport report =
         new SuiteReport(
             runId,
@@ -122,7 +129,8 @@ public final class Harness {
             config.passFloor(),
             checkInfos(checks),
             calibration,
-            caseResults);
+            outcome.results(),
+            outcome.comparison());
 
     ConsoleReport.print(report, out);
     Path reportFile = ReportWriter.write(config.outputDir(), report).normalize();
