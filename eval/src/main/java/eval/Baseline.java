@@ -39,6 +39,10 @@ final class Baseline {
       throw new IllegalArgumentException(
           "baseline " + name + " has no 'cases' list; pass a report the harness wrote");
     }
+    if (cases.isEmpty()) {
+      throw new IllegalArgumentException(
+          "baseline " + name + " has an empty 'cases' list, so it could never flag a regression");
+    }
     Map<String, Boolean> passedById = new HashMap<>();
     for (int index = 0; index < cases.size(); index++) {
       JsonNode entry = cases.get(index);
@@ -58,6 +62,11 @@ final class Baseline {
   /** True only when the case is in the baseline and passed there. */
   boolean passed(String caseId) {
     return passedById.getOrDefault(caseId, false);
+  }
+
+  /** True when the case is in the baseline, whether it passed there or not. */
+  boolean knows(String caseId) {
+    return passedById.containsKey(caseId);
   }
 
   String name() {

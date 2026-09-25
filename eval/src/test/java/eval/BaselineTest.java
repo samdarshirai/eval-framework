@@ -51,8 +51,10 @@ class BaselineTest {
   }
 
   @Test
-  void invalidJsonAnEmptyFileAndAMissingCasesListAreErrorsNotAnEmptyBaseline() throws Exception {
-    for (String body : new String[] {"{not json", "", "{}", "{\"cases\":\"x\"}", "[]"}) {
+  void invalidJsonAnEmptyFileAnEmptyCasesListAndAMissingCasesListAreErrorsNotAnEmptyBaseline()
+      throws Exception {
+    for (String body :
+        new String[] {"{not json", "", "{}", "{\"cases\":\"x\"}", "[]", "{\"cases\":[]}"}) {
       var failure = assertThrows(IllegalArgumentException.class, () -> Baseline.load(write(body)));
       assertTrue(
           failure.getMessage().contains("baseline.json"), body + " -> " + failure.getMessage());
@@ -71,5 +73,15 @@ class BaselineTest {
       assertTrue(
           failure.getMessage().contains("baseline.json"), body + " -> " + failure.getMessage());
     }
+  }
+
+  @Test
+  void knowsSaysWhetherTheCaseIsInTheBaselineWhetherOrNotItPassed() throws Exception {
+    Baseline baseline =
+        Baseline.load(
+            write("{\"cases\":[{\"id\":\"a\",\"passed\":true},{\"id\":\"b\",\"passed\":false}]}"));
+    assertTrue(baseline.knows("a"));
+    assertTrue(baseline.knows("b"));
+    assertFalse(baseline.knows("c"));
   }
 }

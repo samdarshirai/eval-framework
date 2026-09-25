@@ -96,6 +96,13 @@ public final class Harness {
       return 2;
     }
     List<EvalCase> cases = getEvalCases(kb, config);
+    if (baseline != null && cases.stream().noneMatch(evalCase -> baseline.knows(evalCase.id()))) {
+      out.println(
+          "ERROR: baseline "
+              + baseline.name()
+              + " has none of this run's cases, so it could never flag a regression");
+      return 2;
+    }
 
     String judgeModel = config.requireJudgeModel();
     Judge judge =

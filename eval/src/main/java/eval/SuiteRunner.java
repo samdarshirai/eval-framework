@@ -8,7 +8,9 @@ import java.util.List;
  * baseline and failed now (D14, unit 19): the second result replaces the first, so a flake that
  * passes the second time counts as a pass, and a case that fails both times is a regression. Cases
  * that failed in the baseline, and cases the baseline does not know, are never re-run: they are not
- * suspected regressions and a re-run would only cost calls.
+ * suspected regressions and a re-run would only cost calls. Out-of-scope cases are never re-run
+ * either: a hallucination there fails the run by its own rule (D13), and a lucky second attempt
+ * must not clear it, so with a baseline the gate is exactly as strict as without one.
  */
 final class SuiteRunner {
   record Outcome(List<CaseResult> results, SuiteReport.Comparison comparison) {}
@@ -31,7 +33,9 @@ final class SuiteRunner {
     List<SuiteReport.Comparison.Rerun> reruns = new ArrayList<>();
     for (int index = 0; index < cases.size(); index++) {
       CaseResult firstAttempt = results.get(index);
-      if (firstAttempt.passed() || !baseline.passed(firstAttempt.id())) {
+      if (firstAttempt.passed()
+          || !baseline.passed(firstAttempt.id())
+          || SuiteReport.OUT_OF_SCOPE.equals(firstAttempt.category())) {
         continue;
       }
       CaseResult secondAttempt = runner.run(cases.get(index), runId);

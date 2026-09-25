@@ -148,4 +148,24 @@ class SuiteRunnerTest {
     assertEquals(List.of("a", "b", "c"), ids(outcome));
     assertTrue(outcome.results().get(1).passed());
   }
+
+  @Test
+  void anOutOfScopeCaseIsNeverRerunSoAFlakyHallucinationStillFailsTheRun() throws Exception {
+    attempts("oos", false, true);
+    var outOfScope =
+        new EvalCase(
+            "oos",
+            "oos",
+            "out-of-scope",
+            "unrelated",
+            "refuse",
+            List.of(),
+            "src",
+            "me",
+            "2026-01-01");
+    var outcome = runner().run(List.of(outOfScope), "run", baseline("oos"));
+    assertEquals(1, attempts.get("oos"));
+    assertFalse(outcome.results().get(0).passed());
+    assertEquals(List.of(), outcome.comparison().reruns());
+  }
 }
