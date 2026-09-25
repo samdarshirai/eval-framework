@@ -81,6 +81,17 @@ class EvalConfigTest {
   }
 
   @Test
+  void debugIsOffByDefaultAndMustBeABoolean() throws Exception {
+    assertFalse(EvalConfig.loadFile(write(""), null).debug());
+    assertTrue(EvalConfig.loadFile(write("debug: true\n"), null).debug());
+    var failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> EvalConfig.loadFile(write("debug: \"yes\"\n"), null).debug());
+    assertTrue(failure.getMessage().contains("'debug' must be true or false"));
+  }
+
+  @Test
   void skipCalibrationMustBeABooleanAndTheErrorNamesTheFile() throws Exception {
     var failure =
         assertThrows(

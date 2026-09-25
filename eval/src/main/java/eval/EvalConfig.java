@@ -54,6 +54,7 @@ final class EvalConfig {
           "cases",
           "outputDir",
           "skipCalibration",
+          "debug",
           "baseline",
           "calibration",
           "knowledgeBase");
@@ -172,6 +173,18 @@ final class EvalConfig {
       throw new IllegalArgumentException(fileName + ": 'skipCalibration' must be true or false");
     }
     return skip;
+  }
+
+  /** The {@code debug:} flag; default false. {@code --debug} turns it on for one run. */
+  boolean debug() {
+    Object value = raw.get("debug");
+    if (value == null) {
+      return false;
+    }
+    if (!(value instanceof Boolean debug)) {
+      throw new IllegalArgumentException(fileName + ": 'debug' must be true or false");
+    }
+    return debug;
   }
 
   /**
