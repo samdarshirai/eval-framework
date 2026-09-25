@@ -1,5 +1,11 @@
 endpoint: http://localhost:8080/answer
 passFloor: 0.90
+# Run settings that are also command-line flags. A flag on the command line beats the value in this file.
+#   endpoint: above; --endpoint <url> overrides it.
+#   skipCalibration: true    # skip the judge trap pairs and the Groundedness sample. Default false. --skip-calibration / --no-skip-calibration
+#   baseline: caseResults/baseline.json   # previous report to compare with: a case that passed there and fails now
+#                                         # fails the run, after one re-run. Off by default. --baseline <file> / --no-baseline
+#                                         # Resolves against this file's directory; the flag's path against the working directory.
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
 # Categories this app's cases may use. 'out-of-scope' is required: the exit rule (D13) keys on it.

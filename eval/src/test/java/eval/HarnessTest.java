@@ -700,4 +700,105 @@ class HarnessTest {
     assertTrue(output.contains("ERROR") && output.contains("duplicate"), output);
     assertEquals(0, requests.get());
   }
+
+  private String defaultConfig() {
+    return "endpoint: " + url() + "\npassFloor: 0.90\ncategories: [single-source, out-of-scope]\n";
+  }
+
+  private int judgeCallsOf(String... args) throws Exception {
+    var judgeCalls = new int[1];
+    Harness.run(
+        args,
+        root,
+        new PrintStream(new ByteArrayOutputStream()),
+        model ->
+            (system, user) -> {
+              judgeCalls[0]++;
+              return "YES";
+            });
+    return judgeCalls[0];
+  }
+
+  @Test
+  void skipCalibrationInTheConfigSkipsTheJudgeCallsAndTheFlagCanTurnItBackOn() throws Exception {
+    cases(OOS);
+    labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
+    config(defaultConfig() + "skipCalibration: true\n");
+    assertEquals(0, judgeCallsOf());
+    assertTrue(judgeCallsOf("--no-skip-calibration") > 0);
+  }
+
+  @Test
+  void skipCalibrationFlagOverridesAConfigThatRunsIt() throws Exception {
+    cases(OOS);
+    labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
+    config(defaultConfig() + "skipCalibration: false\n");
+    assertTrue(judgeCallsOf() > 0);
+    assertEquals(0, judgeCallsOf("--skip-calibration"));
+  }
+
+  @Test
+  void baselineFromTheConfigIsUsedWithoutTheFlag() throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
+    config(defaultConfig() + "baseline: caseResults/baseline.json\n");
+    replyFor = REFUSAL;
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(1, code[0], output);
+    assertTrue(output.contains("REGRESSION c1"), output);
+  }
+
+  @Test
+  void baselineFlagOverridesTheConfigBaseline() throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":false}]}");
+    Files.writeString(
+        root.resolve("caseResults/from-config.json"),
+        "{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
+    config(defaultConfig() + "baseline: caseResults/from-config.json\n");
+    replyFor = REFUSAL;
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertTrue(output.contains("Baseline: baseline.json"), output);
+    assertTrue(output.contains("no case that passed there failed now"), output);
+    assertEquals(2, requests.get(), "ping plus one attempt, no re-run");
+  }
+
+  @Test
+  void noBaselineFlagTurnsTheConfigBaselineOff() throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
+    config(defaultConfig() + "baseline: caseResults/baseline.json\n");
+    replyFor = REFUSAL;
+    int[] code = new int[1];
+    String output = out(code, "--no-baseline")[0];
+    assertFalse(output.contains("Baseline:"), output);
+    assertEquals(2, requests.get());
+  }
+
+  @Test
+  void theLastOfBaselineAndNoBaselineWins() throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
+    replyFor = REFUSAL;
+    int[] code = new int[1];
+    assertFalse(
+        out(code, "--baseline", "caseResults/baseline.json", "--no-baseline")[0].contains(
+            "Baseline:"));
+    assertTrue(
+        out(code, "--no-baseline", "--baseline", "caseResults/baseline.json")[0].contains(
+            "Baseline:"));
+  }
+
+  @Test
+  void aMissingBaselineNamedInTheConfigExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    config(defaultConfig() + "baseline: caseResults/nope.json\n");
+    int[] code = new int[1];
+    String output = out(code)[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("nope.json"), output);
+    assertEquals(0, requests.get());
+  }
 }

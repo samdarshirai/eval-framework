@@ -37,7 +37,8 @@ public final class Harness {
     String endpointArg = null;
     String configArg = null;
     String baselineArg = null;
-    boolean skipCalibration = false;
+    Boolean skipCalibrationArg = null; // null: use the config value
+    boolean noBaseline = false;
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals("--endpoint") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
         endpointArg = args[++i];
@@ -49,8 +50,14 @@ public final class Harness {
           && i + 1 < args.length
           && !args[i + 1].startsWith("--")) {
         baselineArg = args[++i];
+        noBaseline = false;
+      } else if (args[i].equals("--no-baseline")) {
+        baselineArg = null;
+        noBaseline = true;
+      } else if (args[i].equals("--no-skip-calibration")) {
+        skipCalibrationArg = false;
       } else if (args[i].equals("--skip-calibration")) {
-        skipCalibration = true;
+        skipCalibrationArg = true;
       } else {
         out.println(
             "ERROR: "
@@ -60,8 +67,8 @@ public final class Harness {
                     ? args[i] + " needs a value"
                     : "unknown argument '" + args[i] + "'"));
         out.println(
-            "Usage: Harness [--config <file>] [--endpoint <url>] [--baseline <file>]"
-                + " [--skip-calibration]");
+            "Usage: Harness [--config <file>] [--endpoint <url>] [--baseline <file> |"
+                + " --no-baseline] [--skip-calibration | --no-skip-calibration]");
         return 2;
       }
     }
@@ -76,7 +83,11 @@ public final class Harness {
       }
       config = EvalConfig.loadFile(configFile, endpointArg);
     }
-    Baseline baseline = baselineArg == null ? null : Baseline.load(root.resolve(baselineArg));
+    boolean skipCalibration =
+        skipCalibrationArg != null ? skipCalibrationArg : config.skipCalibration();
+    Path baselineFile =
+        noBaseline ? null : baselineArg != null ? root.resolve(baselineArg) : config.baselineFile();
+    Baseline baseline = baselineFile == null ? null : Baseline.load(baselineFile);
     Path trapFile = config.trapPairsFile(); // null: use the trap pairs bundled in the jar
     if (!skipCalibration && trapFile != null && !Files.isReadable(trapFile)) {
       out.println("ERROR: cannot read the judge trap pairs at " + trapFile);

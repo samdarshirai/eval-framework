@@ -72,4 +72,34 @@ class EvalConfigTest {
             dir.resolve("custom.yaml"), base + "calibration:\n  labeledSample: pairs.yaml\n");
     assertEquals(dir.resolve("pairs.yaml"), EvalConfig.loadFile(custom, null).labeledSampleFile());
   }
+
+  @Test
+  void skipCalibrationIsOffByDefaultAndReadsTheConfigKey() throws Exception {
+    assertFalse(EvalConfig.loadFile(write(""), null).skipCalibration());
+    assertTrue(EvalConfig.loadFile(write("skipCalibration: true\n"), null).skipCalibration());
+    assertFalse(EvalConfig.loadFile(write("skipCalibration: false\n"), null).skipCalibration());
+  }
+
+  @Test
+  void skipCalibrationMustBeABooleanAndTheErrorNamesTheFile() throws Exception {
+    var failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                EvalConfig.loadFile(write("skipCalibration: \"yes please\"\n"), null)
+                    .skipCalibration());
+    assertTrue(
+        failure.getMessage().contains("team.yaml")
+            && failure.getMessage().contains("skipCalibration"),
+        failure.getMessage());
+  }
+
+  @Test
+  void baselineFileIsNullByDefaultAndResolvedAgainstTheConfigDirWhenSet() throws Exception {
+    assertNull(EvalConfig.loadFile(write(""), null).baselineFile());
+    assertEquals(
+        dir.resolve("results/baseline.json"),
+        EvalConfig.loadFile(write("baseline: results/baseline.json\n"), null).baselineFile());
+    assertNull(EvalConfig.loadFile(write("baseline: \"\"\n"), null).baselineFile());
+  }
 }

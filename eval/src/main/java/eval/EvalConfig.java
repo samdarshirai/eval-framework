@@ -93,6 +93,26 @@ final class EvalConfig {
     return calibrationFile("labeledSample");
   }
 
+  /** The {@code skipCalibration:} flag; default false. {@code --skip-calibration} overrides it. */
+  boolean skipCalibration() {
+    Object value = raw.get("skipCalibration");
+    if (value == null) {
+      return false;
+    }
+    if (!(value instanceof Boolean skip)) {
+      throw new IllegalArgumentException(fileName + ": 'skipCalibration' must be true or false");
+    }
+    return skip;
+  }
+
+  /**
+   * The {@code baseline:} report file, or null when none is set. {@code --baseline} overrides it.
+   */
+  Path baselineFile() {
+    String value = text("baseline", null);
+    return value == null ? null : baseDir.resolve(value);
+  }
+
   private Path calibrationFile(String key) {
     Object block = raw.get("calibration");
     if (block == null) {
