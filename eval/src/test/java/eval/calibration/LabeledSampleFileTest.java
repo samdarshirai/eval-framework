@@ -11,12 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
 class LabeledSampleFileTest {
+  @SuppressWarnings("unchecked")
   private static List<Map<String, Object>> sample() throws IOException {
     try (Reader reader =
         new InputStreamReader(
             LabeledSampleFileTest.class.getResourceAsStream("/calibration/labeled-sample.yaml"),
             StandardCharsets.UTF_8)) {
-      return new Yaml().load(reader);
+      Map<String, Object> file = new Yaml().load(reader);
+      return (List<Map<String, Object>>) file.get("pairs");
     }
   }
 

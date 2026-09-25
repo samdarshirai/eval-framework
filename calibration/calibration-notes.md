@@ -1,6 +1,6 @@
 # Judge calibration notes
 
-Run 2026-09-24, judge model `anthropic/claude-opus-4.8`, reasoning effort low, temperature 0.
+Measured on 2026-09-24 in a live run of `java -jar eval/target/eval.jar` (the date of the measurement, not a version), judge model `anthropic/claude-opus-4.8`, reasoning effort low, temperature 0.
 
 ## Groundedness (calibrated, D16)
 
@@ -8,7 +8,7 @@ Run 2026-09-24, judge model `anthropic/claude-opus-4.8`, reasoning effort low, t
 - Overall agreement: 20/20 (100%), target at least 90%.
 - Unsupported pairs judged supported: 0 of 10, target 0.
 - Supported pairs judged unsupported: 0 (counted, no target).
-- Prompt changes made to reach the targets: none (SUPPORTS_SYSTEM unchanged since first live run). An earlier live attempt was invalid (13 pairs answered, 7 errored with HTTP 429 from OpenRouter's new-account rate limit); fixed by a retry-on-429 in OpenRouterLlm (commit 480e189), then re-run cleanly.
+- Prompt changes made to reach the targets: none (SUPPORTS_SYSTEM_PROMPT unchanged since first live run).
 
 ## Trap pairs
 

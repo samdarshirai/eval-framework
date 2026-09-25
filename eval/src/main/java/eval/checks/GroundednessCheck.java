@@ -12,7 +12,8 @@ import kb.Chunk;
  * reports that.
  */
 public final class GroundednessCheck implements Check {
-  private static final int EXCERPT_LENGTH = 120;
+  /** Max characters of a chunk's text shown in a failure message. */
+  private static final int CHUNK_PREVIEW_LENGTH = 120;
 
   private final KnowledgeBase kb;
   private final Judge judge;
@@ -30,22 +31,27 @@ public final class GroundednessCheck implements Check {
   @Override
   public CheckResult run(EvalCase evalCase, Answer answer, CaseState state) {
     List<Claim> claims = answer.claims() == null ? List.of() : answer.claims();
-    Set<Claim> goldGrounded = claimsCitingAGoldChunk(evalCase, state);
+    Set<Claim> goldGroundedClaims = claimsCitingAGoldChunk(evalCase, state);
     List<String> notes = new ArrayList<>();
     List<String> problems = new ArrayList<>();
     for (Claim claim : claims) {
-      if (goldGrounded.contains(claim)) {
+      if (goldGroundedClaims.contains(claim)) {
         notes.add("grounded (gold chunk): \"" + claim.claim() + "\"");
         continue;
       }
-      List<Chunk> cited = citedChunks(claim);
-      if (cited.isEmpty()) {
+      List<Chunk> citedChunks = chunksCitedBy(claim);
+      if (citedChunks.isEmpty()) {
         notes.add(
             "skipped, no existing citation (see Citation integrity): \"" + claim.claim() + "\"");
-      } else if (anyChunkSupports(claim, cited)) {
+      } else if (anyChunkSupports(claim, citedChunks)) {
         notes.add("grounded (judge): \"" + claim.claim() + "\"");
       } else {
-        problems.add("unsupported: \"" + claim.claim() + "\" (cited " + describe(cited) + ")");
+        problems.add(
+            "unsupported: \""
+                + claim.claim()
+                + "\" (cited "
+                + formatCitedChunks(citedChunks)
+                + ")");
       }
     }
     if (!problems.isEmpty()) {
@@ -54,6 +60,10 @@ public final class GroundednessCheck implements Check {
     return notes.isEmpty() ? CheckResult.ok() : CheckResult.ok(String.join("; ", notes));
   }
 
+  /**
+   * The covering claims that cite one of their own fact's gold chunks; these pass without a judge
+   * call. Empty when Coverage stored no covering claims.
+   */
   private static Set<Claim> claimsCitingAGoldChunk(EvalCase evalCase, CaseState state) {
     Set<Claim> grounded = new HashSet<>();
     for (ExpectedFact fact : evalCase.facts()) {
@@ -67,7 +77,7 @@ public final class GroundednessCheck implements Check {
     return grounded;
   }
 
-  private List<Chunk> citedChunks(Claim claim) {
+  private List<Chunk> chunksCitedBy(Claim claim) {
     List<Chunk> chunks = new ArrayList<>();
     if (claim.citations() == null) {
       return chunks;
@@ -80,8 +90,8 @@ public final class GroundednessCheck implements Check {
     return chunks;
   }
 
-  private boolean anyChunkSupports(Claim claim, List<Chunk> cited) {
-    for (Chunk chunk : cited) {
+  private boolean anyChunkSupports(Claim claim, List<Chunk> citedChunks) {
+    for (Chunk chunk : citedChunks) {
       if (judge.supports(claim.claim(), chunk.text())) {
         return true;
       }
@@ -89,13 +99,15 @@ public final class GroundednessCheck implements Check {
     return false;
   }
 
-  private static String describe(List<Chunk> cited) {
+  private static String formatCitedChunks(List<Chunk> citedChunks) {
     List<String> parts = new ArrayList<>();
-    for (Chunk chunk : cited) {
+    for (Chunk chunk : citedChunks) {
       String text = chunk.text().replaceAll("\\s+", " ");
-      String excerpt =
-          text.length() <= EXCERPT_LENGTH ? text : text.substring(0, EXCERPT_LENGTH) + "...";
-      parts.add(chunk.id() + ": \"" + excerpt + "\"");
+      String preview =
+          text.length() <= CHUNK_PREVIEW_LENGTH
+              ? text
+              : text.substring(0, CHUNK_PREVIEW_LENGTH) + "...";
+      parts.add(chunk.id() + ": \"" + preview + "\"");
     }
     return String.join(", ", parts);
   }

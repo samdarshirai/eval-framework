@@ -50,7 +50,7 @@ class LabeledSampleTest {
     var result = run("Maybe");
     assertEquals(0, result.agreed());
     assertEquals(0, result.falseSupported());
-    assertNull(result.pairs().get(0).judged());
+    assertNull(result.pairs().get(0).actualSupported());
     assertTrue(result.pairs().get(0).detail().startsWith("error:"), result.pairs().get(0).detail());
   }
 
@@ -72,6 +72,22 @@ class LabeledSampleTest {
         LabeledSample.run(new StringReader("[]\n"), new Judge((s, u) -> "YES")).agreementMet());
     assertTrue(LabeledSample.Result.NONE.agreementMet());
     assertEquals(0, LabeledSample.Result.NONE.falseSupported());
+  }
+
+  @Test
+  void aMapWithPassagesAndAliasesLoadsAndRuns() {
+    String yaml =
+        """
+passages:
+  safari: &safari "Safari 14"
+pairs:
+  - {name: wrong, kind: unsupported, supported: false, passage: *safari, claim: "Safari 13"}
+  - {name: right, kind: supported, supported: true, passage: *safari, claim: "Safari 14"}
+""";
+    var judge = new Judge((system, user) -> user.contains("Claim: Safari 14") ? "YES" : "NO");
+    var result = LabeledSample.run(new StringReader(yaml), judge);
+    assertEquals(2, result.pairs().size());
+    assertEquals(2, result.agreed());
   }
 
   private static LabeledSample.Result withAgreed(int agreed, int total) {

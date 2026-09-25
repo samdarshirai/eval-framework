@@ -16,12 +16,15 @@ import org.yaml.snakeyaml.Yaml;
 public final class LabeledSample {
   private static final String BUNDLED = "/calibration/labeled-sample.yaml";
 
-  /** {@code judged} is null when the judge threw or answered unclearly: never an agreement. */
+  /**
+   * {@code expectedSupported} is the hand label; {@code actualSupported} is what the judge said,
+   * null when it threw or answered unclearly: never an agreement.
+   */
   public record PairResult(
-      String name, String kind, boolean labeledSupported, Boolean judged, String detail) {
+      String name, String kind, boolean expectedSupported, Boolean actualSupported, String detail) {
     @JsonProperty("agreed")
     public boolean agreed() {
-      return judged != null && judged == labeledSupported;
+      return actualSupported != null && actualSupported == expectedSupported;
     }
   }
 
@@ -36,7 +39,7 @@ public final class LabeledSample {
     /** Pairs where the judge threw or answered unclearly: each fails the run. */
     @JsonProperty("errors")
     public long errors() {
-      return pairs.stream().filter(pair -> pair.judged() == null).count();
+      return pairs.stream().filter(pair -> pair.actualSupported() == null).count();
     }
 
     @JsonProperty("agreement")
@@ -46,21 +49,21 @@ public final class LabeledSample {
 
     @JsonProperty("unsupportedPairs")
     public long unsupportedPairs() {
-      return pairs.stream().filter(pair -> !pair.labeledSupported()).count();
+      return pairs.stream().filter(pair -> !pair.expectedSupported()).count();
     }
 
-    /** Labeled unsupported, judged supported: the miss that lets a wrong claim through. */
+    /** Labeled unsupported, actualSupported supported: the miss that lets a wrong claim through. */
     @JsonProperty("falseSupported")
     public long falseSupported() {
       return pairs.stream()
-          .filter(pair -> !pair.labeledSupported() && Boolean.TRUE.equals(pair.judged()))
+          .filter(pair -> !pair.expectedSupported() && Boolean.TRUE.equals(pair.actualSupported()))
           .count();
     }
 
     @JsonProperty("falseUnsupported")
     public long falseUnsupported() {
       return pairs.stream()
-          .filter(pair -> pair.labeledSupported() && Boolean.FALSE.equals(pair.judged()))
+          .filter(pair -> pair.expectedSupported() && Boolean.FALSE.equals(pair.actualSupported()))
           .count();
     }
 
@@ -85,29 +88,37 @@ public final class LabeledSample {
     }
   }
 
-  /** A judge that throws on a pair counts as not agreeing on it. */
+  /**
+   * Reads either a plain list of pairs or a map with a {@code pairs} list (and optionally a {@code
+   * passages} section of anchors to reuse). A judge that throws on a pair counts as not agreeing on
+   * it.
+   */
   public static Result run(Reader source, Judge judge) {
-    List<Map<String, Object>> entries = new Yaml().load(source);
+    Object loaded = new Yaml().load(source);
+    Object list = loaded instanceof Map<?, ?> map ? map.get("pairs") : loaded;
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> entries = list == null ? List.of() : (List<Map<String, Object>>) list;
     List<PairResult> results = new ArrayList<>();
-    for (Map<String, Object> entry : entries == null ? List.<Map<String, Object>>of() : entries) {
-      boolean labeledSupported = (Boolean) entry.get("supported");
-      Boolean judged;
+    for (Map<String, Object> entry : entries) {
+      boolean expectedSupported = (Boolean) entry.get("supported");
+      Boolean actualSupported;
       String detail = null;
       try {
-        judged = judge.supports((String) entry.get("claim"), (String) entry.get("passage"));
-        if (judged != labeledSupported) {
-          detail = "labeled " + word(labeledSupported) + ", judge said " + word(judged);
+        actualSupported =
+            judge.supports((String) entry.get("claim"), (String) entry.get("passage"));
+        if (actualSupported != expectedSupported) {
+          detail = "labeled " + word(expectedSupported) + ", judge said " + word(actualSupported);
         }
       } catch (IllegalStateException e) {
-        judged = null;
+        actualSupported = null;
         detail = "error: " + e.getMessage();
       }
       results.add(
           new PairResult(
               (String) entry.get("name"),
               (String) entry.get("kind"),
-              labeledSupported,
-              judged,
+              expectedSupported,
+              actualSupported,
               detail));
     }
     return new Result(results);
