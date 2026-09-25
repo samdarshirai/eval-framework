@@ -4,10 +4,9 @@ import eval.*;
 import java.util.*;
 
 /**
- * Deterministic (D11): each covered fact must be backed by a claim that cites a chunk of the same
- * document as one of the fact's gold chunks. Document-level on purpose: a different chunk of the
- * right document is fine (that is Groundedness's business), citing only some other document is not.
- * A fact Coverage did not cover is skipped, Coverage already fails that.
+ * Deterministic (D11): a covered fact must be backed by a claim citing a chunk from the same
+ * document as one of the fact's gold chunks. Any chunk of that document counts. Facts Coverage did
+ * not cover are skipped.
  */
 public final class SourceCheck implements Check {
   @Override
