@@ -69,6 +69,120 @@ class SeedCasesTest {
     }
   }
 
+  // A doc edit that changes a gold chunk must be noticed and re-confirmed, so CI fails until the
+  // author checks the case and runs eval.StampCaseHashes again (D21).
+  @Test
+  void everySeedCaseWithFactsIsStampedAndNotStale() {
+    for (EvalCase evalCase : cases) {
+      String currentHash = CaseHash.of(evalCase, knowledge);
+      if (currentHash == null) {
+        continue;
+      }
+      assertEquals(
+          currentHash,
+          evalCase.confirmedHash(),
+          evalCase.id()
+              + ": confirmed_hash is missing or stale. Check the case against the docs, then run"
+              + " java -cp eval/target/eval.jar eval.StampCaseHashes");
+    }
+  }
+
+  private long count(String category) {
+    return cases.stream().filter(evalCase -> evalCase.category().equals(category)).count();
+  }
+
+  private static String documentOf(String chunkId) {
+    return chunkId.split("#")[0];
+  }
+
+  // The documented shape of the set (D2-D4, D8). Changing a number here is a deliberate decision:
+  // adding a case means retiring or merging one (D19).
+  @Test
+  void singleSourceHasEightCases() {
+    assertEquals(8, count("single-source"));
+  }
+
+  @Test
+  void multiSourceHasSixCases() {
+    assertEquals(6, count("multi-source"));
+  }
+
+  @Test
+  void falsePremiseHasSixCases() {
+    assertEquals(6, count("false-premise"));
+  }
+
+  @Test
+  void outOfScopeHasFiveCasesTwoUnrelatedAndThreePlausibleNonexistent() {
+    assertEquals(5, count("out-of-scope"));
+    var outOfScope =
+        cases.stream().filter(evalCase -> evalCase.category().equals("out-of-scope")).toList();
+    assertEquals(
+        2, outOfScope.stream().filter(evalCase -> "unrelated".equals(evalCase.subtype())).count());
+    assertEquals(
+        3,
+        outOfScope.stream()
+            .filter(evalCase -> "plausible-nonexistent".equals(evalCase.subtype()))
+            .count());
+  }
+
+  @Test
+  void edgeCaseHasThreeCases() {
+    assertEquals(3, count("edge-case"));
+  }
+
+  @Test
+  void falsePremiseCasesExpectAnAnswerAndOutOfScopeCasesExpectARefusalWithNoFacts() {
+    for (EvalCase evalCase : cases) {
+      if (evalCase.category().equals("false-premise")) {
+        assertEquals("answer", evalCase.expectedBehavior(), evalCase.id());
+      }
+      if (evalCase.category().equals("out-of-scope")) {
+        assertEquals("refuse", evalCase.expectedBehavior(), evalCase.id());
+        assertTrue(evalCase.facts().isEmpty(), evalCase.id() + ": a refuse case has no facts");
+      }
+    }
+  }
+
+  @Test
+  void everyCaseRecordsSourceOwnerAndAdded() {
+    for (EvalCase evalCase : cases) {
+      assertNotNull(evalCase.source(), evalCase.id() + ": source");
+      assertNotNull(evalCase.owner(), evalCase.id() + ": owner");
+      assertNotNull(evalCase.added(), evalCase.id() + ": added");
+    }
+  }
+
+  @Test
+  void everySingleSourceCaseStaysInOneDocument() {
+    for (EvalCase evalCase : cases) {
+      if (evalCase.category().equals("single-source")) {
+        long documents =
+            evalCase.facts().stream()
+                .flatMap(fact -> fact.chunks().stream())
+                .map(SeedCasesTest::documentOf)
+                .distinct()
+                .count();
+        assertEquals(1, documents, evalCase.id());
+      }
+    }
+  }
+
+  @Test
+  void everyMultiSourceCaseNeedsMoreThanOneDocument() {
+    for (EvalCase evalCase : cases) {
+      if (evalCase.category().equals("multi-source")) {
+        long documents =
+            evalCase.facts().stream()
+                .flatMap(fact -> fact.chunks().stream())
+                .map(SeedCasesTest::documentOf)
+                .distinct()
+                .count();
+        assertTrue(documents > 1, evalCase.id() + ": its facts must live in different documents");
+      }
+    }
+  }
+
   @Test
   void aMultiSourceSeedHasFactsInDifferentDocuments() {
     assertTrue(
