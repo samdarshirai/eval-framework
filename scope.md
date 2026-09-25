@@ -70,7 +70,7 @@ The set has 28 cases (unit 21).
 | **Regression against a baseline** (`--baseline`): a case that passed there and fails now fails the run, after one re-run | Blocks a silent slide even when the pass rate stays above the floor; the re-run keeps flakes from crying wolf (D13, D14, D46) |
 | **Exit-code rules**: pass floor 90%, and any failing out-of-scope case fails the run | Blocks a hallucination even when the pass rate is high (D13, D34) |
 | **Relevance** (LLM judge, advisory): flags off-topic claims, never fails a case; uncalibrated | Reported and counted so padding is visible without a noisy judge gating releases (D12, D49) |
-| **Measured cost and time**: judge calls and tokens per check, estimated cost from `judgePricing`, wall-clock time; one measured run is $0.15 and 382 s | The scale plan's cost line comes from a measured run, not a guess; assistant tokens are not visible over HTTP (D17, D28, D50) |
+| **Measured cost and time**: judge calls and tokens per check, estimated cost from `judgePricing`, wall-clock time; two measured full runs cost $0.15 (382 s) and $0.14 (295 s), about 82 judge calls each | The scale plan's cost line comes from a measured run, not a guess; assistant tokens are not visible over HTTP (D17, D28, D50) |
 | **Reusable by other teams**: `--config`, a `--<setting> <value>` override for every config key, pluggable knowledge source | The "pattern for thirty more" (D38, D42) |
 
 ## In scope, planned and not built yet
@@ -109,6 +109,8 @@ Described in the pattern document and scale plan, not coded in v1 (D22, D23).
 | A separate model for the Coverage confirm step | The main judge is enough; one judge setting is simpler (D24) |
 | promptfoo / DeepEval, Elasticsearch or a vector DB | A ~300-line runner I know line by line fits the live-change requirement; BM25 in memory suffices for 5 pages |
 
-## Known open item
+## Known open items
 
-The first full run of the 28 cases (2026-09-25) passes 19 and exits 1 at 67.9%. Out-of-scope is 5/5 and single-source 8/8, but multi-source is 0/6: the stub over-refuses or retrieves only one of the two documents, and it once wrote an uncited claim. `edge-multi-ask` and `fp-tcf-gettcdata` fail the same way. `fp-geo-regional-settings` failed on a case wording mistake that is now fixed (D48), so 20 pass by composition. All the stub failures are kept as evidence, not tuned to pass. Telling a retrieval miss from a model miss is exactly what the retrieval metric above would do (D44).
+The latest full run of the 28 cases (2026-09-25, `caseResults/20260925-175406.json`) passes 20 and exits 1 at 71.4%. The first full run passed 19 (67.9%); the difference is the `fp-geo-regional-settings` wording fix (D48). Out-of-scope is 5/5 and single-source 8/8, but multi-source is 0/6: the stub over-refuses or retrieves only one of the two documents, and it once wrote an uncited claim. `edge-multi-ask` and `fp-tcf-gettcdata` fail the same way. All the stub failures are kept as evidence, not tuned to pass. Telling a retrieval miss from a model miss is exactly what the retrieval metric above would do (D44).
+
+The committed `caseResults/baseline.json` is an early 8-case run (87.5%, floor 0.85), not a known-good run of the 28-case set. Promote a current report to `caseResults/baseline.json` once the multi-source failures are diagnosed.

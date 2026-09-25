@@ -1,7 +1,7 @@
 # Grilling Decisions — Eval Harness Plan
 
 Decisions settled while stress-testing `usercentrics-eval-harness-plan.md`. Terms are defined in `CONTEXT.md`.
-Status: **in progress**. Not final until confirmed.
+Status: D1-D51 are settled and built (units 1-22 of `build-order.md`, plus `--debug`). Still open: the pattern document, the scale plan and the README (units 24-26).
 
 ## Contract and cases
 
@@ -105,11 +105,11 @@ Status: **in progress**. Not final until confirmed.
 
 ## Open
 
-(none right now)
+- Baseline: `caseResults/baseline.json` is an early 8-case run. Promote a current report once the multi-source failures (0/6 in the latest run) are diagnosed as retrieval miss or model miss.
+- The live-change rehearsal (unit 23) has not been done out loud yet.
 
 ## Not yet grilled
 
-- Pattern document structure and worked example
-- Time budget and the "what I cut and why" list
-- The live-change rehearsal (which change, how quickly)
-- Build details (Java stack, `pom.xml` and `Main.java` show as deleted in git status)
+- Pattern document structure and worked example (unit 24)
+- Scale plan content and the assistant-cost hand calculation (unit 25)
+- Time budget and the "what I cut and why" list (`scope.md` covers the cut list)
