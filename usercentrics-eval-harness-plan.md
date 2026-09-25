@@ -46,7 +46,7 @@ Reasoning chain used to pick pages — risk/failure mode → eval case → requi
 
 ### Step 2 — Thin assistant
 
-One function: question in, structured answer out. **The assistant runs as a separate HTTP service** (one POST endpoint: `{question}` in, claims JSON out) and the harness calls it over HTTP. This is the same integration path any other app on the hub would use, in any language, so the harness code is identical for the stub and for a real app. The stub is a small standalone server (Java's built-in `com.sun.net.httpserver`, no dependency).
+One function: question in, structured answer out. **The assistant runs as a separate HTTP service** (one POST endpoint: `{question}` in, claims JSON out) and the harness calls it over HTTP. This is the same integration path any other app on the hub would use, in any language, so the harness code is identical for the stub and for a real app. The stub is a small standalone Spring Boot service in its own Maven module (D37; this replaced the JDK `HttpServer` first planned), so the harness module never depends on it.
 
 - **Retrieval:** BM25 keyword search over the chunks to pull the top 2–3 most relevant.
 - **Generation:** LLM prompted to answer using only those chunks, and to refuse if the docs don't cover it. Temperature 0. The prompt alone decides "not covered": BM25 always returns the top chunks and there is no retrieval score cutoff. A weaker stub gives the Refusal check something real to catch; a score cutoff is a "what I'd add next" item.
@@ -90,7 +90,7 @@ One function: question in, structured answer out. **The assistant runs as a sepa
 1. Every case records its origin (`source`, `owner`, `added`).
 2. Hard cap per category. Adding a case means retiring or merging one, so the set stays small enough to run in CI. This is an authoring rule; the loader does not enforce it.
 3. A candidate case is admitted only if it adds a *distinct* failure. If it would fail the same check for the same reason as an existing case, it becomes a note on that case.
-4. The loader flags rot: a missing gold chunk is a hard error; a doc whose content hash changed since the case was last confirmed is a warning (designed, built if time allows).
+4. The loader flags rot: a missing gold chunk is a hard error; a doc whose content hash changed since the case was last confirmed is a warning (built, D48).
 
 ### Step 4 — Harness
 
@@ -107,7 +107,7 @@ One command runs the harness (the stub is started separately; README documents b
 
 Philosophy: use a deterministic check wherever the property is deterministic (citation integrity, source, refusal, keyword filtering, gold-chunk matching); reserve an LLM judge for where semantic interpretation is genuinely required (coverage confirmation, groundedness fallback, relevance). A stronger Staff-level argument than defaulting to an LLM judge for everything.
 
-**Pass rule.** A case passes if every **gating** check passes. All checks gate except Relevance. Failing checks are always listed in the per-case detail. Roll up into a summary (pass rate overall, by category, and out-of-scope by subtype). Print a summary table to the terminal; write full detail to timestamped JSON in `results/`.
+**Pass rule.** A case passes if every **gating** check passes. All checks gate except Relevance. Failing checks are always listed in the per-case detail. Roll up into a summary (pass rate overall, by category, and out-of-scope by subtype). Print a summary table to the terminal; write full detail to timestamped JSON in `caseResults/`.
 
 **Exit code.** Non-zero if any of:
 

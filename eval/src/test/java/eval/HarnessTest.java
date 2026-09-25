@@ -128,6 +128,27 @@ class HarnessTest {
   }
 
   @Test
+  void caseFlagRunsOnlyTheNamedCasesAndSaysSo() throws Exception {
+    cases(OOS + OOS.replace("oos-1", "oos-2"));
+    int[] code = new int[1];
+    String output = out(code, "--case", "oos-2")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("Partial run: 1 of 2 cases [oos-2]"), output);
+    assertFalse(output.contains("oos-1"), output);
+    assertTrue(output.contains("oos-2"), output);
+  }
+
+  @Test
+  void unknownCaseIdExitsTwoNamingTheIdAndTheKnownOnes() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--case", "nope")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("unknown case id(s): nope (known: oos-1)"), output);
+    assertEquals(0, requests.get(), "must fail before contacting the assistant");
+  }
+
+  @Test
   void aStaleCaseWarnsByNameAndStillRuns() throws Exception {
     cases(
         "- id: c1\n"

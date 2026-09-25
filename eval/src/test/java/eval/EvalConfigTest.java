@@ -3,6 +3,7 @@ package eval;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.*;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -78,6 +79,14 @@ class EvalConfigTest {
     assertFalse(EvalConfig.loadFile(write(""), null).skipCalibration());
     assertTrue(EvalConfig.loadFile(write("skipCalibration: true\n"), null).skipCalibration());
     assertFalse(EvalConfig.loadFile(write("skipCalibration: false\n"), null).skipCalibration());
+  }
+
+  @Test
+  void caseIdsAreSplitAndTrimmedAndEmptyWhenUnset() throws Exception {
+    assertEquals(List.of(), EvalConfig.loadFile(write(""), null).caseIds());
+    assertEquals(
+        List.of("a", "b"), EvalConfig.loadFile(write("case: \"a, b,\"\n"), null).caseIds());
+    assertEquals(List.of("a", "b"), EvalConfig.loadFile(write("case: [a, b]\n"), null).caseIds());
   }
 
   @Test

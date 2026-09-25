@@ -55,6 +55,7 @@ final class EvalConfig {
           "outputDir",
           "skipCalibration",
           "debug",
+          "case",
           "baseline",
           "calibration",
           "knowledgeBase");
@@ -185,6 +186,18 @@ final class EvalConfig {
       throw new IllegalArgumentException(fileName + ": 'debug' must be true or false");
     }
     return debug;
+  }
+
+  /**
+   * The {@code case:} ids to run, comma-separated ({@code --case a,b}); empty means every case.
+   */
+  List<String> caseIds() {
+    Object value = raw.get("case");
+    if (value == null) {
+      return List.of();
+    }
+    List<?> parts = value instanceof List<?> list ? list : List.of(value.toString().split(","));
+    return parts.stream().map(part -> part.toString().trim()).filter(id -> !id.isEmpty()).toList();
   }
 
   /**

@@ -17,7 +17,7 @@ Measured on 2026-09-24 in a live run of `java -jar eval/target/eval.jar` (the da
 ## Not calibrated in v1
 
 - Coverage by judge (the `agree` and `covering` questions): only the 7 trap pairs guard it. Calibrating it against labeled pairs is the first thing to add.
-- Relevance (unit 17, not built yet).
+- Relevance (unit 17, built as an advisory check, D49): its judge has no labeled sample and never fails a case.
 
 ## Limits
 
