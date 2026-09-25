@@ -13,7 +13,19 @@ public record SuiteReport(
     List<CheckInfo> checks,
     Calibration calibration,
     List<CaseResult> cases,
-    Comparison baseline) {
+    Comparison baseline,
+    Usage usage) {
+
+  public SuiteReport(
+      String runId,
+      String endpoint,
+      double passFloor,
+      List<CheckInfo> checks,
+      Calibration calibration,
+      List<CaseResult> cases,
+      Comparison baseline) {
+    this(runId, endpoint, passFloor, checks, calibration, cases, baseline, null);
+  }
 
   public SuiteReport(
       String runId,
@@ -22,7 +34,7 @@ public record SuiteReport(
       List<CheckInfo> checks,
       Calibration calibration,
       List<CaseResult> cases) {
-    this(runId, endpoint, passFloor, checks, calibration, cases, null);
+    this(runId, endpoint, passFloor, checks, calibration, cases, null, null);
   }
 
   /**

@@ -74,4 +74,56 @@ class ConsoleReportTest {
     assertTrue(output.indexOf("Advisory Relevance") < output.indexOf("Pass rate:"), output);
     assertTrue(output.contains("RESULT: OK"), output);
   }
+
+  private static SuiteReport.Usage usage(Double cost) {
+    return new SuiteReport.Usage(
+        65_400,
+        2,
+        1_500,
+        List.of(
+            new SuiteReport.Usage.CheckUsage("Coverage", 3, 3000, 30),
+            new SuiteReport.Usage.CheckUsage("Relevance", 2, 1000, 10)),
+        cost);
+  }
+
+  private static String printWithUsage(SuiteReport.Usage usage) {
+    SuiteReport report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(),
+            SuiteReport.Calibration.SKIPPED,
+            List.of(result("a", "single-source", null, true)),
+            null,
+            usage);
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    ConsoleReport.print(report, new PrintStream(buffer));
+    return buffer.toString();
+  }
+
+  @Test
+  void printsWallClockAssistantAndJudgeUsageWithAnEstimatedCost() {
+    String output = printWithUsage(usage(0.02));
+    assertTrue(output.contains("Cost and time"), output);
+    assertTrue(output.contains("wall-clock: 65.4 s"), output);
+    assertTrue(output.contains("assistant: 2 calls, 1.5 s"), output);
+    assertTrue(
+        output.contains("judge: 5 calls, 4000 prompt + 40 completion tokens, est. $0.0200"),
+        output);
+    assertTrue(output.matches("(?s).*Coverage\\s+3 calls, 3000 \\+ 30 tokens.*"), output);
+    assertTrue(output.indexOf("Cost and time") < output.indexOf("Pass rate:"), output);
+  }
+
+  @Test
+  void withNoPricesItSaysTheCostWasNotEstimatedInsteadOfPrintingZero() {
+    String output = printWithUsage(usage(null));
+    assertTrue(output.contains("cost not estimated"), output);
+    assertFalse(output.contains("$0.0000"), output);
+  }
+
+  @Test
+  void aReportWithNoUsageLeavesTheBlockOut() {
+    assertFalse(printWithUsage(null).contains("Cost and time"));
+  }
 }

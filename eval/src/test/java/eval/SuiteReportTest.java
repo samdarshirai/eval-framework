@@ -307,4 +307,34 @@ class SuiteReportTest {
             List.of(resultWith("a", false, new CheckOutcome("Refusal", false, "bad"))));
     assertTrue(report.advisoryFlags().isEmpty());
   }
+
+  @Test
+  void usageIsInTheJsonWithTheDerivedTotals() throws Exception {
+    SuiteReport.Usage usage =
+        new SuiteReport.Usage(
+            1000,
+            2,
+            500,
+            List.of(
+                new SuiteReport.Usage.CheckUsage("Coverage", 3, 300, 30),
+                new SuiteReport.Usage.CheckUsage("Relevance", 2, 100, 10)),
+            null);
+    SuiteReport report =
+        new SuiteReport(
+            "r",
+            "http://x",
+            0.90,
+            List.of(),
+            SuiteReport.Calibration.SKIPPED,
+            List.of(),
+            null,
+            usage);
+    var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+    var json = mapper.readTree(mapper.writeValueAsString(report));
+    assertEquals(5, json.get("usage").get("judgeCalls").asInt());
+    assertEquals(400, json.get("usage").get("judgePromptTokens").asLong());
+    assertEquals(40, json.get("usage").get("judgeCompletionTokens").asLong());
+    assertTrue(json.get("usage").get("judgeCostUsd").isNull());
+    assertEquals("Coverage", json.get("usage").get("byCheck").get(0).get("check").asText());
+  }
 }

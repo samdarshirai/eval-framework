@@ -3,6 +3,7 @@ package eval;
 import eval.calibration.LabeledSample;
 import eval.calibration.TrapPairs.TrapResult;
 import java.io.PrintStream;
+import java.util.Locale;
 
 /** Prints a finished suite report to the console. */
 final class ConsoleReport {
@@ -32,6 +33,7 @@ final class ConsoleReport {
     printBaseline(report.baseline(), out);
     printRollups(report, out);
     printAdvisory(report, out);
+    printUsage(report.usage(), out);
     out.printf(
         "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
         report.passed(), report.cases().size(), report.passRate() * 100, report.passFloor() * 100);
@@ -50,6 +52,43 @@ final class ConsoleReport {
                 out.printf(
                     "Advisory %s (never fails a case): flagged on %d of %d case(s)%n",
                     check, flaggedCases, report.cases().size()));
+  }
+
+  private static void printUsage(SuiteReport.Usage usage, PrintStream out) {
+    if (usage == null) {
+      return;
+    }
+    out.println("Cost and time");
+    out.println(
+        String.format(Locale.ROOT, "  wall-clock: %.1f s", usage.wallClockMillis() / 1000.0));
+    out.println(
+        String.format(
+            Locale.ROOT,
+            "  assistant: %d calls, %.1f s (its tokens are not visible over HTTP)",
+            usage.assistantCalls(),
+            usage.assistantMillis() / 1000.0));
+    String cost =
+        usage.judgeCostUsd() == null
+            ? "cost not estimated (set judgePricing in the config)"
+            : String.format(Locale.ROOT, "est. $%.4f", usage.judgeCostUsd());
+    out.println(
+        String.format(
+            Locale.ROOT,
+            "  judge: %d calls, %d prompt + %d completion tokens, %s",
+            usage.judgeCalls(),
+            usage.judgePromptTokens(),
+            usage.judgeCompletionTokens(),
+            cost));
+    for (SuiteReport.Usage.CheckUsage byCheck : usage.byCheck()) {
+      out.println(
+          String.format(
+              Locale.ROOT,
+              "    %-20s %d calls, %d + %d tokens",
+              byCheck.check(),
+              byCheck.calls(),
+              byCheck.promptTokens(),
+              byCheck.completionTokens()));
+    }
   }
 
   private static void printRollups(SuiteReport report, PrintStream out) {
