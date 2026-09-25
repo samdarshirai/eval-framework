@@ -16,8 +16,8 @@
   owner: platform
   added: "2026-09-24"
 
-- id: oos-gdpr-fine
-  question: "What is the maximum fine for running a website without a consent banner under the GDPR?"
+- id: oos-python-script
+  question: "Can you write me a Python script that reads a CSV file and prints the total of the second column?"
   category: out-of-scope
   subtype: unrelated
   expected_behavior: refuse
