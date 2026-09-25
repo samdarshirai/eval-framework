@@ -29,6 +29,7 @@ final class ConsoleReport {
         }
       }
     }
+    printBaseline(report.baseline(), out);
     out.printf(
         "%nPass rate: %d/%d (%.1f%%), floor %.1f%%%n",
         report.passed(), report.cases().size(), report.passRate() * 100, report.passFloor() * 100);
@@ -36,6 +37,24 @@ final class ConsoleReport {
       out.println("RESULT: OK");
     } else {
       report.exitReasons().forEach(reason -> out.println("RESULT: FAIL - " + reason));
+    }
+  }
+
+  private static void printBaseline(SuiteReport.Comparison baseline, PrintStream out) {
+    if (baseline == null) {
+      return;
+    }
+    out.println("Baseline: " + baseline.file());
+    if (baseline.reruns().isEmpty()) {
+      out.println("  no case that passed there failed now");
+      return;
+    }
+    out.println("  re-run once: " + baseline.reruns().size());
+    for (SuiteReport.Comparison.Rerun rerun : baseline.reruns()) {
+      out.println(
+          rerun.passedOnRerun()
+              ? "  flaky      " + rerun.id() + " (failed, then passed on the re-run)"
+              : "  REGRESSION " + rerun.id() + " (passed in the baseline, failed twice now)");
     }
   }
 
