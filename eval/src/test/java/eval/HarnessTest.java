@@ -994,17 +994,16 @@ class HarnessTest {
     cases(ONE_ANSWER_CASE);
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge();
-    // 1 trap pair (calibration) + Coverage confirm + Relevance; Groundedness shortcuts on the gold
-    // chunk
+    // 1 trap pair (calibration) + Coverage confirm + Groundedness + Relevance
     assertTrue(output.contains("Cost and time"), output);
     assertTrue(
-        output.contains("judge: 3 calls, 300 prompt + 15 completion tokens, est. $0.0019"), output);
+        output.contains("judge: 4 calls, 400 prompt + 20 completion tokens, est. $0.0025"), output);
     var usage = reportJson(output).get("usage");
-    assertEquals(3, usage.get("judgeCalls").asInt());
+    assertEquals(4, usage.get("judgeCalls").asInt());
     assertEquals(1, usage.get("assistantCalls").asInt());
     assertEquals(
-        (300 * 5.0 + 15 * 25.0) / 1_000_000.0, usage.get("judgeCostUsd").asDouble(), 1e-12);
-    assertEquals(java.util.List.of("calibration", "Coverage", "Relevance"), checkNames(usage));
+        (400 * 5.0 + 20 * 25.0) / 1_000_000.0, usage.get("judgeCostUsd").asDouble(), 1e-12);
+    assertEquals(java.util.List.of("calibration", "Coverage", "Groundedness", "Relevance"), checkNames(usage));
   }
 
   @Test
@@ -1024,7 +1023,20 @@ class HarnessTest {
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge("--skipCalibration", "true");
     assertEquals(
-        java.util.List.of("Coverage", "Relevance"), checkNames(reportJson(output).get("usage")));
+        java.util.List.of("Coverage", "Groundedness", "Relevance"), checkNames(reportJson(output).get("usage")));
+  }
+
+  @Test
+  void theReportRecordsProvenance() throws Exception {
+    config(defaultConfig() + "assistantVersion: stub-v1\n");
+    cases(ONE_ANSWER_CASE);
+    replyFor = ONE_CLAIM_REPLY;
+    var provenance = reportJson(runWithReportingJudge()).get("provenance");
+    assertEquals(Judge.promptHash(), provenance.get("judgePromptHash").asText());
+    assertEquals(12, provenance.get("judgePromptHash").asText().length());
+    assertEquals("stub-v1", provenance.get("assistantVersion").asText());
+    assertFalse(provenance.get("judgeModel").asText().isBlank());
+    assertTrue(provenance.get("gitSha").isNull(), "the temp root is not a git checkout");
   }
 
   @Test
@@ -1046,5 +1058,81 @@ class HarnessTest {
     replyFromRerun = GOOD_ANSWER;
     String output = runWithReportingJudge("--baseline", "caseResults/baseline.json");
     assertEquals(2, reportJson(output).get("usage").get("assistantCalls").asInt(), output);
+  }
+
+  @Test
+  void aSubsetOfChecksRunsOnlyThoseAndSaysWhatIsOff() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--checks", "Refusal,Coverage")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("Checks off: Citation integrity, Groundedness, Source, Relevance"), output);
+    try (var files = Files.list(root.resolve("caseResults"))) {
+      String report = Files.readString(files.filter(p -> p.toString().endsWith(".json")).findFirst().get());
+      assertTrue(report.contains("\"Coverage\"") && !report.contains("\"Groundedness\""), report);
+    }
+  }
+
+  @Test
+  void aBadChecksListExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--checks", "Refusal,Nope")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("unknown check(s): Nope"), output);
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void aCheckThatNeedsAnotherPullsItInAndSaysSo() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--checks", "Refusal,Source")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("Checks added because another check needs them: Coverage"), output);
+  }
+
+  @Test
+  void appTypeWithAddChecksRunsTheFloorPlusTheAddition() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--appType", "uncited", "--addChecks", "Relevance")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("Checks off: Citation integrity, Groundedness, Source"), output);
+    assertFalse(output.contains("Relevance,"), output);
+  }
+
+  @Test
+  void appTypeAndChecksTogetherExitTwo() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--appType", "cited", "--checks", "Refusal")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("not both"), output);
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void dropRefusalWithOutOfScopeCasesExitsTwo() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--checks", "Coverage")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("'Refusal' is required"), output);
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void withoutGroundednessTheSampleIsNotJudged() throws Exception {
+    cases(OOS);
+    labeledSampleFile("- {name: u1, kind: unsupported, supported: false, passage: P, claim: C}\n");
+    var buf = new ByteArrayOutputStream();
+    int code =
+        Harness.run(
+            new String[] {"--checks", "Refusal,Coverage"},
+            root,
+            new PrintStream(buf),
+            model -> (system, user) -> "YES");
+    assertEquals(0, code, buf.toString());
   }
 }

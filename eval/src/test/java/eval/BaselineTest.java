@@ -108,4 +108,17 @@ class BaselineTest {
     assertFalse(baseline.failed("a"));
     assertFalse(baseline.failed("not-in-baseline"));
   }
+
+  @Test
+  void aDifferentCheckSetWarnsAndTheSameSetOrNoListDoesNot() throws Exception {
+    Baseline baseline =
+        Baseline.load(
+            write(
+                "{\"checks\":[{\"name\":\"Refusal\"},{\"name\":\"Coverage\"}],"
+                    + "\"cases\":[{\"id\":\"a\",\"passed\":true}]}"));
+    assertNull(baseline.checkSetWarning(java.util.List.of("Coverage", "Refusal")));
+    assertTrue(baseline.checkSetWarning(java.util.List.of("Refusal")).contains("not like-for-like"));
+    Baseline none = Baseline.load(write("{\"cases\":[{\"id\":\"a\",\"passed\":true}]}"));
+    assertNull(none.checkSetWarning(java.util.List.of("Refusal")));
+  }
 }

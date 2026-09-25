@@ -1,6 +1,6 @@
 # Build Order — Eval Harness
 
-Sliced from `usercentrics-eval-harness-plan.md` (the spec), with `grilling-decisions.md` as the ADR layer (numbered decisions win over any older plan text) and `CONTEXT.md` for vocabulary. There are no `docs/adr/` files, so decisions are cited as **D<n>**.
+Sliced from the original harness plan, with `grilling-decisions.md` as the ADR layer (numbered decisions win over any older plan text) and `CONTEXT.md` for vocabulary. There are no `docs/adr/` files, so decisions are cited as **D<n>**.
 
 **Status (2026-09-25):** units 1-22 and 24-26 are built or written (24-26 are `PATTERN.md`, the scale plan and `README.md`). Unit 23, the live-change rehearsal, is not done. `--case` (D52) is an addition to unit 4 and has no unit of its own.
 
@@ -189,7 +189,7 @@ Acceptance criteria:
 - `calibration/labeled-sample.yaml` holds 20 claim/chunk pairs: 10 subtly unsupported, 5 plain supported, 5 hard-supported (paraphrase, split across sentences, equivalent numbers).
 - Running the calibration reports overall agreement (target at least 90%) and the count of unsupported pairs the judge called "supported" (target 0 of 10).
 - False-"unsupported" is counted and reported, with no target.
-- `calibration/calibration-notes.md` records results and any judge-prompt change made to hit the targets.
+- The run report records the calibration results.
 - Only Groundedness is calibrated; Coverage-by-judge and Relevance are named as uncalibrated.
 
 ## 16. A multi-source answer that skips a required document fails Source

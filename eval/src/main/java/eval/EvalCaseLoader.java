@@ -3,6 +3,7 @@ package eval;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.*;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -131,5 +132,30 @@ public final class EvalCaseLoader {
         if (!(value instanceof List<?> items))
             throw new IllegalArgumentException(where + ": '" + field + "' must be a list");
         return items.stream().map(String::valueOf).toList();
+    }
+
+    /**
+     * The cases named by {@code ids}, in file order; all of them when ids is empty. An unknown id
+     * throws. A partial selection is announced on {@code out} and in the debug log.
+     */
+    public static List<EvalCase> select(List<EvalCase> cases, List<String> ids, PrintStream out, DebugLog debug) {
+        if (ids.isEmpty()) {
+            debug.cases(cases);
+            return cases;
+        }
+        List<String> known = cases.stream().map(EvalCase::id).toList();
+        List<String> unknown = ids.stream().filter(id -> !known.contains(id)).toList();
+        if (!unknown.isEmpty()) {
+            throw new IllegalArgumentException("unknown case id(s): " + String.join(", ", unknown)
+                    + " (known: " + String.join(", ", known) + ")");
+        }
+        List<EvalCase> selected = cases.stream().filter(evalCase -> ids.contains(evalCase.id())).toList();
+        if (selected.size() < cases.size()) {
+            String partial = "Partial run: " + selected.size() + " of " + cases.size() + " cases " + ids;
+            out.println(partial);
+            debug.log(partial);
+        }
+        debug.cases(selected);
+        return selected;
     }
 }
