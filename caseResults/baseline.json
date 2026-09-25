@@ -1,5 +1,5 @@
 {
-  "runId" : "20260925-210303",
+  "runId" : "20260925-220009",
   "endpoint" : "http://localhost:8080/answer",
   "passFloor" : 0.9,
   "checks" : [ {
@@ -194,11 +194,11 @@
         "detail" : null,
         "agreed" : true
       } ],
-      "agreed" : 20,
-      "agreement" : 1.0,
-      "falseSupported" : 0,
       "unsupportedPairs" : 10,
       "falseUnsupported" : 0,
+      "agreement" : 1.0,
+      "falseSupported" : 0,
+      "agreed" : 20,
       "errors" : 0
     },
     "misses" : 0
@@ -1335,53 +1335,6 @@
       "reason" : null
     } ]
   }, {
-    "id" : "ss-loader-chrome",
-    "question" : "What is the minimum Chrome version that Loader.js supports on desktop?",
-    "category" : "single-source",
-    "subtype" : null,
-    "expected" : {
-      "refused" : false,
-      "claims" : [ {
-        "claim" : "Loader.js supports Chrome starting from version 43",
-        "citations" : [ "browser-support#browser-support" ],
-        "keywords" : [ "Chrome", "43" ]
-      } ]
-    },
-    "passed" : true,
-    "error" : null,
-    "actual" : {
-      "refused" : false,
-      "claims" : [ {
-        "claim" : "Loader.js supports Chrome version 43 and above on desktop",
-        "citations" : [ "browser-support#browser-support" ]
-      } ]
-    },
-    "checks" : [ {
-      "check" : "Refusal",
-      "passed" : true,
-      "reason" : null
-    }, {
-      "check" : "Citation integrity",
-      "passed" : true,
-      "reason" : null
-    }, {
-      "check" : "Coverage",
-      "passed" : true,
-      "reason" : null
-    }, {
-      "check" : "Groundedness",
-      "passed" : true,
-      "reason" : "grounded (judge): \"Loader.js supports Chrome version 43 and above on desktop\""
-    }, {
-      "check" : "Source",
-      "passed" : true,
-      "reason" : null
-    }, {
-      "check" : "Relevance",
-      "passed" : true,
-      "reason" : null
-    } ]
-  }, {
     "id" : "ss-geo-global-fallback",
     "question" : "Why do I have to pick a global configuration when I create a geolocation ruleset?",
     "category" : "single-source",
@@ -1528,12 +1481,56 @@
       "passed" : true,
       "reason" : null
     } ]
+  }, {
+    "id" : "ss-tcf-cmp-version",
+    "question" : "Which Usercentrics CMP version do I need to support TCF?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "To support TCF you must be using the Usercentrics CMP v2",
+        "citations" : [ "tcf2#general-information" ],
+        "keywords" : [ "v2" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : false,
+      "reason" : "over-refusal: assistant refused a question the docs cover"
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"To support TCF you must be using the Usercentrics CMP v2\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Relevance",
+      "passed" : true,
+      "reason" : null
+    } ]
   } ],
   "baseline" : null,
   "usage" : {
-    "wallClockMillis" : 500895,
+    "wallClockMillis" : 350513,
     "assistantCalls" : 28,
-    "assistantMillis" : 53060,
+    "assistantMillis" : 55226,
     "byCheck" : [ {
       "check" : "calibration",
       "calls" : 27,
@@ -1541,33 +1538,43 @@
       "completionTokens" : 109
     }, {
       "check" : "Coverage",
-      "calls" : 20,
-      "promptTokens" : 4294,
-      "completionTokens" : 84
+      "calls" : 19,
+      "promptTokens" : 4139,
+      "completionTokens" : 80
     }, {
       "check" : "Groundedness",
-      "calls" : 27,
-      "promptTokens" : 23431,
-      "completionTokens" : 108
+      "calls" : 26,
+      "promptTokens" : 22818,
+      "completionTokens" : 104
     }, {
       "check" : "Relevance",
-      "calls" : 27,
-      "promptTokens" : 5524,
-      "completionTokens" : 237
+      "calls" : 26,
+      "promptTokens" : 5361,
+      "completionTokens" : 217
     } ],
-    "judgeCostUsd" : 0.218425,
-    "judgeCalls" : 101,
-    "judgePromptTokens" : 40995,
-    "judgeCompletionTokens" : 538
+    "judgeCostUsd" : 0.21307,
+    "judgePromptTokens" : 40064,
+    "judgeCompletionTokens" : 510,
+    "judgeCalls" : 98
   },
   "provenance" : {
     "judgeModel" : "anthropic/claude-opus-4.8",
     "judgePromptHash" : "4be411e69ccf",
-    "gitSha" : "cd9a314-dirty",
+    "gitSha" : "b34a4cb",
     "assistantVersion" : null
   },
-  "exitReasons" : [ "pass rate 71.4% is below floor 90.0%" ],
-  "passRate" : 0.7142857142857143,
+  "outOfScopeBySubtype" : {
+    "unrelated" : {
+      "passed" : 2,
+      "total" : 2
+    },
+    "plausible-nonexistent" : {
+      "passed" : 3,
+      "total" : 3
+    }
+  },
+  "passRate" : 0.6785714285714286,
+  "exitReasons" : [ "pass rate 67.9% is below floor 90.0%" ],
   "advisoryFlags" : {
     "Relevance" : 1
   },
@@ -1589,18 +1596,8 @@
       "total" : 5
     },
     "single-source" : {
-      "passed" : 8,
+      "passed" : 7,
       "total" : 8
-    }
-  },
-  "outOfScopeBySubtype" : {
-    "unrelated" : {
-      "passed" : 2,
-      "total" : 2
-    },
-    "plausible-nonexistent" : {
-      "passed" : 3,
-      "total" : 3
     }
   }
 }
