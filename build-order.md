@@ -219,7 +219,7 @@ Acceptance criteria:
 **Never cut**
 
 Acceptance criteria:
-- The `baseline` setting (config key, or `--baseline <file>` for one run, D47) names a previous results JSON; a baseline is promoted by copying a report to `caseResults/baseline.json`. No path, or no file at the path, is logged and the run goes ahead without a baseline; a file that exists but is unusable exits 2 (D46).
+- The `baseline` setting (config key, or `--baseline <file>` for one run, D47) names a previous results JSON; a baseline is promoted by copying a report to `caseResults/baseline.json`. No path set is logged and the run goes ahead without a baseline; a path with no file behind it, or a file that is unusable, exits 2 (D46, D47).
 - Any case that passed in the baseline and fails now is a **regression**, listed by name; the exit code is non-zero even if the overall rate is above the floor.
 - Without a baseline, no regression check runs.
 - Cases that failed in the baseline and pass now are listed as `improved since baseline` (a hint to promote a newer baseline); this never changes the exit code (D46).

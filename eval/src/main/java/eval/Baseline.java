@@ -18,27 +18,22 @@ import java.util.Map;
  */
 final class Baseline {
   private final String name;
-  private final Map<String, Boolean> passedById;
+  private final Map<String, Boolean> passedInBaselineByCaseId;
 
-  private Baseline(String name, Map<String, Boolean> passedById) {
+  private Baseline(String name, Map<String, Boolean> passedInBaselineByCaseId) {
     this.name = name;
-    this.passedById = passedById;
+    this.passedInBaselineByCaseId = passedInBaselineByCaseId;
   }
 
   /**
-   * The baseline named by the {@code baseline} setting. No path, or a path with no file behind it,
-   * is logged and the run goes ahead without a baseline (null); a file that exists but is unusable
-   * throws, and the run exits 2.
+   * The baseline named by the {@code baseline} setting. No path set: logged, and the run goes ahead
+   * without a baseline (null). A path with no usable file behind it (missing, not JSON, ...)
+   * throws, and the run exits 2, so a mistyped path never silently drops the regression check.
    */
   static Baseline resolve(EvalConfig config, PrintStream out) throws IOException {
     Path file = config.baselineFile();
     if (file == null) {
       out.println("No baseline set, running without one (no regression check).");
-      return null;
-    }
-    if (!Files.isRegularFile(file)) {
-      out.println(
-          "Baseline file " + file + " not found, running without one (no regression check).");
       return null;
     }
     return load(file);
@@ -47,7 +42,7 @@ final class Baseline {
   static Baseline load(Path file) throws IOException {
     String name = file.getFileName().toString();
     if (!Files.isRegularFile(file)) {
-      throw new IllegalArgumentException("baseline file not found: " + name);
+      throw new IllegalArgumentException("baseline file not found: " + file);
     }
     JsonNode cases;
     try {
@@ -64,7 +59,7 @@ final class Baseline {
       throw new IllegalArgumentException(
           "baseline " + name + " has an empty 'cases' list, so it could never flag a regression");
     }
-    Map<String, Boolean> passedById = new HashMap<>();
+    Map<String, Boolean> passedInBaselineByCaseId = new HashMap<>();
     for (int index = 0; index < cases.size(); index++) {
       JsonNode entry = cases.get(index);
       if (!entry.path("id").isTextual() || !entry.path("passed").isBoolean()) {
@@ -76,12 +71,12 @@ final class Baseline {
                 + " needs a text 'id' and a boolean 'passed'");
       }
       String caseId = entry.get("id").asText();
-      if (passedById.put(caseId, entry.get("passed").asBoolean()) != null) {
+      if (passedInBaselineByCaseId.put(caseId, entry.get("passed").asBoolean()) != null) {
         throw new IllegalArgumentException(
             "baseline " + name + " has a duplicate case id '" + caseId + "'");
       }
     }
-    return new Baseline(name, passedById);
+    return new Baseline(name, passedInBaselineByCaseId);
   }
 
   /** A baseline that shares no case with the run could never flag a regression: an error. */
@@ -96,17 +91,17 @@ final class Baseline {
 
   /** True only when the case is in the baseline and passed there. */
   boolean passed(String caseId) {
-    return passedById.getOrDefault(caseId, false);
+    return passedInBaselineByCaseId.getOrDefault(caseId, false);
   }
 
   /** True only when the case is in the baseline and failed there. */
   boolean failed(String caseId) {
-    return Boolean.FALSE.equals(passedById.get(caseId));
+    return Boolean.FALSE.equals(passedInBaselineByCaseId.get(caseId));
   }
 
   /** True when the case is in the baseline, whether it passed there or not. */
   boolean knows(String caseId) {
-    return passedById.containsKey(caseId);
+    return passedInBaselineByCaseId.containsKey(caseId);
   }
 
   String name() {

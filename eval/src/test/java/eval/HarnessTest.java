@@ -764,25 +764,26 @@ class HarnessTest {
   }
 
   @Test
-  void aBaselineFileThatDoesNotExistIsLoggedAndTheRunGoesAheadWithoutIt() throws Exception {
+  void aBaselineFileThatDoesNotExistExitsTwoNamingThePathBeforeAnyAssistantCall() throws Exception {
     cases(OOS);
     int[] code = new int[1];
     String output = out(code, "--baseline", "caseResults/missing.json")[0];
-    assertEquals(0, code[0], output);
-    assertTrue(output.contains("missing.json") && output.contains("not found"), output);
-    assertTrue(output.contains("running without"), output);
-    assertFalse(output.contains("Baseline:"), output);
-    assertEquals(2, requests.get(), "ping plus one attempt");
+    assertEquals(2, code[0], output);
+    assertTrue(
+        output.contains("baseline file not found") && output.contains("missing.json"), output);
+    assertEquals(0, requests.get());
   }
 
   @Test
-  void aMissingBaselineNamedInTheConfigIsLoggedAndTheRunGoesAheadWithoutIt() throws Exception {
+  void aMissingBaselineNamedInTheConfigExitsTwoNamingThePathBeforeAnyAssistantCall()
+      throws Exception {
     cases(OOS);
     config(defaultConfig() + "baseline: caseResults/nope.json\n");
     int[] code = new int[1];
     String output = out(code)[0];
-    assertEquals(0, code[0], output);
-    assertTrue(output.contains("nope.json") && output.contains("not found"), output);
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("baseline file not found") && output.contains("nope.json"), output);
+    assertEquals(0, requests.get());
   }
 
   @Test

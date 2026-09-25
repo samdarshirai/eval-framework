@@ -16,7 +16,8 @@ passFloor: 0.90
 # Skip the judge trap pairs and the Groundedness sample that normally run first. Default: false.
 # skipCalibration: false
 # A previous report to compare with. A case that passed there and fails now fails the run, after one re-run.
-# Not set, or no file at the path: this is logged and the run goes ahead without a regression check.
+# Not set: this is logged and the run goes ahead without a regression check.
+# Set but no file at the path (or the file is unusable): an error, exit code 2.
 # Pass --baseline "" to switch it off for one run.
 # baseline: caseResults/baseline.json
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.

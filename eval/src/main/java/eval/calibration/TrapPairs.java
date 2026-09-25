@@ -8,7 +8,12 @@ import java.nio.file.*;
 import java.util.*;
 import org.yaml.snakeyaml.Yaml;
 
-/** Runs the negation traps against the judge (D24) and returns one result per pair. */
+/**
+ * Asks the judge trick questions whose answer we already know (D24) and returns one result per
+ * pair. A trap is a fact and a claim that looks like it agrees but does not (fact "Safari 14 or
+ * later is supported", claim "All Safari versions except 14 are supported"): the judge must say no.
+ * A few correct rewordings are mixed in, so a judge that always says no also fails.
+ */
 public final class TrapPairs {
   /** {@code detail} is null when the judge got the pair right. */
   public record TrapResult(String name, boolean passed, String detail) {}

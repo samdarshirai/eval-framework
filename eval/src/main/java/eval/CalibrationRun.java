@@ -8,9 +8,22 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Judge calibration at the start of a run (D41): the trap pairs and the Groundedness sample, each
- * bundled in the jar unless the config names a file. Skipped when the {@code skipCalibration}
- * setting is true.
+ * Checks the judge before the real cases run. The judge is the LLM that decides whether an answer
+ * is right, so if the judge is wrong, every verdict after it is wrong too. Two quick tests, both
+ * with answers we already know:
+ *
+ * <ul>
+ *   <li><b>Trap pairs</b>: a fact next to a claim that looks like it agrees but does not. For
+ *       example the fact "Safari 14 or later is supported" against the claim "All Safari versions
+ *       except 14 are supported": a keyword match would accept it, and the judge must say it does
+ *       not agree. A few correct rewordings are mixed in, so a judge that always says no fails too.
+ *   <li><b>Groundedness sample</b>: 20 claims, each with the doc text it cites and a hand-written
+ *       label saying whether that text really supports the claim. The judge must agree with the
+ *       labels.
+ * </ul>
+ *
+ * Both sets ship inside the jar; the config can point to your own files. If the judge fails a test
+ * the run exits 1. The whole step is skipped when the {@code skipCalibration} setting is true.
  */
 final class CalibrationRun {
   private CalibrationRun() {}

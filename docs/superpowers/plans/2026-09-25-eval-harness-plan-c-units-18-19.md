@@ -5,7 +5,7 @@
 > **As built (differs from the tasks below):** the final review and later requests changed five things, recorded in D46 and D47 of `grilling-decisions.md`.
 > 1. Out-of-scope cases are never re-run, so a lucky re-run cannot clear a hallucination (Review Focus 4 and Task 3 hold only for other categories).
 > 2. A baseline with an empty `cases` list, a duplicate id, or none of the run's cases exits 2 (Review Focus 1 also covers these).
-> 3. A baseline path that is unset or has no file behind it is logged and the run goes ahead without one (Review Focus 1 and the `--baseline` missing-file test say exit 2; that only holds for a file that exists but is unusable).
+> 3. A baseline path that is unset is logged and the run goes ahead without one; a path with no file behind it exits 2, as Review Focus 1 says (D47).
 > 4. The `--baseline` flag became the general `--<setting> <value>` override for every config key (D47); `baseline` and `skipCalibration` are config keys.
 > 5. `HarnessTest` request counts include the reachability ping (one more than the tasks say).
 
