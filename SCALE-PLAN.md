@@ -7,11 +7,11 @@ Answers the five questions in the brief. Numbers come from one measured run of t
 | When | What | Against | Time |
 |---|---|---|---|
 | **Local**, editing a prompt | The cases touched (`--case a,b`), `--skip-calibration` | A candidate on the builder's machine | ~2 min for 10 cases (estimated from the run: at most 12.5 s per case, 350.5 s / 28) |
-| **CI** (`.github/workflows/eval.yml`): run by hand, and on a pull request that touches `docs/`, `eval/cases/`, `eval/config.yaml` or `assistant/` | Full set with calibration: `./run.sh --baseline caseResults/baseline.json`. The job fails on exit code 1 or 2 and uploads `caseResults/*.json` as an artifact. It blocks a merge only if the repo requires the check | The stub, started on the runner | ~6 min for 28 cases (350.5 s measured, with calibration) |
+| **CI**, on any change to prompt, model, config or documents | Full set, with the baseline. **Blocks the merge** on a regression or a failing out-of-scope case | A candidate started for the run | ~6 min for 28 cases (350.5 s measured, with calibration) |
 | **Nightly** | Full set | An instance with production's exact prompt, model and config, to catch silent provider drift | Unattended |
 | **Weekly**, and when the judge model or prompt changes | Judge calibration (7 trap pairs, 20 labeled pairs) | The judge itself | 27 judge calls, about $0.04 (time not measured) |
 
-Only the CI row exists as a workflow (it needs an `OPENROUTER_API_KEY` repo secret, which a pull request from a fork does not get); the local, nightly and weekly rows are how I would run it. Before a change ships, local and CI decide. After, the nightly run says when something moved on its own. **Never against live production** (D32): eval traffic pollutes analytics and cost attribution, and production can change mid-run. Eval calls carry an `X-Eval-Run` header so the gateway can exclude them.
+This table is the plan: no eval run is automated yet, and the only workflow, `.github/workflows/test.yml`, runs the unit tests with the model calls mocked. Before a change ships, local and CI decide. After, the nightly run says when something moved on its own. **Never against live production** (D32): eval traffic pollutes analytics and cost attribution, and production can change mid-run. Eval calls carry an `X-Eval-Run` header so the gateway can exclude them.
 
 ## 2. Who owns what
 
