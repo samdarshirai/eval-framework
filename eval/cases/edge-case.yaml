@@ -10,6 +10,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "86a09c1d14c5"
 
 - id: edge-multi-ask
   question: "Two things: from which zone.js version do the script tags work, and which custom event lets an A/B testing tool track how users interact with the CMP?"
@@ -26,6 +27,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "431018481311"
 
 - id: edge-light-paraphrase
   question: "How can I stop my TCF banner from using legitimate interest as the legal basis?"
@@ -39,3 +41,4 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "05b9f22dd5e6"

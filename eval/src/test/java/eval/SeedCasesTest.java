@@ -69,6 +69,24 @@ class SeedCasesTest {
     }
   }
 
+  // A doc edit that changes a gold chunk must be noticed and re-confirmed, so CI fails until the
+  // author checks the case and runs eval.StampCaseHashes again (D21).
+  @Test
+  void everySeedCaseWithFactsIsStampedAndNotStale() {
+    for (EvalCase evalCase : cases) {
+      String currentHash = CaseHash.of(evalCase, knowledge);
+      if (currentHash == null) {
+        continue;
+      }
+      assertEquals(
+          currentHash,
+          evalCase.confirmedHash(),
+          evalCase.id()
+              + ": confirmed_hash is missing or stale. Check the case against the docs, then run"
+              + " java -cp eval/target/eval.jar eval.StampCaseHashes");
+    }
+  }
+
   private long count(String category) {
     return cases.stream().filter(evalCase -> evalCase.category().equals(category)).count();
   }

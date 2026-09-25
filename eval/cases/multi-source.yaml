@@ -12,6 +12,7 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "c5f60d0bdf80"
 
 - id: ms-tcf-version-and-consent-default
   question: "I am adding TCF to a site that already uses Google Consent Mode. Which CMP version does TCF require, and should I still set the Consent Mode default state?"
@@ -27,6 +28,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "d48f3b09cd03"
 
 - id: ms-geo-delete-and-consent-default
   question: "Can I delete a company that still has geolocation rulesets, and what does the Consent Mode default snippet set ad_storage to?"
@@ -42,6 +44,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "bec13a81f284"
 
 - id: ms-ruleset-and-tcf-attributes
   question: "I am rolling out a TCF banner with Geolocation Rules. Which script tag attribute selects the ruleset, and which one enables TCF?"
@@ -57,6 +60,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "a636e2676cfe"
 
 - id: ms-ab-and-consent-script-order
   question: "Where should the Google Consent Mode default script go in the head, and where does my A/B testing tool script go relative to the CMP?"
@@ -72,6 +76,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "09f9a9143a70"
 
 - id: ms-tcstring-and-google-vendor
   question: "What does the tcString encode, and under which vendor ID is Google registered in TCF?"
@@ -87,3 +92,4 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "d48f3b09cd03"

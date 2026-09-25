@@ -9,6 +9,7 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "86a09c1d14c5"
 
 - id: ss-zonejs
   question: "From which zone.js version do the Usercentrics script tags work?"
@@ -21,6 +22,7 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "317dae7226e9"
 
 - id: ss-ab-internal-split
   question: "When Usercentrics runs the A/B test itself, how are visitors split between the variants?"
@@ -33,6 +35,7 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "356e4ffc97dc"
 
 - id: ss-ab-third-party-events
   question: "I use a third-party A/B testing tool with Usercentrics. Which variable must be set before the CMP loads, and which custom event can the tool listen to in order to track how users interact with the variants?"
@@ -48,6 +51,7 @@
   source: authored
   owner: platform
   added: "2026-09-24"
+  confirmed_hash: "ef07f42a46f6"
 
 - id: ss-loader-chrome
   question: "What is the minimum Chrome version that Loader.js supports on desktop?"
@@ -61,6 +65,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "86a09c1d14c5"
 
 - id: ss-geo-global-fallback
   question: "Why do I have to pick a global configuration when I create a geolocation ruleset?"
@@ -73,6 +78,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "8f0345466538"
 
 - id: ss-tcf-privacy-button
   question: "Where can the Privacy Button be rendered in the TCF layout options?"
@@ -85,6 +91,7 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "65ea25adf523"
 
 - id: ss-consent-mode-v2-bits
   question: "Which two extra signals did Google Consent Mode v2 add?"
@@ -97,3 +104,4 @@
   source: authored
   owner: platform
   added: "2026-09-25"
+  confirmed_hash: "b0915dc035f1"
