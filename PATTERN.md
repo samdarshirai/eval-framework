@@ -1,8 +1,54 @@
 # Pattern: evaluating an AI Hub application
 
-For an AI Enablement Engineer in another department who has never seen this code and has about one hour. The goal is a first evaluation report for your own application. Read sections 1 to 5, then do the one-hour path in section 6. Section 8 shows a mature example, and it is deliberately last.
+For an AI Enablement Engineer in another department who has never seen this code and has about one hour. The goal is a first evaluation report for your own application. Do the quickstart first, then read sections 1 to 5 and follow the one-hour path in section 6. Section 8 shows a mature example, and it is deliberately last.
 
 Terms in **bold** are defined in `CONTEXT.md`. Why the harness works this way is logged in `grilling-decisions.md`; you do not need it to use this document.
+
+## Quickstart (10 minutes)
+
+The shortest path to a first report. Everything else in this document is reference.
+
+**1. Your application answers with claims.** `POST <endpoint>` with `{"question": "..."}` returns HTTP 200 and:
+
+```json
+{"refused": false,
+ "claims": [{"claim": "bundle.js supports Safari starting from version 14",
+             "citations": ["browser-support#browser-support"]}]}
+```
+
+A refusal is `{"refused": true, "claims": []}`. A citation is a chunk ID, `<document>#<heading-slug>`, from the documents your application answers from.
+
+**2. A config**, `my-team/eval.yaml`, next to a `docs/` folder of your markdown files and a `cases/` folder:
+
+```yaml
+endpoint: http://localhost:9000/answer
+categories: [single-source, out-of-scope]
+knowledgeBase:
+  type: docs
+  path: docs
+```
+
+**3. One case**, `my-team/cases/first.yaml`:
+
+```yaml
+- id: ss-safari-bundle
+  question: "Which Safari version does bundle.js support?"
+  category: single-source
+  expected_behavior: answer
+  facts:
+    - fact: "bundle.js supports Safari starting from version 14"
+      chunks: [browser-support#browser-support]
+```
+
+**4. Run it** (with `OPENROUTER_API_KEY` set, from the repo root, after `mvn -q -DskipTests package`):
+
+```
+java -jar eval/target/eval.jar --config my-team/eval.yaml
+```
+
+**5. Read the exit code.** `0`: every case passed. `1`: the run failed, so read the block printed for each failing case, which names the check and the reason. `2`: a setup problem (bad config, a case that names a chunk that does not exist, a missing API key), and the message says what to fix. Add `--skip-calibration` while you iterate, because the judge calibration runs first on every run.
+
+Then read sections 1 to 4 for the contract and the checks, and section 6 for the one-hour plan.
 
 ## What you get
 
@@ -47,6 +93,8 @@ Rules that the checks depend on:
 **Point the harness at an instance started for testing, never at live production**. Production would mix eval traffic into real usage and cost figures, may have side effects (logging, connectors that write), can change in the middle of a run, and may not allow temperature 0. Use a candidate build for CI, or a dedicated instance with production's exact prompt, model and config for drift checks. The harness only knows a URL, so this is a deployment choice, not a code change.
 
 Before it runs any case, the harness sends a GET to the endpoint. Any HTTP response counts as reachable, and a failed connection stops the run with a message.
+
+**Designed, not built: a prose adapter.** For an application that produces free text, the harness would accept `{"answer": "...", "sources": [...]}` and use the judge to split the answer into claims before running the checks. The trade-off is an extra judge step that itself needs calibrating, because a wrong split changes what every later check sees. Today the application must return claims itself.
 
 **Fallback for a team that cannot expose an endpoint**: export answers to a JSON file and have the harness score the file. This is designed but **not built in v1**. Today you need a live endpoint, even a thin wrapper around your application.
 
@@ -131,7 +179,14 @@ Coverage (the model part), Groundedness and Relevance use a judge model, set wit
 - **7 trap pairs** guard Coverage: claims that a keyword filter would let through ("all Safari versions except 14") which the judge must reject.
 - **20 hand-labeled pairs** measure Groundedness: 10 subtly unsupported, 5 plain supported and 5 hard-supported. The run fails if agreement is below 90% or if any unsupported pair is judged supported, because a false "supported" lets a wrong claim through silently.
 
-The bundled pairs are written from the Usercentrics documents. For your own application, add pairs of your own from your own documents (`calibration.trapPairs` and `calibration.labeledSample` in your config). Until you do, the calibration measures the judge on Usercentrics text, not on yours. Coverage-by-judge and Relevance are otherwise **uncalibrated** in v1, and Coverage is the first one to add.
+The bundled pairs are written from the Usercentrics documents. For your own application, add pairs of your own from your own documents (`calibration.trapPairs` and `calibration.labeledSample` in your config). Until you do, the calibration measures the judge on Usercentrics text, not on yours.
+
+Two caveats about the bundled sample:
+
+- **It is a smoke test, not a measurement.** Getting 0 false-supported out of 10 unsupported pairs still allows a true false-supported rate of up to about 30% at 95% confidence (the rule of three: 3 divided by 10). It catches a judge that is badly wrong, and it cannot show that the judge is safe.
+- **The author wrote the pairs.** The bundled pairs were written by the person who built the harness, so they may share that person's blind spots. Add pairs written by someone else, and keep some held out that you never tune the judge prompt against.
+
+Coverage-by-judge and Relevance are otherwise **uncalibrated** in v1, and Coverage is the first one to add.
 
 ## 4. Thresholds, baselines and the exit code
 
@@ -195,7 +250,7 @@ The goal is a first honest report, not a complete set. Start with about 10 cases
 
 | Minutes | Step |
 |---|---|
-| 15 | Expose the endpoint from a test instance and return the contract in section 1. Make a config file like the one in section 5. Check that `curl` returns claims with citations and that a refusal is `{"refused": true, "claims": []}`. |
+| 15 | Expose the endpoint from a test instance and return the contract in section 1. This takes 15 minutes only if the application already produces structured, cited output; if it produces prose, splitting it into cited claims is the main integration work and takes longer. Make a config file like the one in section 5. Check that `curl` returns claims with citations and that a refusal is `{"refused": true, "claims": []}`. |
 | 25 | Write the 10 cases. Pick real questions. For every fact, look up the chunk in your documents and confirm it says the fact. Put a `keywords` list on the facts with a checkable token. |
 | 10 | Run the harness and read the report (section 7). |
 | 10 | Fix mistakes in the **cases**, not the application. The first run mostly exposes case errors: a wrong gold chunk, a fact that two chunks state, a question that is only partly answerable. |
