@@ -199,6 +199,59 @@ class SuiteReportTest {
     assertEquals(List.of(), report(28, Set.of(5), Set.of()).exitReasons());
   }
 
+  private static CaseResult result(String id, String category, String subtype, boolean passed) {
+    return new CaseResult(
+        id,
+        "q",
+        category,
+        subtype,
+        new Expected(false, List.of()),
+        passed,
+        null,
+        null,
+        List.of());
+  }
+
+  private static SuiteReport reportOf(CaseResult... results) {
+    return new SuiteReport(
+        "r", "http://x", 0.90, List.of(), SuiteReport.Calibration.SKIPPED, List.of(results));
+  }
+
+  @Test
+  void rollsUpPassesByCategoryInFirstSeenOrder() {
+    SuiteReport report =
+        reportOf(
+            result("a", "single-source", null, true),
+            result("b", "out-of-scope", "unrelated", true),
+            result("c", "single-source", null, false));
+    assertEquals(
+        List.of("single-source", "out-of-scope"), List.copyOf(report.byCategory().keySet()));
+    assertEquals(new SuiteReport.Rollup(1, 2), report.byCategory().get("single-source"));
+    assertEquals(new SuiteReport.Rollup(1, 1), report.byCategory().get("out-of-scope"));
+  }
+
+  @Test
+  void rollsUpOutOfScopeBySubtypeAndKeepsACaseWithNoSubtype() {
+    SuiteReport report =
+        reportOf(
+            result("a", "out-of-scope", "unrelated", true),
+            result("b", "out-of-scope", "plausible-nonexistent", false),
+            result("c", "out-of-scope", null, true),
+            result("d", "single-source", null, true));
+    assertEquals(new SuiteReport.Rollup(1, 1), report.outOfScopeBySubtype().get("unrelated"));
+    assertEquals(
+        new SuiteReport.Rollup(0, 1), report.outOfScopeBySubtype().get("plausible-nonexistent"));
+    assertEquals(new SuiteReport.Rollup(1, 1), report.outOfScopeBySubtype().get("untagged"));
+    assertEquals(3, report.outOfScopeBySubtype().size(), "the single-source case is not counted");
+  }
+
+  @Test
+  void aCategoryWithNoCasesDoesNotAppear() {
+    SuiteReport report = reportOf(result("a", "single-source", null, true));
+    assertEquals(List.of("single-source"), List.copyOf(report.byCategory().keySet()));
+    assertTrue(report.outOfScopeBySubtype().isEmpty());
+  }
+
   @Test
   void improvedCasesNeverChangeTheExitCode() {
     var comparison = new SuiteReport.Comparison("b.json", List.of(), List.of("c-1", "c-2"));

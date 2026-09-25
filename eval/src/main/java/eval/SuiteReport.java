@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import eval.calibration.LabeledSample;
 import eval.calibration.TrapPairs.TrapResult;
 import java.util.*;
+import java.util.function.Function;
 
 public record SuiteReport(
     String runId,
@@ -77,6 +78,43 @@ public record SuiteReport(
   @JsonProperty("passRate")
   public double passRate() {
     return cases.isEmpty() ? 0 : passed() / (double) cases.size();
+  }
+
+  /** Passed and total for one group of cases. */
+  public record Rollup(int passed, int total) {}
+
+  /** Pass counts per category, in the order the categories first appear. */
+  @JsonProperty("byCategory")
+  public Map<String, Rollup> byCategory() {
+    return rollup(cases, CaseResult::category);
+  }
+
+  /**
+   * Pass counts for the out-of-scope cases per subtype (D4), so the report shows which kind of bait
+   * the assistant falls for. A case with no subtype is counted as {@code untagged}.
+   */
+  @JsonProperty("outOfScopeBySubtype")
+  public Map<String, Rollup> outOfScopeBySubtype() {
+    List<CaseResult> outOfScopeCases =
+        cases.stream().filter(caseResult -> OUT_OF_SCOPE.equals(caseResult.category())).toList();
+    return rollup(
+        outOfScopeCases,
+        caseResult -> caseResult.subtype() == null ? "untagged" : caseResult.subtype());
+  }
+
+  private static Map<String, Rollup> rollup(
+      List<CaseResult> results, Function<CaseResult, String> groupOf) {
+    Map<String, int[]> passedAndTotal = new LinkedHashMap<>();
+    for (CaseResult result : results) {
+      int[] counts = passedAndTotal.computeIfAbsent(groupOf.apply(result), group -> new int[2]);
+      if (result.passed()) {
+        counts[0]++;
+      }
+      counts[1]++;
+    }
+    Map<String, Rollup> rollups = new LinkedHashMap<>();
+    passedAndTotal.forEach((group, counts) -> rollups.put(group, new Rollup(counts[0], counts[1])));
+    return rollups;
   }
 
   @JsonProperty("exitReasons")
