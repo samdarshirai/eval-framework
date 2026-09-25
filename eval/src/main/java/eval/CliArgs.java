@@ -11,9 +11,9 @@ import java.util.Map;
 record CliArgs(String configFile, Map<String, String> overrides) {
   private static final String USAGE =
       """
-      Usage: Harness [--config <file>] [--<setting> <value>]... [--skip-calibration]
+      Usage: Harness [--config <file>] [--<setting> <value>]... [--skip-calibration] [--debug]
       Settings (same names as in the config file; a value here beats the file):
-        endpoint passFloor judgeModel categories cases outputDir skipCalibration baseline
+        endpoint passFloor judgeModel categories cases outputDir skipCalibration baseline debug
         calibration.trapPairs calibration.labeledSample knowledgeBase.type ...\
       """;
 
@@ -25,6 +25,11 @@ record CliArgs(String configFile, Map<String, String> overrides) {
       String arg = args[index];
       if (arg.equals("--skip-calibration")) { // shorthand for --skipCalibration true
         overrides.put("skipCalibration", "true");
+        continue;
+      }
+      boolean bare = index + 1 >= args.length || args[index + 1].startsWith("--");
+      if (arg.equals("--debug") && bare) { // shorthand for --debug true
+        overrides.put("debug", "true");
         continue;
       }
       String key = arg.startsWith("--") ? arg.substring(2) : "";

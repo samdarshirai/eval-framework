@@ -37,6 +37,16 @@ class CliArgsTest {
   }
 
   @Test
+  void debugIsABareFlagOrTakesAnExplicitValue() {
+    assertEquals(Map.of("debug", "true"), CliArgs.parse(new String[] {"--debug"}).overrides());
+    assertEquals(
+        Map.of("debug", "true", "baseline", "b.json"),
+        CliArgs.parse(new String[] {"--debug", "--baseline", "b.json"}).overrides());
+    assertEquals(
+        Map.of("debug", "false"), CliArgs.parse(new String[] {"--debug", "false"}).overrides());
+  }
+
+  @Test
   void theLastValueOfARepeatedSettingWins() {
     assertEquals(
         Map.of("baseline", "second.json"),

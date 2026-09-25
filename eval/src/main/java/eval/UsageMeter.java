@@ -33,6 +33,10 @@ final class UsageMeter {
     currentCheck = check == null ? OUTSIDE_CHECKS : check;
   }
 
+  String currentCheck() {
+    return currentCheck;
+  }
+
   void assistantCall(long millis) {
     assistantCalls++;
     assistantMillis += millis;
