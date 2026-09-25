@@ -688,4 +688,16 @@ class HarnessTest {
     assertTrue(output.contains("baseline.json") && output.contains("none of"), output);
     assertEquals(0, requests.get());
   }
+
+  @Test
+  void aBaselineWithADuplicateIdExitsTwoBeforeAnyAssistantCall() throws Exception {
+    cases(OOS);
+    baseline(
+        "{\"cases\":[{\"id\":\"oos-1\",\"passed\":true},{\"id\":\"oos-1\",\"passed\":false}]}");
+    int[] code = new int[1];
+    String output = out(code, "--baseline", "caseResults/baseline.json")[0];
+    assertEquals(2, code[0], output);
+    assertTrue(output.contains("ERROR") && output.contains("duplicate"), output);
+    assertEquals(0, requests.get());
+  }
 }

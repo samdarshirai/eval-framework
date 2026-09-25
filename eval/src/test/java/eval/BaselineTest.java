@@ -84,4 +84,18 @@ class BaselineTest {
     assertTrue(baseline.knows("b"));
     assertFalse(baseline.knows("c"));
   }
+
+  @Test
+  void aDuplicateIdIsAnErrorNamingTheIdEvenWhenBothEntriesAgree() throws Exception {
+    for (String body :
+        new String[] {
+          "{\"cases\":[{\"id\":\"a\",\"passed\":true},{\"id\":\"a\",\"passed\":false}]}",
+          "{\"cases\":[{\"id\":\"a\",\"passed\":true},{\"id\":\"a\",\"passed\":true}]}"
+        }) {
+      var failure = assertThrows(IllegalArgumentException.class, () -> Baseline.load(write(body)));
+      assertTrue(
+          failure.getMessage().contains("baseline.json") && failure.getMessage().contains("'a'"),
+          body + " -> " + failure.getMessage());
+    }
+  }
 }

@@ -54,7 +54,11 @@ final class Baseline {
                 + (index + 1)
                 + " needs a text 'id' and a boolean 'passed'");
       }
-      passedById.put(entry.get("id").asText(), entry.get("passed").asBoolean());
+      String caseId = entry.get("id").asText();
+      if (passedById.put(caseId, entry.get("passed").asBoolean()) != null) {
+        throw new IllegalArgumentException(
+            "baseline " + name + " has a duplicate case id '" + caseId + "'");
+      }
     }
     return new Baseline(name, passedById);
   }
