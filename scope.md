@@ -69,6 +69,8 @@ The set has 28 cases (unit 21).
 | **Judge calibration** inside the same command: 7 trap pairs plus 20 hand-labeled Groundedness pairs (measured: 20/20 agreement, 0 of 10 false-supported) | A judge you have not measured is not evidence (D16, D41, D43) |
 | **Regression against a baseline** (`--baseline`): a case that passed there and fails now fails the run, after one re-run | Blocks a silent slide even when the pass rate stays above the floor; the re-run keeps flakes from crying wolf (D13, D14, D46) |
 | **Exit-code rules**: pass floor 90%, and any failing out-of-scope case fails the run | Blocks a hallucination even when the pass rate is high (D13, D34) |
+| **Relevance** (LLM judge, advisory): flags off-topic claims, never fails a case; uncalibrated | Reported and counted so padding is visible without a noisy judge gating releases (D12, D49) |
+| **Measured cost and time**: judge calls and tokens per check, estimated cost from `judgePricing`, wall-clock time; one measured run is $0.15 and 382 s | The scale plan's cost line comes from a measured run, not a guess; assistant tokens are not visible over HTTP (D17, D28, D50) |
 | **Reusable by other teams**: `--config`, a `--<setting> <value>` override for every config key, pluggable knowledge source | The "pattern for thirty more" (D38, D42) |
 
 ## In scope, planned and not built yet
@@ -79,8 +81,6 @@ These are committed to the plan; say plainly that they are unfinished.
 |---|---|---|
 | **Pattern document** for an engineer with one hour | 24 | Deliverable 4 |
 | **Scale plan**, one page | 25 | The five questions in the brief |
-| Measured calls, tokens, cost, wall-clock time | 20 | Feeds the scale plan cost line |
-| Relevance check (advisory, never fails a case) | 17 | Last on the cut list |
 | README and the live-change rehearsal | 26, 23 | |
 
 Cut order if time runs out (D30): cost detail, automatic re-run, trap-pair run, Source, Relevance. Never cut: claims-only contract, Citation integrity, Groundedness with calibration, Refusal, Coverage, the exit code, the eval set, the pattern document.

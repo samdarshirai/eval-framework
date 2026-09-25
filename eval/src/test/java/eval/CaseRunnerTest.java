@@ -8,6 +8,7 @@ import eval.checks.Registered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 class CaseRunnerTest {
@@ -191,5 +192,45 @@ class CaseRunnerTest {
     runner.run(evalCase("b"), "run");
     // per case: readerFirst sees nothing (fresh state), reader sees the writer's claim
     assertEquals(List.of(0, 1, 0, 1), seenByReader);
+  }
+
+  @Test
+  void everyAssistantCallIsCountedIncludingOnesThatFail() {
+    UsageMeter meter = new UsageMeter();
+    Assistant failing =
+        (question, runId) -> {
+          throw new IOException("HTTP 500");
+        };
+    new CaseRunner(answering(), List.of(), meter).run(evalCase("a"), "run");
+    new CaseRunner(failing, List.of(), meter).run(evalCase("b"), "run");
+    assertEquals(2, meter.usage(0, null).assistantCalls());
+  }
+
+  @Test
+  void theMeterKnowsWhichCheckIsRunningAndForgetsItAfterwards() {
+    UsageMeter meter = new UsageMeter();
+    AtomicReference<String> insideFirst = new AtomicReference<>();
+    Check probing =
+        new Check() {
+          @Override
+          public String name() {
+            return "probe";
+          }
+
+          @Override
+          public CheckResult run(EvalCase evalCase, Answer answer, CaseState state) {
+            meter.judgeCall(10, 1);
+            insideFirst.set("ran");
+            return CheckResult.ok();
+          }
+        };
+    new CaseRunner(answering(), List.of(new Registered(probing, true)), meter)
+        .run(evalCase("a"), "run");
+    meter.judgeCall(1, 1); // after the case: not attributed to "probe"
+    SuiteReport.Usage usage = meter.usage(0, null);
+    assertEquals("ran", insideFirst.get());
+    assertEquals("probe", usage.byCheck().get(0).check());
+    assertEquals(1, usage.byCheck().get(0).calls());
+    assertEquals("outside checks", usage.byCheck().get(1).check());
   }
 }

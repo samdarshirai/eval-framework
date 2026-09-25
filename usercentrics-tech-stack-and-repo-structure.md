@@ -10,7 +10,7 @@ Updated after the grilling session. See `usercentrics-eval-harness-plan.md` for 
 | Retrieval (BM25) | **Hand-rolled**, ~40–50 lines | No real complexity to hide behind a library; implementing it yourself makes "I wrote this" a true and strong sentence in the walkthrough. Lucene is the fallback if BM25-by-hand eats too much time. |
 | YAML parsing | **SnakeYAML** | One dependency, trivial API, standard choice. |
 | JSON (chunks, claims, eval results) | **Jackson** (`jackson-databind`) | Same reasoning as SnakeYAML — one well-known dependency, not worth hand-rolling. |
-| LLM calls | **Java's built-in `HttpClient`** (`java.net.http`, Java 11+) direct to the provider's REST API | Zero extra dependency. It's a POST with a JSON body — no SDK needed for what this build does. The client also records calls and tokens per role and per check, for the measured cost report. |
+| LLM calls | **Java's built-in `HttpClient`** (`java.net.http`, Java 11+) direct to the provider's REST API | Zero extra dependency. It's a POST with a JSON body — no SDK needed for what this build does. `MeteredLlm` records judge calls and tokens per check into `UsageMeter` for the measured cost report (D50). |
 | Harness ↔ assistant | **HTTP**: the harness POSTs `{question}` to an endpoint and reads `{refused, claims}` back, using the same `HttpClient`. | The assistant runs as a separate service, so the harness code is identical for the stub and for any other app on the hub, in any language. |
 | Stub assistant server | **Spring Boot 3.3** (`spring-boot-starter-web`), one `@RestController` | Reviewer asked for it (D37). Only the `assistant` module carries Spring; the harness stays plain Java. Started separately from the harness; the harness pre-checks that the endpoint is reachable and prints how to start the stub if not. |
 | Build | **Maven, multi-module**: `kb`, `llm`, `assistant`, `eval` under one parent POM | The module graph enforces the HTTP-only boundary (D28, D37): `eval` has no dependency on `assistant`. |
@@ -63,7 +63,8 @@ usercentrics-eval-harness/
 │   ├── EvalCaseLoader.java         # reads eval/cases/*.yaml; fails loudly on a gold chunk that doesn't exist
 │   ├── KnowledgeBase.java          # loads docs/ via Chunker; chunk lookup for integrity and groundedness
 │   ├── AssistantClient.java        # HTTP adapter: POST question, parse AssistantResponse
-│   ├── LlmClient.java              # thin wrapper over HttpClient → provider API; records calls and tokens
+│   ├── MeteredLlm.java             # wraps the judge's Llm; records each call and its tokens in the UsageMeter
+│   ├── UsageMeter.java             # judge calls/tokens per check, assistant calls/time, cost from judgePricing (D50)
 │   ├── Judge.java                  # shared LLM-judge call wrapper (Coverage confirm, Groundedness fallback, Relevance)
 │   ├── checks/
 │   │   ├── Check.java              # the one interface: (case, response) -> pass/fail + reason

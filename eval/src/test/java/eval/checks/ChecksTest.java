@@ -38,4 +38,16 @@ class ChecksTest {
       }
     }
   }
+
+  @Test
+  void relevanceIsRegisteredLastAndIsAdvisory() {
+    var registered =
+        Checks.registered(new KnowledgeBase(List.of()), new Judge((system, user) -> "YES"));
+    var last = registered.get(registered.size() - 1);
+    assertEquals("Relevance", last.check().name());
+    assertFalse(last.gating());
+    for (var others : registered.subList(0, registered.size() - 1)) {
+      assertTrue(others.gating(), others.check().name());
+    }
+  }
 }
