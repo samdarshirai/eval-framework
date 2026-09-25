@@ -8,13 +8,14 @@ import java.time.Duration;
 
 public final class OpenRouterLlm implements Llm {
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final URI URL = URI.create("https://openrouter.ai/api/v1/chat/completions");
+  private static final String DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
   private static final int MAX_ATTEMPTS = 4;
   private static final long DEFAULT_RETRY_DELAY_MILLIS = 15000;
   private static final long MIN_RETRY_DELAY_MILLIS = 1000;
   private static final long MAX_RETRY_DELAY_MILLIS = 65000;
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+  private final URI url = chatCompletionsUrl(System.getenv("LLM_BASE_URL"));
   private final String model, apiKey, effort;
 
   public OpenRouterLlm(String model, String apiKey) {
@@ -44,6 +45,12 @@ public final class OpenRouterLlm implements Llm {
     return new OpenRouterLlm(model, key, effort);
   }
 
+  /** The chat-completions URL under {@code baseUrl} (env LLM_BASE_URL); OpenRouter when unset or blank. */
+  static URI chatCompletionsUrl(String baseUrl) {
+    String base = baseUrl == null || baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl.strip();
+    return URI.create(base.replaceAll("/+$", "") + "/chat/completions");
+  }
+
   @Override
   public String complete(String system, String user) {
     return completeWithUsage(system, user).text();
@@ -53,7 +60,7 @@ public final class OpenRouterLlm implements Llm {
   public Completion completeWithUsage(String system, String user) {
     try {
       var request =
-          HttpRequest.newBuilder(URL)
+          HttpRequest.newBuilder(url)
               .timeout(Duration.ofSeconds(60))
               .header("content-type", "application/json")
               .header("authorization", "Bearer " + apiKey)

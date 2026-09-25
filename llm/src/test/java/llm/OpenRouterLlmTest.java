@@ -23,6 +23,19 @@ class OpenRouterLlmTest {
   }
 
   @Test
+  void baseUrlDefaultsToOpenRouterAndCanBeRoutedThroughAGateway() {
+    assertEquals(
+        "https://openrouter.ai/api/v1/chat/completions",
+        OpenRouterLlm.chatCompletionsUrl(null).toString());
+    assertEquals(
+        "https://openrouter.ai/api/v1/chat/completions",
+        OpenRouterLlm.chatCompletionsUrl(" ").toString());
+    assertEquals(
+        "https://llm.internal/v1/chat/completions",
+        OpenRouterLlm.chatCompletionsUrl("https://llm.internal/v1/").toString());
+  }
+
+  @Test
   void parseTextReturnsFirstChoiceContent() {
     assertEquals(
         "hello", OpenRouterLlm.parseText("{\"choices\":[{\"message\":{\"content\":\"hello\"}}]}"));

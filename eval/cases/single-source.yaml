@@ -29,7 +29,7 @@
   category: single-source
   expected_behavior: answer
   facts:
-    # no keywords on purpose: exercises the one-call judge path (unit 12)
+    # no keywords on purpose: exercises the one-call judge path
     - fact: "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants"
       chunks: [ab-test#usercentrics-internal-a-b-testing]
   source: authored

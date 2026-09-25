@@ -7,7 +7,7 @@ import java.util.HexFormat;
 import java.util.TreeSet;
 
 /**
- * A short fingerprint of the gold chunks a case was confirmed against (D21, unit 22). It covers
+ * A short fingerprint of the gold chunks a case was confirmed against (D21). It covers
  * only the case's own gold chunks, so an edit elsewhere in a document does not make every case that
  * cites the document look stale.
  */
