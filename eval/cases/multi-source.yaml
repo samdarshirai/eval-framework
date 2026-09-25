@@ -47,7 +47,7 @@
   confirmed_hash: "bec13a81f284"
 
 - id: ms-ruleset-and-tcf-attributes
-  question: "I am rolling out a TCF banner with Geolocation Rules. Which script tag attribute selects the ruleset, and which one enables TCF?"
+  question: "I am rolling out a TCF banner with Geolocation Rules. Which attribute does the script tag generated for a ruleset contain, and which one enables TCF?"
   category: multi-source
   expected_behavior: answer
   facts:
@@ -79,16 +79,16 @@
   confirmed_hash: "09f9a9143a70"
 
 - id: ms-tcstring-and-google-vendor
-  question: "What does the tcString encode, and under which vendor ID is Google registered in TCF?"
+  question: "What does the tcString encode, and under which vendor ID is Google registered on the IAB Global Vendor List?"
   category: multi-source
   expected_behavior: answer
   facts:
     - fact: "The tcString encodes the consent information in a machine readable format"
       chunks: [tcf2#general-information]
       keywords: ["tcString"]
-    - fact: "Google is registered as a TCF vendor with ID 7"
+    - fact: "Google is registered as a vendor with ID 755 on the IAB Global Vendor List"
       chunks: [consent-mode#general-information]
-      keywords: ["7"]
+      keywords: ["755"]
   source: authored
   owner: platform
   added: "2026-09-25"

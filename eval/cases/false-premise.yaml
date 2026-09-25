@@ -45,7 +45,7 @@
   category: false-premise
   expected_behavior: answer
   facts:
-    - fact: "No regional settings may be in place in configurations used with Geolocation Rules: they must be set to Display CMP to all users (default)"
+    - fact: "When using Geolocation Rules the regional settings of a configuration must be set to Display CMP to all users (default)"
       chunks: [geolocation-rules#prerequisites]
       keywords: ["all users"]
   source: authored
