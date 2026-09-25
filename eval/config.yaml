@@ -15,6 +15,9 @@ endpoint: http://localhost:8080/answer
 passFloor: 0.90
 # Skip the judge trap pairs and the Groundedness sample that normally run first. Default: false.
 # skipCalibration: false
+# Print a [debug] line for the config, each case, each check, and every assistant and judge call. Default: false.
+# --debug turns it on for one run.
+# debug: false
 # A previous report to compare with. A case that passed there and fails now fails the run, after one re-run.
 # Not set: this is logged and the run goes ahead without a regression check.
 # Set but no file at the path (or the file is unusable): an error, exit code 2.

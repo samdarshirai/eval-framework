@@ -16,9 +16,15 @@ final class SuiteRunner {
   record Outcome(List<CaseResult> results, SuiteReport.Comparison comparison) {}
 
   private final CaseRunner runner;
+  private final DebugLog debug;
 
   SuiteRunner(CaseRunner runner) {
+    this(runner, DebugLog.OFF);
+  }
+
+  SuiteRunner(CaseRunner runner, DebugLog debug) {
     this.runner = runner;
+    this.debug = debug;
   }
 
   /** The comparison in the outcome is null when there is no baseline. */
@@ -38,6 +44,7 @@ final class SuiteRunner {
           || SuiteReport.OUT_OF_SCOPE.equals(firstAttempt.category())) {
         continue;
       }
+      debug.log("re-running " + firstAttempt.id() + ": passed in the baseline, failed now");
       CaseResult secondAttempt = runner.run(cases.get(index), runId);
       results.set(index, secondAttempt);
       reruns.add(new SuiteReport.Comparison.Rerun(firstAttempt.id(), secondAttempt.passed()));

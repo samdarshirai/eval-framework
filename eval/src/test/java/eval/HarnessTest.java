@@ -111,6 +111,23 @@ class HarnessTest {
   }
 
   @Test
+  void debugFlagLogsTheRunAndWithoutItNothingIsLogged() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String quiet = out(code)[0];
+    assertFalse(quiet.contains("[debug]"), quiet);
+
+    String output = out(code, "--debug")[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("[debug]") && output.contains("config: endpoint="), output);
+    assertTrue(output.contains("case oos-1 [out-of-scope] start"), output);
+    assertTrue(output.contains("case oos-1 check Refusal"), output);
+    assertTrue(output.contains("assistant POST"), output);
+    assertTrue(output.contains("judge call in calibration"), output);
+    assertFalse(output.contains("Bearer"), output);
+  }
+
+  @Test
   void aStaleCaseWarnsByNameAndStillRuns() throws Exception {
     cases(
         "- id: c1\n"

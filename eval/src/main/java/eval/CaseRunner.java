@@ -27,30 +27,53 @@ final class CaseRunner {
   private final List<Registered> checks;
 
   private final UsageMeter meter;
+  private final DebugLog debug;
 
   CaseRunner(Assistant assistant, List<Registered> checks) {
     this(assistant, checks, new UsageMeter());
   }
 
   CaseRunner(Assistant assistant, List<Registered> checks, UsageMeter meter) {
+    this(assistant, checks, meter, DebugLog.OFF);
+  }
+
+  CaseRunner(Assistant assistant, List<Registered> checks, UsageMeter meter, DebugLog debug) {
     this.assistant = assistant;
     this.checks = checks;
     this.meter = meter;
+    this.debug = debug;
   }
 
   CaseResult run(EvalCase evalCase, String runId) {
+    debug.log("case " + evalCase.id() + " [" + evalCase.category() + "] start");
     Answer answer;
     long askStartedNanos = System.nanoTime();
     try {
       answer = assistant.ask(evalCase.question(), runId);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      debug.log("case " + evalCase.id() + " interrupted");
       return CaseResult.failed(evalCase, "interrupted");
     } catch (Exception e) {
+      debug.log("case " + evalCase.id() + " assistant call failed: " + DebugLog.clip(e.toString()));
       return CaseResult.failed(evalCase, e.getMessage());
     } finally {
       meter.assistantCall((System.nanoTime() - askStartedNanos) / 1_000_000);
     }
+    debug.log(
+        "case "
+            + evalCase.id()
+            + " answer: refused="
+            + answer.refused()
+            + ", "
+            + (answer.claims() == null ? 0 : answer.claims().size())
+            + " claims, cited "
+            + (answer.claims() == null
+                ? List.of()
+                : answer.claims().stream()
+                    .flatMap(claim -> claim.citations().stream())
+                    .distinct()
+                    .toList()));
     List<CheckOutcome> outcomes = new ArrayList<>();
     boolean passed = true;
     CaseState state = new CaseState();
@@ -64,6 +87,15 @@ final class CaseRunner {
             CheckResult.fail(
                 "check error: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
       }
+      debug.log(
+          "case "
+              + evalCase.id()
+              + " check "
+              + registered.check().name()
+              + (registered.gating() ? " (gating) " : " (advisory) ")
+              + (checkResult.passed() ? "PASS" : "FAIL")
+              + ": "
+              + DebugLog.clip(checkResult.reason()));
       outcomes.add(
           new CheckOutcome(registered.check().name(), checkResult.passed(), checkResult.reason()));
       if (registered.gating() && !checkResult.passed()) {
@@ -71,6 +103,7 @@ final class CaseRunner {
       }
     }
     meter.setCheck(null);
+    debug.log("case " + evalCase.id() + (passed ? " PASSED" : " FAILED"));
     return CaseResult.answered(evalCase, passed, answer, outcomes);
   }
 }
