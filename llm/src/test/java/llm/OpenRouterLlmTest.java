@@ -104,4 +104,37 @@ class OpenRouterLlmTest {
             .readTree(OpenRouterLlm.requestBody("m", "s", "u"));
     assertFalse(requestJson.has("reasoning"));
   }
+
+  @Test
+  void parseCompletionReadsTheTokenCounts() {
+    Completion completion =
+        OpenRouterLlm.parseCompletion(
+            "{\"choices\":[{\"message\":{\"content\":\"hi\"}}],"
+                + "\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":3}}");
+    assertEquals("hi", completion.text());
+    assertEquals(12, completion.promptTokens());
+    assertEquals(3, completion.completionTokens());
+  }
+
+  @Test
+  void parseCompletionWithNoUsageBlockCountsZeroTokensAndDoesNotFail() {
+    Completion completion =
+        OpenRouterLlm.parseCompletion("{\"choices\":[{\"message\":{\"content\":\"hi\"}}]}");
+    assertEquals("hi", completion.text());
+    assertEquals(0, completion.promptTokens());
+    assertEquals(0, completion.completionTokens());
+  }
+
+  @Test
+  void parseCompletionStillSurfacesAnErrorBodyOn200() {
+    assertThrows(
+        IllegalStateException.class,
+        () -> OpenRouterLlm.parseCompletion("{\"error\":{\"message\":\"boom\"}}"));
+  }
+
+  @Test
+  void aPlainLlmReportsItsTextWithZeroTokens() {
+    Llm llm = (system, user) -> "x";
+    assertEquals(new Completion("x", 0, 0), llm.completeWithUsage("s", "u"));
+  }
 }

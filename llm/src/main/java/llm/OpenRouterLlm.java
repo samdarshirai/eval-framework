@@ -46,6 +46,11 @@ public final class OpenRouterLlm implements Llm {
 
   @Override
   public String complete(String system, String user) {
+    return completeWithUsage(system, user).text();
+  }
+
+  @Override
+  public Completion completeWithUsage(String system, String user) {
     try {
       var request =
           HttpRequest.newBuilder(URL)
@@ -69,7 +74,7 @@ public final class OpenRouterLlm implements Llm {
         throw new IllegalStateException(
             "OpenRouter API " + response.statusCode() + ": " + response.body());
       }
-      return parseText(response.body());
+      return parseCompletion(response.body());
     } catch (java.io.IOException e) {
       throw new IllegalStateException("OpenRouter API call failed: " + e.getMessage(), e);
     } catch (InterruptedException e) {
@@ -126,13 +131,20 @@ public final class OpenRouterLlm implements Llm {
   }
 
   static String parseText(String json) {
+    return parseCompletion(json).text();
+  }
+
+  static Completion parseCompletion(String json) {
     try {
       JsonNode root = MAPPER.readTree(json);
       // OpenRouter can answer HTTP 200 with an error object instead of choices.
       if (root.has("error")) {
         throw new IllegalStateException("OpenRouter API error: " + root.get("error"));
       }
-      return root.get("choices").get(0).get("message").get("content").asText();
+      String text = root.get("choices").get(0).get("message").get("content").asText();
+      JsonNode usage = root.path("usage");
+      return new Completion(
+          text, usage.path("prompt_tokens").asLong(0), usage.path("completion_tokens").asLong(0));
     } catch (IllegalStateException e) {
       throw e;
     } catch (Exception e) {
