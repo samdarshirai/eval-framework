@@ -3,7 +3,7 @@ package eval;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Finds cases whose gold chunks changed since they were confirmed (D21, unit 22). */
+/** Finds cases whose gold chunks changed since they were confirmed (D21). */
 final class StaleCases {
   private StaleCases() {}
 

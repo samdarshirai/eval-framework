@@ -26,7 +26,7 @@ passFloor: 0.90
 # Run only these cases, comma-separated ids: --case ss-zonejs,oos-pricing (D52). Not set: every case.
 # An unknown id exits 2. The pass rate, floor and out-of-scope rule then apply to the selected cases only.
 # case: ss-zonejs,oos-pricing
-# Which checks run (D23). Not set: all six. Two ways to set it:
+# Which checks run (D54). Not set: all six. Two ways to set it:
 #   appType: cited | uncited | smoke   the least checks for that kind of app; the app can add, not remove
 #     cited   = Refusal, Citation integrity, Coverage, Groundedness, Source
 #     uncited = Refusal, Coverage                    (app cannot cite)

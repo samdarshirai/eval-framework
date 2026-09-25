@@ -176,7 +176,7 @@ knowledgeBase:
 
 Run it from anywhere with `--config my-team/eval.yaml`. Every relative path in the file resolves against the file's folder. The judge needs `OPENROUTER_API_KEY` in the environment, and your own application can use any model provider.
 
-Useful overrides: `--case id1,id2` runs only those cases, `--checks "Refusal,Coverage"` runs only those checks, `--skip-calibration` skips the judge calibration (the calibration is where most of a small run's judge calls go), `--debug` prints one `[debug]` line per config, case, check, assistant call and judge call, and `--baseline ""` switches a configured baseline off for one run. Keep `out-of-scope` in `categories`, because the exit rule depends on it.
+Useful overrides: `--case id1,id2` runs only those cases, `--checks "Refusal,Coverage"` runs only those checks, `--skip-calibration` skips the judge calibration (the calibration was 27 of the 98 judge calls in the baseline run), `--debug` prints one `[debug]` line per config, case, check, assistant call and judge call, and `--baseline ""` switches a configured baseline off for one run. Keep `out-of-scope` in `categories`, because the exit rule depends on it.
 
 ### Where the harness gets the chunks
 
@@ -232,20 +232,21 @@ The application is a thin assistant that answers questions about the Usercentric
 
 The set has 28 cases: 8 single-source, 6 multi-source, 6 false-premise, 5 out-of-scope (2 unrelated and 3 plausible-nonexistent) and 3 edge cases (exact-value precision, a two-part question, and a light paraphrase). Every case names its gold chunks. What the set deliberately leaves out is in `scope.md`.
 
-The latest full run (2026-09-25) passed 20 of 28 and exited 1:
+The latest full run (2026-09-25, run 20260925-220009, `caseResults/baseline.json`) passed 19 of 28 and exited 1 (67.9%):
 
 | Category | Passed |
 |---|---|
-| single-source | 8 of 8 |
+| single-source | 7 of 8 |
 | out-of-scope | 5 of 5 |
 | false-premise | 5 of 6 |
 | edge-case | 2 of 3 |
 | multi-source | 0 of 6 |
 
-The baseline run (with calibration) used 101 judge calls, cost about $0.22 and took about 500 seconds. The harness did its job on a deliberately thin assistant. Reading the failures showed:
+The baseline run (with calibration) used 98 judge calls, cost about $0.21 and took about 350 seconds. The harness did its job on a deliberately thin assistant. Reading the failures showed:
 
-- **7 failures come with a retrieval gap.** Each is a question about two topics, where the stub's top 3 chunks all came from one topic. The model then refused, or answered only half. The harness cannot see this itself, because it only sees claims and citations, never the chunks the application retrieved. Replaying the search against the gold chunks showed the gap. It is not the whole cause: in one experiment, raising top-k from 3 to 6 made three cases pass (two multi-source, one edge) and three false-premise cases fail with over-refusals, and the score stayed 20 of 28. Regressions and improvements at once are what the baseline comparison is for. Telling a retrieval miss from a model miss needs an optional `retrieved` field in the contract.
+- **7 failures come with a retrieval gap.** Each is a question about two topics, where the stub's top 3 chunks all came from one topic. The model then refused, or answered only half. The harness cannot see this itself, because it only sees claims and citations, never the chunks the application retrieved. Replaying the search against the gold chunks showed the gap. It is not the whole cause: in an earlier experiment, when the score was 20 of 28, raising top-k from 3 to 6 made three cases pass (two multi-source, one edge) and three false-premise cases fail with over-refusals, and the score stayed 20 of 28. Regressions and improvements at once are what the baseline comparison is for. Telling a retrieval miss from a model miss needs an optional `retrieved` field in the contract.
 - **1 failure is a model miss** (`fp-tcf-gettcdata`). The right chunk was retrieved first, and the model still refused. With a modified prompt in a later experiment it answered, but added an invented detail ("deprecated from 2.0"), and Groundedness and Coverage both failed it. That is the failure the brief describes: a wrong answer that sounds right, caught by a check that is not a string match.
+- **1 failure is an over-refusal I have not diagnosed** (`ss-tcf-cmp-version`, a single-document question). It passed when run alone and was refused in the full runs after it, so it is also the flakiness example in `SCALE-PLAN.md` section 5.
 
 The stub's failures are kept as evidence and not tuned away.
 

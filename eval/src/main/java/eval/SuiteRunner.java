@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Runs every case once. With a baseline it then re-runs, once, each case that passed in the
- * baseline and failed now (D14, unit 19): the second result replaces the first, so a flake that
+ * baseline and failed now (D14): the second result replaces the first, so a flake that
  * passes the second time counts as a pass, and a case that fails both times is a regression. Cases
  * that failed in the baseline, and cases the baseline does not know, are never re-run: they are not
  * suspected regressions and a re-run would only cost calls. Out-of-scope cases are never re-run

@@ -23,7 +23,7 @@ java -jar eval/target/eval.jar
 
 You get a summary on the terminal and a full JSON report in `caseResults/`. If the stub is not running, the harness stops at once and tells you how to start it.
 
-A full run of the 28 cases takes about 8 minutes and costs about $0.22 in judge calls (the calibration is about $0.04 of that). To try it fast, run a few cases and skip the judge calibration:
+A full run of the 28 cases takes about 6 minutes and costs about $0.21 in judge calls (the calibration is about $0.04 of that). To try it fast, run a few cases and skip the judge calibration:
 
 ```bash
 java -jar eval/target/eval.jar --case ss-safari-bundle,oos-pricing --skip-calibration
@@ -31,7 +31,7 @@ java -jar eval/target/eval.jar --case ss-safari-bundle,oos-pricing --skip-calibr
 
 **Exit code:** `0` everything passed, `1` the run failed (pass rate under the floor, a failing out-of-scope case, a regression against the baseline, or a failed judge calibration), `2` a setup error such as a bad config or a missing API key.
 
-**Expect red on the default run.** The stub is thin on purpose. The latest full run passed 20 of 28 and exited 1, and `scope.md` explains why, case by case.
+**Expect red on the default run.** The stub is thin on purpose. The latest full run passed 19 of 28 and exited 1, and `scope.md` explains why, case by case.
 
 To run the tests (no API key needed, the model calls are mocked): `mvn test`.
 
@@ -79,4 +79,3 @@ java -jar eval/target/eval.jar --config my-team/eval.yaml
 | Know what is in, what is out, and why | [`scope.md`](scope.md) |
 | Look up a term | [`CONTEXT.md`](CONTEXT.md) |
 | See why a design choice was made | [`grilling-decisions.md`](grilling-decisions.md) |
-| See the build broken into units | [`build-order.md`](build-order.md) |

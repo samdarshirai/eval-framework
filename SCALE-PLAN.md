@@ -1,15 +1,15 @@
 # Scale plan: from one application to the whole marketplace
 
-Answers the five questions in the brief. Numbers come from one measured run of the Implementation Assistant (2026-09-25, 28 cases): 101 judge calls (27 of them calibration), **$0.218**, **501 s**. Where I estimate, I say so. `PATTERN.md` is the recipe for one team; `grilling-decisions.md` holds the decisions (D#).
+Answers the five questions in the brief. Numbers come from one measured run of the Implementation Assistant (run 20260925-220009, 28 cases, `caseResults/baseline.json`): 98 judge calls (27 of them calibration), **$0.213**, **350.5 s**. Where I estimate, I say so. `PATTERN.md` is the recipe for one team; `grilling-decisions.md` holds the decisions (D#).
 
 ## 1. What runs where, and when
 
 | When | What | Against | Time |
 |---|---|---|---|
-| **Local**, editing a prompt | The cases touched (`--case a,b`), `--skip-calibration` | A candidate on the builder's machine | ~2.5 min for 10 cases (estimated, ~15 s per case) |
-| **CI**, on any change to prompt, model, config or documents | Full set, with the baseline. **Blocks the merge** on a regression or a failing out-of-scope case | A candidate started for the run | ~7 min for 28 cases |
+| **Local**, editing a prompt | The cases touched (`--case a,b`), `--skip-calibration` | A candidate on the builder's machine | ~2 min for 10 cases (estimated from the run: at most 12.5 s per case, 350.5 s / 28) |
+| **CI**, on any change to prompt, model, config or documents | Full set, with the baseline. **Blocks the merge** on a regression or a failing out-of-scope case | A candidate started for the run | ~6 min for 28 cases (350.5 s measured, with calibration) |
 | **Nightly** | Full set | An instance with production's exact prompt, model and config, to catch silent provider drift | Unattended |
-| **Weekly**, and when the judge model or prompt changes | Judge calibration (7 trap pairs, 20 labeled pairs) | The judge itself | ~90 s |
+| **Weekly**, and when the judge model or prompt changes | Judge calibration (7 trap pairs, 20 labeled pairs) | The judge itself | 27 judge calls, about $0.04 (time not measured) |
 
 Before a change ships, local and CI decide. After, the nightly run says when something moved on its own. **Never against live production** (D32): eval traffic pollutes analytics and cost attribution, and production can change mid-run. Eval calls carry an `X-Eval-Run` header so the gateway can exclude them.
 
@@ -29,16 +29,17 @@ All of these hold: **no regression** against the last known-good run; pass rate 
 
 ## 4. Cost and time for thirty applications
 
-Per case: about 2.6 judge calls, **$0.0063**. The assistant's tokens are not visible over HTTP, so I **estimate** $0.0035 per call (Haiku 4.5). About **$0.01 per case**, **$0.29 for a 30-case run**; calibration adds about $0.04.
+Per case: about 2.5 judge calls (98 − 27 calibration = 71, over 28 cases), **$0.0061** (calibration was 7,746 in + 109 out tokens = $0.0415, so the cases cost $0.2131 − $0.0415 = $0.1716, over 28). The assistant's tokens are not visible over HTTP, so I **estimate** $0.0035 per call (Haiku 4.5). About **$0.0096 per case** ($0.0061 + $0.0035), **$0.29 for a 30-case run**; calibration adds about $0.04.
 
-Assumed monthly cadence per application: 30 nightly full runs ($8.70), 10 CI runs ($2.90), 60 local runs of 10 cases ($6.00), 4 calibrations ($0.16). That is **about $18**, so **about $530 for thirty applications**. Judge calls scale with claims per answer, so plan for **$530 to $1,600**. Two savings are not built: a cheaper judge for Relevance (a third of the calls, and advisory), and stopping judge calls after a deterministic failure (D45).
+Assumed monthly cadence per application: 30 nightly full runs (30 × $0.29 = $8.70), 10 CI runs (10 × $0.29 = $2.90), 60 local runs of 10 cases (60 × 10 × $0.0096 = $5.78), 4 calibrations (4 × $0.0415 = $0.17). That is **$17.55, about $18**, so **about $530 for thirty applications**. Judge calls scale with claims per answer, so plan for **$530 to $1,600**. Two savings are not built: a cheaper judge for Relevance (26 of the 98 calls, and advisory), and stopping judge calls after a deterministic failure (D45).
 
-Cases run one after another: 28 take about 7 minutes and 60 would take about 15. My targets are under 90 seconds locally and under 5 minutes in CI, so **we are over the limit already**. Parallel runs are the first fix; they need care with provider rate limits.
+Cases run one after another: 28 take about 6 minutes (350.5 s) and 60 would take about 12 (60 × 12.5 s). My targets are under 90 seconds locally and under 5 minutes in CI, so **we are over the limit already**. Parallel runs are the first fix; they need care with provider rate limits.
 
 ## 5. What breaks first, and what I would build next
 
-1. **Flaky verdicts.** The same model and prompt at temperature 0 passed a case in 2 of 3 runs while I tuned the stub. Teams learn to ignore red builds that go green on a retry. The single re-run of a suspected regression (D14) contains it; majority-of-N is next if the re-run rate is high.
-2. **The contract does not fit every application.** The harness needs citations by default; an application that cannot cite turns checks off with the `checks` list (D23).
+1. **Flaky verdicts.** Temperature 0 does not make a verdict stable. Teams learn to ignore red builds that go green on a retry. The single re-run of a suspected regression (D14) contains it; majority-of-N is next if the re-run rate is high.
+   Live evidence: `ss-tcf-cmp-version` passed when run alone (run 20260925-215234) and over-refused in the full run straight after (20260925-215414, same harness commit), and again in the baseline run. The stub's model and temperature (0) are fixed in its config. One case is an anecdote, not a rate, but it is the failure the paragraph above describes.
+2. **The contract does not fit every application.** The harness needs citations by default; an application that cannot cite turns checks off with the `checks` list (D54).
 3. **The judge is calibrated on Usercentrics text.** The bundled pairs say nothing about a Legal or HR judge, so each department supplies its own before its result counts.
 
 **Next, in order:** parallel case runs and early stopping after a deterministic failure; a `retrieved` field and retrieval check (D44), because raising top-k from 3 to 6 on the stub did not fix its failures and the harness could not say why; then sampling real questions and corrections into candidate cases, so sets grow from real failures.

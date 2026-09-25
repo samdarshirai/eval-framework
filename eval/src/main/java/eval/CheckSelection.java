@@ -6,7 +6,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 /**
- * Which checks this run executes (D23): resolves the config's {@code appType}, {@code addChecks}
+ * Which checks this run executes (D54): resolves the config's {@code appType}, {@code addChecks}
  * and {@code checks}, validates the result against the cases, and tells the console what is off,
  * what was pulled in and whether the baseline ran a different set. Throws IllegalArgumentException
  * for anything invalid, so the run exits 2 before any call.
