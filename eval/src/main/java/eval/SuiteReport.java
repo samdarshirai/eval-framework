@@ -13,7 +13,19 @@ public record SuiteReport(
     List<CheckInfo> checks,
     Calibration calibration,
     List<CaseResult> cases,
-    Comparison baseline) {
+    Comparison baseline,
+    Usage usage) {
+
+  public SuiteReport(
+      String runId,
+      String endpoint,
+      double passFloor,
+      List<CheckInfo> checks,
+      Calibration calibration,
+      List<CaseResult> cases,
+      Comparison baseline) {
+    this(runId, endpoint, passFloor, checks, calibration, cases, baseline, null);
+  }
 
   public SuiteReport(
       String runId,
@@ -22,7 +34,7 @@ public record SuiteReport(
       List<CheckInfo> checks,
       Calibration calibration,
       List<CaseResult> cases) {
-    this(runId, endpoint, passFloor, checks, calibration, cases, null);
+    this(runId, endpoint, passFloor, checks, calibration, cases, null, null);
   }
 
   /**
@@ -60,6 +72,35 @@ public record SuiteReport(
     }
   }
 
+  /**
+   * What the run measured (D17). The judge is metered through its {@code Llm}; the assistant is a
+   * black box over HTTP (D28), so only its calls and time are known, never its tokens. {@code
+   * judgeCostUsd} is tokens times the configured prices, null when none are configured.
+   */
+  public record Usage(
+      long wallClockMillis,
+      int assistantCalls,
+      long assistantMillis,
+      List<CheckUsage> byCheck,
+      Double judgeCostUsd) {
+    public record CheckUsage(String check, int calls, long promptTokens, long completionTokens) {}
+
+    @JsonProperty("judgeCalls")
+    public int judgeCalls() {
+      return byCheck.stream().mapToInt(CheckUsage::calls).sum();
+    }
+
+    @JsonProperty("judgePromptTokens")
+    public long judgePromptTokens() {
+      return byCheck.stream().mapToLong(CheckUsage::promptTokens).sum();
+    }
+
+    @JsonProperty("judgeCompletionTokens")
+    public long judgeCompletionTokens() {
+      return byCheck.stream().mapToLong(CheckUsage::completionTokens).sum();
+    }
+  }
+
   public static final String OUT_OF_SCOPE = "out-of-scope";
 
   /** Whether the named check gates a case; unknown names count as gating. */
@@ -69,6 +110,30 @@ public record SuiteReport(
         .findFirst()
         .map(CheckInfo::gating)
         .orElse(true);
+  }
+
+  /**
+   * For each advisory check (D12), in registration order, the number of cases where it failed. A
+   * {@code check error} counts, so a broken advisory judge is visible. Never part of pass/fail.
+   */
+  @JsonProperty("advisoryFlags")
+  public Map<String, Long> advisoryFlags() {
+    Map<String, Long> flags = new LinkedHashMap<>();
+    for (CheckInfo info : checks) {
+      if (info.gating()) {
+        continue;
+      }
+      long flaggedCases =
+          cases.stream()
+              .filter(
+                  caseResult ->
+                      caseResult.checks().stream()
+                          .anyMatch(
+                              outcome -> outcome.check().equals(info.name()) && !outcome.passed()))
+              .count();
+      flags.put(info.name(), flaggedCases);
+    }
+    return flags;
   }
 
   public long passed() {

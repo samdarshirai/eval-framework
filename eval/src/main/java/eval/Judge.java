@@ -6,8 +6,8 @@ import java.util.regex.*;
 import llm.Llm;
 
 /**
- * Three narrow judge questions used by Coverage and Groundedness (D24, D10). The prompts are the
- * only place judge wording lives.
+ * Four narrow judge questions used by Coverage, Groundedness and Relevance (D24, D10, D12). The
+ * prompts are the only place judge wording lives.
  */
 public final class Judge {
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -41,6 +41,14 @@ The claim may be worded differently from the passage and may combine sentences o
 Reply with exactly one word: YES or NO.\
 """;
 
+  private static final String RELEVANT_SYSTEM_PROMPT =
+      """
+You check whether a claim made by an assistant is pertinent to the user's question.
+Answer YES if the claim helps answer the question, including background the answer needs to make sense.
+Answer NO if the claim is off-topic padding: it may be true, but it does not help answer this question.
+Reply with exactly one word: YES or NO.\
+""";
+
   private final Llm llm;
 
   public Judge(Llm llm) {
@@ -56,6 +64,12 @@ Reply with exactly one word: YES or NO.\
   public boolean supports(String claim, String passage) {
     return yesOrNo(
         llm.complete(SUPPORTS_SYSTEM_PROMPT, "Passage:\n" + passage + "\n\nClaim: " + claim));
+  }
+
+  /** Is the claim pertinent to the question, and not true-but-off-topic padding? */
+  public boolean relevant(String question, String claim) {
+    return yesOrNo(
+        llm.complete(RELEVANT_SYSTEM_PROMPT, "Question: " + question + "\nClaim: " + claim));
   }
 
   private static boolean yesOrNo(String reply) {
