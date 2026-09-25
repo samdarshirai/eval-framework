@@ -19,19 +19,28 @@ import java.util.List;
  *
  * <p>A check that throws a RuntimeException does not abort the run: it is recorded as a failed
  * outcome and the remaining checks still run. Each case gets a fresh CaseState, so findings never
- * leak from one case to the next.
+ * leak from one case to the next. The meter is told which check is running, so judge calls are
+ * counted per check.
  */
 final class CaseRunner {
   private final Assistant assistant;
   private final List<Registered> checks;
 
+  private final UsageMeter meter;
+
   CaseRunner(Assistant assistant, List<Registered> checks) {
+    this(assistant, checks, new UsageMeter());
+  }
+
+  CaseRunner(Assistant assistant, List<Registered> checks, UsageMeter meter) {
     this.assistant = assistant;
     this.checks = checks;
+    this.meter = meter;
   }
 
   CaseResult run(EvalCase evalCase, String runId) {
     Answer answer;
+    long askStartedNanos = System.nanoTime();
     try {
       answer = assistant.ask(evalCase.question(), runId);
     } catch (InterruptedException e) {
@@ -39,11 +48,14 @@ final class CaseRunner {
       return CaseResult.failed(evalCase, "interrupted");
     } catch (Exception e) {
       return CaseResult.failed(evalCase, e.getMessage());
+    } finally {
+      meter.assistantCall((System.nanoTime() - askStartedNanos) / 1_000_000);
     }
     List<CheckOutcome> outcomes = new ArrayList<>();
     boolean passed = true;
     CaseState state = new CaseState();
     for (Registered registered : checks) {
+      meter.setCheck(registered.check().name());
       CheckResult checkResult;
       try {
         checkResult = registered.check().run(evalCase, answer, state);
@@ -58,6 +70,7 @@ final class CaseRunner {
         passed = false;
       }
     }
+    meter.setCheck(null);
     return CaseResult.answered(evalCase, passed, answer, outcomes);
   }
 }

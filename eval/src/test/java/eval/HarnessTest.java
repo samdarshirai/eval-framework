@@ -912,4 +912,100 @@ class HarnessTest {
     assertTrue(output.contains("flagged on 1 of 1 case(s)"), output);
     assertTrue(output.contains("RESULT: OK"), output);
   }
+
+  /** A judge that says YES and reports 100 prompt and 5 completion tokens for every call. */
+  private static llm.Llm reportingYes() {
+    return new llm.Llm() {
+      @Override
+      public String complete(String system, String user) {
+        return "YES";
+      }
+
+      @Override
+      public llm.Completion completeWithUsage(String system, String user) {
+        return new llm.Completion("YES", 100, 5);
+      }
+    };
+  }
+
+  private static final String ONE_ANSWER_CASE =
+      "- id: c1\n"
+          + "  question: q\n"
+          + "  category: single-source\n"
+          + "  expected_behavior: answer\n"
+          + "  facts:\n"
+          + "    - {fact: A is body, chunks: [d#a], keywords: [body]}\n";
+  private static final String ONE_CLAIM_REPLY =
+      "{\"refused\":false,\"claims\":[{\"claim\":\"A is body\",\"citations\":[\"d#a\"]}]}";
+
+  private String runWithReportingJudge(String... args) throws Exception {
+    var buf = new ByteArrayOutputStream();
+    Harness.run(args, root, new PrintStream(buf), model -> reportingYes());
+    return buf.toString();
+  }
+
+  private static java.util.List<String> checkNames(com.fasterxml.jackson.databind.JsonNode usage) {
+    var names = new java.util.ArrayList<String>();
+    usage.get("byCheck").forEach(entry -> names.add(entry.get("check").asText()));
+    return names;
+  }
+
+  @Test
+  void theReportMeasuresCallsTokensAndCostPerCheck() throws Exception {
+    config(defaultConfig() + "judgePricing:\n  inputPerMillion: 5.0\n  outputPerMillion: 25.0\n");
+    cases(ONE_ANSWER_CASE);
+    replyFor = ONE_CLAIM_REPLY;
+    String output = runWithReportingJudge();
+    // 1 trap pair (calibration) + Coverage confirm + Relevance; Groundedness shortcuts on the gold chunk
+    assertTrue(output.contains("Cost and time"), output);
+    assertTrue(
+        output.contains("judge: 3 calls, 300 prompt + 15 completion tokens, est. $0.0019"),
+        output);
+    var usage = reportJson(output).get("usage");
+    assertEquals(3, usage.get("judgeCalls").asInt());
+    assertEquals(1, usage.get("assistantCalls").asInt());
+    assertEquals(
+        (300 * 5.0 + 15 * 25.0) / 1_000_000.0, usage.get("judgeCostUsd").asDouble(), 1e-12);
+    assertEquals(java.util.List.of("calibration", "Coverage", "Relevance"), checkNames(usage));
+  }
+
+  @Test
+  void withoutJudgePricingTheReportHasTokensAndNoCost() throws Exception {
+    config(defaultConfig());
+    cases(ONE_ANSWER_CASE);
+    replyFor = ONE_CLAIM_REPLY;
+    String output = runWithReportingJudge();
+    assertTrue(output.contains("cost not estimated"), output);
+    assertFalse(output.contains("$0.0000"), output);
+    assertTrue(reportJson(output).get("usage").get("judgeCostUsd").isNull());
+  }
+
+  @Test
+  void skippingCalibrationLeavesNoCalibrationRow() throws Exception {
+    cases(ONE_ANSWER_CASE);
+    replyFor = ONE_CLAIM_REPLY;
+    String output = runWithReportingJudge("--skipCalibration", "true");
+    assertEquals(java.util.List.of("Coverage", "Relevance"), checkNames(reportJson(output).get("usage")));
+  }
+
+  @Test
+  void aBadJudgePricingExitsTwoBeforeAnyAssistantCall() throws Exception {
+    config(defaultConfig() + "judgePricing:\n  inputPerMillion: 5.0\n");
+    cases(ONE_ANSWER_CASE);
+    var buf = new ByteArrayOutputStream();
+    int code = Harness.run(new String[0], root, new PrintStream(buf), model -> reportingYes());
+    assertEquals(2, code, buf.toString());
+    assertTrue(buf.toString().contains("judgePricing"), buf.toString());
+    assertEquals(0, requests.get());
+  }
+
+  @Test
+  void aBaselineRerunIsCountedAsRealSpend() throws Exception {
+    cases(ANSWER_CASE);
+    baseline("{\"cases\":[{\"id\":\"c1\",\"passed\":true}]}");
+    replyFor = REFUSAL;
+    replyFromRerun = GOOD_ANSWER;
+    String output = runWithReportingJudge("--baseline", "caseResults/baseline.json");
+    assertEquals(2, reportJson(output).get("usage").get("assistantCalls").asInt(), output);
+  }
 }

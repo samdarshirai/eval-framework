@@ -31,7 +31,10 @@ public final class Harness {
   /** Wiring only: parse args, load config and cases, preflight, run each case, report. */
   private static int runInner(
       String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm) throws Exception {
+    long startedNanos = System.nanoTime();
+    UsageMeter meter = new UsageMeter();
     EvalConfig config = EvalConfig.from(root, CliArgs.parse(args));
+    UsageMeter.Pricing pricing = config.judgePricing(); // a bad block exits 2 before any call
     Baseline baseline = Baseline.resolve(config, out);
     CalibrationRun.preflight(config);
 
@@ -46,15 +49,18 @@ public final class Harness {
     }
 
     // Throws with the export hint if the API key is missing.
-    Judge judge = new Judge(judgeLlm.apply(config.requireJudgeModel()));
+    Judge judge = new Judge(new MeteredLlm(judgeLlm.apply(config.requireJudgeModel()), meter));
     List<Registered> checks = Checks.registered(kb, judge);
     AssistantClient client = new AssistantClient(config.endpoint());
     client.requireReachable();
+    meter.setCheck("calibration");
     SuiteReport.Calibration calibration = CalibrationRun.run(config, judge);
+    meter.setCheck(null);
 
     String runId = ReportWriter.newRunId();
     SuiteRunner.Outcome outcome =
-        new SuiteRunner(new CaseRunner(client, checks)).run(cases, runId, baseline);
+        new SuiteRunner(new CaseRunner(client, checks, meter)).run(cases, runId, baseline);
+    SuiteReport.Usage usage = meter.usage((System.nanoTime() - startedNanos) / 1_000_000, pricing);
     SuiteReport report =
         new SuiteReport(
             runId,
@@ -63,7 +69,8 @@ public final class Harness {
             CheckInfo.of(checks),
             calibration,
             outcome.results(),
-            outcome.comparison());
+            outcome.comparison(),
+            usage);
     ConsoleReport.print(report, out);
     ReportWriter.writeAndAnnounce(config.outputDir(), report, root, out);
     return report.exitCode();
