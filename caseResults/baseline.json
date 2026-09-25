@@ -1,0 +1,553 @@
+{
+  "runId" : "20260925-053104",
+  "endpoint" : "http://localhost:8080/answer",
+  "passFloor" : 0.85,
+  "checks" : [ {
+    "name" : "Refusal",
+    "gating" : true
+  }, {
+    "name" : "Citation integrity",
+    "gating" : true
+  }, {
+    "name" : "Coverage",
+    "gating" : true
+  }, {
+    "name" : "Groundedness",
+    "gating" : true
+  }, {
+    "name" : "Source",
+    "gating" : true
+  } ],
+  "calibration" : {
+    "ran" : true,
+    "pairs" : [ {
+      "name" : "all-except-14",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "safari-13-not-14",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "safari-14-not-supported",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "paraphrase-onward",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "paraphrase-from",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "covering-negated-and-different-value",
+      "passed" : true,
+      "detail" : null
+    }, {
+      "name" : "covering-picks-only-the-real-one",
+      "passed" : true,
+      "detail" : null
+    } ],
+    "groundedness" : {
+      "pairs" : [ {
+        "name" : "wrong-safari-version",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "wrong-zonejs-version",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "swapped-chrome-version",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "custom-ab-split",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "variant-set-after-cmp",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "tool-after-cmp",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "default-for-all-customers",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "added-exception",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "extra-analytics-js",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "wrong-consent-signal",
+        "kind" : "unsupported",
+        "labeledSupported" : false,
+        "judged" : false,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-chrome-version",
+        "kind" : "supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-even-split",
+        "kind" : "supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-ruleset-delete",
+        "kind" : "supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-variant-before-cmp",
+        "kind" : "supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "plain-default-for-new-customers",
+        "kind" : "supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-oldest-safari",
+        "kind" : "hard-supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-split-across-sentences",
+        "kind" : "hard-supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-half-of-visitors",
+        "kind" : "hard-supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-gdpr-and-tcf",
+        "kind" : "hard-supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      }, {
+        "name" : "hard-update-analytics-js",
+        "kind" : "hard-supported",
+        "labeledSupported" : true,
+        "judged" : true,
+        "detail" : null,
+        "agreed" : true
+      } ],
+      "agreed" : 20,
+      "agreement" : 1.0,
+      "falseSupported" : 0,
+      "unsupportedPairs" : 10,
+      "falseUnsupported" : 0,
+      "errors" : 0
+    },
+    "misses" : 0
+  },
+  "cases" : [ {
+    "id" : "fp-ab-script-after-cmp",
+    "question" : "I want my A/B testing tool to load after the Usercentrics CMP. Where do I add the tool's script?",
+    "category" : "false-premise",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The A/B testing tool script must be added in the head section before the Usercentrics CMP script, so the tool is loaded before the CMP and can split properly",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ],
+        "keywords" : [ "head", "before" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      }, {
+        "claim" : "The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The A/B testing tool script should be added in the <head> section before the Usercentrics Consent Management Platform, not after it.\"; grounded (judge): \"The A/B testing tool needs to be loaded before the Consent Management Platform to perform the splitting properly.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ms-geo-tcf-and-consent-mode",
+    "question" : "Can I put a GDPR configuration and a TCF configuration in the same geolocation ruleset, and which Google tag libraries does Google Consent Mode require?",
+    "category" : "multi-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Configurations supporting TCF 2.2 should belong to a single ruleset, so a GDPR configuration and a TCF configuration should not be combined in one rule",
+        "citations" : [ "geolocation-rules#constraints" ],
+        "keywords" : [ "TCF" ]
+      }, {
+        "claim" : "Google Consent Mode requires gtag.js or Google Tag Manager",
+        "citations" : [ "consent-mode#prerequisites" ],
+        "keywords" : [ "gtag.js" ]
+      } ]
+    },
+    "passed" : false,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected.",
+        "citations" : [ "geolocation-rules#constraints" ]
+      }, {
+        "claim" : "The documentation does not specify which Google tag libraries Google Consent Mode requires.",
+        "citations" : [ ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : false,
+      "reason" : "no citation for claim: \"The documentation does not specify which Google tag libraries Google Consent Mode requires.\""
+    }, {
+      "check" : "Coverage",
+      "passed" : false,
+      "reason" : "not covered: \"Google Consent Mode requires gtag.js or Google Tag Manager\""
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"Configurations supporting TCF 2.2 should belong to a single ruleset and should not combine GDPR and TCF configuration in one rule, as it will not always work as expected.\"; skipped, no existing citation (see Citation integrity): \"The documentation does not specify which Google tag libraries Google Consent Mode requires.\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-pricing",
+    "question" : "How much does a Usercentrics Web CMP v2 subscription cost per month?",
+    "category" : "out-of-scope",
+    "subtype" : "unrelated",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "oos-geo-language",
+    "question" : "How do I configure a Geolocation Rules ruleset to show a different banner based on the visitor's browser language?",
+    "category" : "out-of-scope",
+    "subtype" : "plausible-nonexistent",
+    "expected" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : true,
+      "claims" : [ ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-safari-bundle",
+    "question" : "Which Safari version does bundle.js support?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "bundle.js supports Safari starting from version 14",
+        "citations" : [ "browser-support#browser-support" ],
+        "keywords" : [ "Safari", "14" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "bundle.js supports Safari version 14 and above",
+        "citations" : [ "browser-support#browser-support" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"bundle.js supports Safari version 14 and above\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-zonejs",
+    "question" : "From which zone.js version do the Usercentrics script tags work?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The script tags support zone.js starting from version 0.11.4",
+        "citations" : [ "browser-support#libraries-support" ],
+        "keywords" : [ "zone.js", "0.11.4" ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4",
+        "citations" : [ "browser-support#libraries-support" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The Usercentrics script tags (loader, bundle and bundle_legacy) support zone.js starting from version 0.11.4\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-ab-internal-split",
+    "question" : "When Usercentrics runs the A/B test itself, how are visitors split between the variants?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "With Usercentrics internal A/B testing the variants are always evenly distributed, for example 50:50 for two variants",
+        "citations" : [ "ab-test#usercentrics-internal-a-b-testing" ],
+        "keywords" : [ ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).",
+        "citations" : [ "ab-test#usercentrics-internal-a-b-testing" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"When using Usercentrics to display variants, they are always evenly distributed (e.g. 50:50 in case of two variants).\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  }, {
+    "id" : "ss-ab-third-party-events",
+    "question" : "I use a third-party A/B testing tool with Usercentrics. Which variable must be set before the CMP loads, and which custom event can the tool listen to in order to track how users interact with the variants?",
+    "category" : "single-source",
+    "subtype" : null,
+    "expected" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The UC_AB_VARIANT variable must be set before the Usercentrics CMP is loaded",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ],
+        "keywords" : [ "UC_AB_VARIANT" ]
+      }, {
+        "claim" : "The UC_UI_CMP_EVENT custom event is triggered by user interactions with the CMP (for example ACCEPT_ALL or SAVE), so the tool can track them",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool", "ab-test#available-ui-events" ],
+        "keywords" : [ ]
+      } ]
+    },
+    "passed" : true,
+    "error" : null,
+    "actual" : {
+      "refused" : false,
+      "claims" : [ {
+        "claim" : "The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      }, {
+        "claim" : "UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).",
+        "citations" : [ "ab-test#a-b-testing-with-third-party-tool" ]
+      } ]
+    },
+    "checks" : [ {
+      "check" : "Refusal",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Citation integrity",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Coverage",
+      "passed" : true,
+      "reason" : null
+    }, {
+      "check" : "Groundedness",
+      "passed" : true,
+      "reason" : "grounded (gold chunk): \"The UC_AB_VARIANT variable defines what A/B variant you will be testing on and needs to be set before the Consent Management Platform is loaded.\"; grounded (gold chunk): \"UC_UI_CMP_EVENT defines various UI events that can be used in A/B testing tools to track the interactions of users with different variants, including events such as ACCEPT_ALL (user clicks on accept all) or SAVE (user clicks on the save button).\""
+    }, {
+      "check" : "Source",
+      "passed" : true,
+      "reason" : null
+    } ]
+  } ],
+  "passRate" : 0.875,
+  "exitReasons" : [ "pass rate 87.5% is below floor 90.0%" ]
+}
