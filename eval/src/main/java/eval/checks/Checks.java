@@ -22,31 +22,28 @@ public final class Checks {
           "uncited", List.of("Refusal", "Coverage"),
           "smoke", List.of("Refusal", "Citation integrity"));
 
+  /** The app type an application gets when it sets none. */
+  private static final String DEFAULT_APP_TYPE = "cited";
+
   /**
-   * The check names to run: the app type's floor plus {@code addChecks}, or the explicit {@code
-   * checks} list, or null (all six) when none is set. Setting both, an unknown app type, or {@code
-   * addChecks} without an app type throws IllegalArgumentException.
+   * The check names to run: the app type's floor (default {@code cited}) plus {@code addChecks}. An
+   * unknown app type throws IllegalArgumentException.
    */
-  public static List<String> requested(String appType, List<String> addChecks, List<String> checks) {
+  public static List<String> requested(String appType, List<String> addChecks) {
     if (appType == null) {
-      if (addChecks != null) {
-        throw new IllegalArgumentException("'addChecks' needs an 'appType'");
-      }
-      return checks;
+      appType = DEFAULT_APP_TYPE;
     }
-    if (checks != null) {
-      throw new IllegalArgumentException("set 'appType' or 'checks', not both");
-    }
+    String type = appType.trim();
     List<String> floor =
         APP_TYPES.entrySet().stream()
-            .filter(entry -> entry.getKey().equalsIgnoreCase(appType.trim()))
+            .filter(entry -> entry.getKey().equalsIgnoreCase(type))
             .map(Map.Entry::getValue)
             .findFirst()
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(
                         "unknown appType '"
-                            + appType
+                            + type
                             + "' (known: "
                             + String.join(", ", new java.util.TreeSet<>(APP_TYPES.keySet()))
                             + ")"));
@@ -68,18 +65,12 @@ public final class Checks {
   }
 
   /**
-   * The registered checks named in {@code enabled} (case-insensitive), in registration order; all
-   * of them when {@code enabled} is null. A check's required checks are added even when not named.
-   * Throws IllegalArgumentException for an unknown name, an empty list, or no gating check.
+   * The registered checks named in {@code enabled} (case-insensitive), in registration order. A
+   * check's required checks are added even when not named. Throws IllegalArgumentException for an
+   * unknown name or no gating check.
    */
   public static List<Registered> registered(KnowledgeBase kb, Judge judge, List<String> enabled) {
     List<Registered> all = registered(kb, judge);
-    if (enabled == null) {
-      return all;
-    }
-    if (enabled.isEmpty()) {
-      throw new IllegalArgumentException("'checks' must name at least one check");
-    }
     List<String> known = all.stream().map(registered -> registered.check().name()).toList();
     Set<String> wanted = new LinkedHashSet<>();
     List<String> unknown = new java.util.ArrayList<>();
@@ -94,7 +85,7 @@ public final class Checks {
     }
     if (!unknown.isEmpty()) {
       throw new IllegalArgumentException(
-          "unknown check(s): "
+          "unknown check(s) in addChecks: "
               + String.join(", ", unknown)
               + " (known: "
               + String.join(", ", known)
@@ -111,7 +102,7 @@ public final class Checks {
         all.stream().filter(registered -> wanted.contains(registered.check().name())).toList();
     if (selected.stream().noneMatch(Registered::gating)) {
       throw new IllegalArgumentException(
-          "'checks' needs at least one gating check, otherwise every case passes");
+          "the checks need at least one gating check, otherwise every case passes");
     }
     return selected;
   }

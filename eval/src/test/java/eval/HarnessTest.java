@@ -476,6 +476,7 @@ class HarnessTest {
   @Test
   void negatedClaimWithAllKeywordsFailsCoverageEndToEnd() throws Exception {
     trapFile("[]\n"); // no trap pairs, so the judge calls counted below are Coverage's alone
+    config(defaultConfig() + "addChecks: [Relevance]\n");
     cases(
         "- id: c1\n"
             + "  question: q\n"
@@ -928,6 +929,7 @@ class HarnessTest {
 
   @Test
   void aRelevanceNoIsReportedButTheCaseAndTheRunStillPass() throws Exception {
+    config(defaultConfig() + "addChecks: [Relevance]\n");
     cases(
         "- id: c1\n"
             + "  question: q\n"
@@ -990,7 +992,9 @@ class HarnessTest {
 
   @Test
   void theReportMeasuresCallsTokensAndCostPerCheck() throws Exception {
-    config(defaultConfig() + "judgePricing:\n  inputPerMillion: 5.0\n  outputPerMillion: 25.0\n");
+    config(
+        defaultConfig()
+            + "addChecks: [Relevance]\njudgePricing:\n  inputPerMillion: 5.0\n  outputPerMillion: 25.0\n");
     cases(ONE_ANSWER_CASE);
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge();
@@ -1019,6 +1023,7 @@ class HarnessTest {
 
   @Test
   void skippingCalibrationLeavesNoCalibrationRow() throws Exception {
+    config(defaultConfig() + "addChecks: [Relevance]\n");
     cases(ONE_ANSWER_CASE);
     replyFor = ONE_CLAIM_REPLY;
     String output = runWithReportingJudge("--skipCalibration", "true");
@@ -1061,10 +1066,19 @@ class HarnessTest {
   }
 
   @Test
-  void aSubsetOfChecksRunsOnlyThoseAndSaysWhatIsOff() throws Exception {
+  void defaultAppTypeIsCitedSoRelevanceIsOff() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String output = out(code, "--checks", "Refusal,Coverage")[0];
+    String output = out(code)[0];
+    assertEquals(0, code[0], output);
+    assertTrue(output.contains("Checks off: Relevance"), output);
+  }
+
+  @Test
+  void anAppTypeRunsOnlyItsFloorAndSaysWhatIsOff() throws Exception {
+    cases(OOS);
+    int[] code = new int[1];
+    String output = out(code, "--appType", "uncited")[0];
     assertEquals(0, code[0], output);
     assertTrue(output.contains("Checks off: Citation integrity, Groundedness, Source, Relevance"), output);
     try (var files = Files.list(root.resolve("caseResults"))) {
@@ -1074,12 +1088,12 @@ class HarnessTest {
   }
 
   @Test
-  void aBadChecksListExitsTwoBeforeAnyAssistantCall() throws Exception {
+  void aBadAddChecksExitsTwoBeforeAnyAssistantCall() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String output = out(code, "--checks", "Refusal,Nope")[0];
+    String output = out(code, "--addChecks", "Nope")[0];
     assertEquals(2, code[0], output);
-    assertTrue(output.contains("unknown check(s): Nope"), output);
+    assertTrue(output.contains("unknown check(s) in addChecks: Nope"), output);
     assertEquals(0, requests.get());
   }
 
@@ -1087,7 +1101,7 @@ class HarnessTest {
   void aCheckThatNeedsAnotherPullsItInAndSaysSo() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String output = out(code, "--checks", "Refusal,Source")[0];
+    String output = out(code, "--appType", "smoke", "--addChecks", "Source")[0];
     assertEquals(0, code[0], output);
     assertTrue(output.contains("Checks added because another check needs them: Coverage"), output);
   }
@@ -1103,22 +1117,12 @@ class HarnessTest {
   }
 
   @Test
-  void appTypeAndChecksTogetherExitTwo() throws Exception {
+  void theRemovedChecksSettingExitsTwo() throws Exception {
     cases(OOS);
     int[] code = new int[1];
-    String output = out(code, "--appType", "cited", "--checks", "Refusal")[0];
+    String output = out(code, "--checks", "Refusal")[0];
     assertEquals(2, code[0], output);
-    assertTrue(output.contains("not both"), output);
-    assertEquals(0, requests.get());
-  }
-
-  @Test
-  void dropRefusalWithOutOfScopeCasesExitsTwo() throws Exception {
-    cases(OOS);
-    int[] code = new int[1];
-    String output = out(code, "--checks", "Coverage")[0];
-    assertEquals(2, code[0], output);
-    assertTrue(output.contains("'Refusal' is required"), output);
+    assertTrue(output.contains("unknown setting"), output);
     assertEquals(0, requests.get());
   }
 
@@ -1129,7 +1133,7 @@ class HarnessTest {
     var buf = new ByteArrayOutputStream();
     int code =
         Harness.run(
-            new String[] {"--checks", "Refusal,Coverage"},
+            new String[] {"--appType", "uncited"},
             root,
             new PrintStream(buf),
             model -> (system, user) -> "YES");

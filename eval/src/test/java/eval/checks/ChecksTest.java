@@ -64,9 +64,9 @@ class ChecksTest {
   }
 
   @Test
-  void noListMeansAllSixInRegistryOrder() {
+  void registryHasAllSixInOrder() {
     var all =
-        Checks.registered(new KnowledgeBase(List.of()), new Judge((s, u) -> "YES"), null).stream()
+        Checks.registered(new KnowledgeBase(List.of()), new Judge((s, u) -> "YES")).stream()
             .map(registered -> registered.check().name())
             .toList();
     assertEquals(names(), all);
@@ -80,8 +80,7 @@ class ChecksTest {
 
   @Test
   void unknownEmptyAndNoGatingCheckAreErrors() {
-    assertTrue(error("Refusal", "Nope").startsWith("unknown check(s): Nope (known: Refusal,"));
-    assertEquals("'checks' must name at least one check", error());
+    assertTrue(error("Refusal", "Nope").startsWith("unknown check(s) in addChecks: Nope (known: Refusal,"));
     assertTrue(error("Relevance").contains("at least one gating check"));
   }
 
@@ -97,32 +96,33 @@ class ChecksTest {
 
   @Test
   void appTypeIsTheFloorAndAddChecksAddsToIt() {
-    assertEquals(List.of("Refusal", "Coverage"), Checks.requested("uncited", null, null));
+    assertEquals(List.of("Refusal", "Coverage"), Checks.requested("uncited", null));
     assertEquals(
         List.of("Refusal", "Coverage", "Relevance"),
-        Checks.requested("UNCITED", List.of("Relevance"), null));
-    assertNull(Checks.requested(null, null, null));
-    assertEquals(List.of("Source"), Checks.requested(null, null, List.of("Source")));
+        Checks.requested("UNCITED", List.of("Relevance")));
+  }
+
+  @Test
+  void noAppTypeMeansCited() {
+    assertEquals(Checks.requested("cited", null), Checks.requested(null, null));
+    assertEquals(
+        List.of("Refusal", "Citation integrity", "Coverage", "Groundedness", "Source", "Relevance"),
+        Checks.requested(null, List.of("Relevance")));
   }
 
   @Test
   void everyAppTypeIsClosedOverRequiresAndAddsNothingExtra() {
     for (String type : List.of("cited", "uncited", "smoke")) {
-      List<String> floor = Checks.requested(type, null, null);
+      List<String> floor = Checks.requested(type, null);
       assertEquals(floor, selected(floor.toArray(String[]::new)), type);
     }
   }
 
   @Test
-  void badAppTypeCombinationsAreErrors() {
+  void unknownAppTypeIsAnError() {
     assertTrue(
-        assertThrows(
-                IllegalArgumentException.class, () -> Checks.requested("nope", null, null))
+        assertThrows(IllegalArgumentException.class, () -> Checks.requested("nope", null))
             .getMessage()
             .contains("known: cited, smoke, uncited"));
-    assertThrows(
-        IllegalArgumentException.class, () -> Checks.requested("cited", null, List.of("Refusal")));
-    assertThrows(
-        IllegalArgumentException.class, () -> Checks.requested(null, List.of("Relevance"), null));
   }
 }

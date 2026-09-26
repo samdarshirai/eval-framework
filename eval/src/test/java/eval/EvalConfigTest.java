@@ -214,13 +214,11 @@ class EvalConfigTest {
   }
 
   @Test
-  void checksIsNullWhenAbsentAndReadsAListOrACommaString() throws Exception {
-    assertNull(EvalConfig.loadFile(write(""), null).checks());
-    assertEquals(
-        List.of("Refusal", "Citation integrity"),
-        EvalConfig.loadFile(write("checks: [Refusal, Citation integrity]\n"), null).checks());
-    assertEquals(
-        List.of("Refusal", "Coverage"),
-        EvalConfig.loadFile(write(""), java.util.Map.of("checks", "Refusal, Coverage")).checks());
+  void checksIsRemovedAndPointsAtAppType() throws Exception {
+    var error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> EvalConfig.loadFile(write("checks: [Refusal]\n"), null));
+    assertTrue(error.getMessage().contains("appType"), error.getMessage());
   }
 }
