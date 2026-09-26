@@ -15,7 +15,7 @@ public final class OpenRouterLlm implements Llm {
   private static final long MAX_RETRY_DELAY_MILLIS = 65000;
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-  private final URI url = chatCompletionsUrl(System.getenv("LLM_BASE_URL"));
+  private final URI url;
   private final String model, apiKey, effort;
 
   public OpenRouterLlm(String model, String apiKey) {
@@ -23,9 +23,15 @@ public final class OpenRouterLlm implements Llm {
   }
 
   public OpenRouterLlm(String model, String apiKey, String effort) {
+    this(model, apiKey, effort, null);
+  }
+
+  /** {@code baseUrl} is the OpenAI-compatible API root; null or blank means OpenRouter. */
+  public OpenRouterLlm(String model, String apiKey, String effort, String baseUrl) {
     this.model = model;
     this.apiKey = apiKey;
     this.effort = effort;
+    this.url = chatCompletionsUrl(baseUrl);
   }
 
   public static OpenRouterLlm fromEnv(String model) {
@@ -37,15 +43,19 @@ public final class OpenRouterLlm implements Llm {
    * unset.
    */
   public static OpenRouterLlm fromEnv(String model, String effort) {
-    String key = System.getenv("OPENROUTER_API_KEY");
-    if (key == null || key.isBlank()) {
-      throw new IllegalStateException(
-          "OPENROUTER_API_KEY is not set. Run: export OPENROUTER_API_KEY=...");
-    }
-    return new OpenRouterLlm(model, key, effort);
+    return fromEnv(model, effort, null);
   }
 
-  /** The chat-completions URL under {@code baseUrl} (env LLM_BASE_URL); OpenRouter when unset or blank. */
+  /** The API key comes from env LLM_API_KEY; {@code baseUrl} from config (null: OpenRouter). */
+  public static OpenRouterLlm fromEnv(String model, String effort, String baseUrl) {
+    String key = System.getenv("LLM_API_KEY");
+    if (key == null || key.isBlank()) {
+      throw new IllegalStateException("LLM_API_KEY is not set. Run: export LLM_API_KEY=...");
+    }
+    return new OpenRouterLlm(model, key, effort, baseUrl);
+  }
+
+  /** The chat-completions URL under {@code baseUrl}; OpenRouter when null or blank. */
   static URI chatCompletionsUrl(String baseUrl) {
     String base = baseUrl == null || baseUrl.isBlank() ? DEFAULT_BASE_URL : baseUrl.strip();
     return URI.create(base.replaceAll("/+$", "") + "/chat/completions");

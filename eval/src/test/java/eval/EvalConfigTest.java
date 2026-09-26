@@ -75,6 +75,14 @@ class EvalConfigTest {
   }
 
   @Test
+  void llmBaseUrlIsNullByDefaultAndReadsTheConfigKey() throws Exception {
+    assertNull(EvalConfig.loadFile(write(""), null).llmBaseUrl());
+    assertEquals(
+        "http://localhost:11434/v1",
+        EvalConfig.loadFile(write("llmBaseUrl: http://localhost:11434/v1\n"), null).llmBaseUrl());
+  }
+
+  @Test
   void skipCalibrationIsOffByDefaultAndReadsTheConfigKey() throws Exception {
     assertFalse(EvalConfig.loadFile(write(""), null).skipCalibration());
     assertTrue(EvalConfig.loadFile(write("skipCalibration: true\n"), null).skipCalibration());
@@ -214,13 +222,11 @@ class EvalConfigTest {
   }
 
   @Test
-  void checksIsNullWhenAbsentAndReadsAListOrACommaString() throws Exception {
-    assertNull(EvalConfig.loadFile(write(""), null).checks());
-    assertEquals(
-        List.of("Refusal", "Citation integrity"),
-        EvalConfig.loadFile(write("checks: [Refusal, Citation integrity]\n"), null).checks());
-    assertEquals(
-        List.of("Refusal", "Coverage"),
-        EvalConfig.loadFile(write(""), java.util.Map.of("checks", "Refusal, Coverage")).checks());
+  void checksIsRemovedAndPointsAtAppType() throws Exception {
+    var error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> EvalConfig.loadFile(write("checks: [Refusal]\n"), null));
+    assertTrue(error.getMessage().contains("appType"), error.getMessage());
   }
 }

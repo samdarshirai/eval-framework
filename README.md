@@ -9,7 +9,7 @@ The assistant here is a deliberately thin stub over five public Usercentrics doc
 You need Java 21, Maven, `curl`, and an [OpenRouter](https://openrouter.ai) API key. The stub and the judge both call models through OpenRouter.
 
 ```bash
-export OPENROUTER_API_KEY=...
+export LLM_API_KEY=...
 ./run.sh
 ```
 

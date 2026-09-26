@@ -49,6 +49,7 @@ final class EvalConfig {
           "endpoint",
           "passFloor",
           "judgeModel",
+          "llmBaseUrl",
           "assistantVersion",
           "judgePricing",
           "categories",
@@ -57,7 +58,6 @@ final class EvalConfig {
           "skipCalibration",
           "debug",
           "case",
-          "checks",
           "appType",
           "addChecks",
           "baseline",
@@ -110,6 +110,10 @@ final class EvalConfig {
     Map<String, Object> raw = new Yaml().load(Files.readString(file));
     if (overrides != null) {
       overrides.forEach((key, value) -> override(raw, key, value));
+    }
+    if (raw.containsKey("checks")) {
+      throw new IllegalArgumentException(
+          fileName + ": 'checks' is removed; set 'appType' (and 'addChecks' to add to it)");
     }
     Object endpointValue = raw.get("endpoint");
     String endpoint = endpointValue == null ? null : endpointValue.toString();
@@ -200,15 +204,7 @@ final class EvalConfig {
     return ids == null ? List.of() : ids;
   }
 
-  /**
-   * The {@code checks:} names to run (a list or comma-separated, {@code --checks a,b}); null when
-   * not set, meaning every registered check. Set but empty is an error, raised by Checks.
-   */
-  List<String> checks() {
-    return list("checks");
-  }
-
-  /** The {@code appType:} (D54), or null. It sets the least checks; see Checks. */
+  /** The {@code appType:} (D54), or null for the default (cited). It sets the least checks; see Checks. */
   String appType() {
     return text("appType", null);
   }
@@ -269,10 +265,15 @@ final class EvalConfig {
     return raw;
   }
 
+  /** The OpenAI-compatible API root for the judge, or null for OpenRouter. */
+  String llmBaseUrl() {
+    return raw.get("llmBaseUrl") instanceof String url && !url.isBlank() ? url : null;
+  }
+
   String requireJudgeModel() {
     if (!(raw.get("judgeModel") instanceof String judgeModel) || judgeModel.isBlank()) {
       throw new IllegalArgumentException(
-          fileName + ": 'judgeModel' is required (an OpenRouter model slug)");
+          fileName + ": 'judgeModel' is required (a model id your provider accepts)");
     }
     return judgeModel;
   }

@@ -15,7 +15,7 @@ public final class Harness {
   }
 
   static int run(String[] args, Path root) throws Exception {
-    return run(args, root, System.out, model -> OpenRouterLlm.fromEnv(model, "low"));
+    return run(args, root, System.out, null);
   }
 
   static int run(String[] args, Path root, PrintStream out, Function<String, Llm> judgeLlm)
@@ -53,8 +53,8 @@ public final class Harness {
     }
 
     // Throws with the export hint if the API key is missing.
-    Judge judge =
-        new Judge(new MeteredLlm(judgeLlm.apply(config.requireJudgeModel()), meter, debug));
+    Llm llm = getLlm(judgeLlm, config);
+    Judge judge = new Judge(new MeteredLlm(llm, meter, debug));
     CheckSelection selection = CheckSelection.resolve(config, kb, judge, cases, baseline, out);
     List<Registered> checks = selection.checks();
     AssistantClient client = new AssistantClient(config.endpoint(), debug);
@@ -85,5 +85,12 @@ public final class Harness {
     ConsoleReport.print(report, out);
     ReportWriter.writeAndAnnounce(config.outputDir(), report, root, out);
     return report.exitCode();
+  }
+
+  private static Llm getLlm(Function<String, Llm> judgeLlm, EvalConfig config) {
+    String judgeModel = config.requireJudgeModel();
+      return judgeLlm != null
+          ? judgeLlm.apply(judgeModel)
+          : OpenRouterLlm.fromEnv(judgeModel, "low", config.llmBaseUrl());
   }
 }

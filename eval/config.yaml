@@ -26,21 +26,25 @@ baseline: caseResults/baseline.json
 # Run only these cases, comma-separated ids: --case ss-zonejs,oos-pricing (D52). Not set: every case.
 # An unknown id exits 2. The pass rate, floor and out-of-scope rule then apply to the selected cases only.
 # case: ss-zonejs,oos-pricing
-# Which checks run (D54). Not set: all six. Two ways to set it:
-#   appType: cited | uncited | smoke   the least checks for that kind of app; the app can add, not remove
+# Which checks run (D54). appType sets the least checks for that kind of app; the app can add, not remove.
+# Not set: cited.
+#   appType: cited | uncited | smoke
 #     cited   = Refusal, Citation integrity, Coverage, Groundedness, Source
 #     uncited = Refusal, Coverage                    (app cannot cite)
 #     smoke   = Refusal, Citation integrity          (no judge calls)
 #   addChecks: [Relevance]             extra checks on top of the app type (needs appType)
 #   checks: [Refusal, Coverage]        or an explicit list, instead of appType (not both). --checks "a,b" too.
 # Names: Refusal, Citation integrity, Coverage, Groundedness, Source, Relevance (case does not matter).
-# A check that needs another pulls it in (Source needs Coverage). A list needs a gating check, and Refusal
-# while the cases include out-of-scope ones. Anything else is an error, exit code 2. The calibration for a
+# A check that needs another pulls it in (Source needs Coverage). Anything else is an error, exit code 2. The calibration for a
 # check that is off is skipped.
-# appType: cited
-# addChecks: [Relevance]
+appType: cited
+addChecks: [Relevance]
+
 # Judge model for Coverage and Groundedness (D15, D40). OpenRouter slug; stronger than assistant.model.
 judgeModel: anthropic/claude-opus-4.8
+# OpenAI-compatible API root for the judge (the harness appends /chat/completions). Default: OpenRouter. The key is env LLM_API_KEY.
+# llmBaseUrl: https://llm-gateway.example.com/v1
+# Untested with non-OpenRouter endpoints: requests carry OpenRouter-only fields (provider, reasoning) a strict gateway may reject.
 # Optional label for the assistant build under test (model, prompt version, git tag). Recorded in the report's
 # provenance block, because the harness cannot see inside the assistant.
 # assistantVersion: stub-haiku-4.5-prompt-v1

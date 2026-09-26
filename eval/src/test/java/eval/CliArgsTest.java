@@ -91,9 +91,12 @@ class CliArgsTest {
   }
 
   @Test
-  void checksBecomesAnOverride() {
-    assertEquals(
-        Map.of("checks", "Refusal,Coverage"),
-        CliArgs.parse(new String[] {"--checks", "Refusal,Coverage"}).overrides());
+  void checksIsNoLongerASetting() {
+    assertTrue(
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CliArgs.parse(new String[] {"--checks", "Refusal,Coverage"}))
+            .getMessage()
+            .contains("unknown setting '--checks'"));
   }
 }

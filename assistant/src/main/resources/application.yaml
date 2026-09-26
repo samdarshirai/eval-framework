@@ -6,6 +6,7 @@ spring:
   main:
     banner-mode: "off"
 assistant:
-  model: anthropic/claude-haiku-4.5
+  model: anthropic/claude-haiku-4.5   # a model id your provider accepts
+  # baseUrl: https://llm-gateway.example.com/v1   # OpenAI-compatible API root; default OpenRouter. Untested with other endpoints (requests carry OpenRouter-only fields).
   topK: 3
   docs: docs

@@ -20,7 +20,10 @@ public class StubServer {
         return new BM25Index(Chunker.chunkDir(Path.of(docs)));
     }
 
-    @Bean Llm llm(@Value("${assistant.model}") String model) { return OpenRouterLlm.fromEnv(model); }
+    @Bean Llm llm(
+      @Value("${assistant.model}") String model, @Value("${assistant.baseUrl:}") String baseUrl) {
+    return OpenRouterLlm.fromEnv(model, null, baseUrl);
+  }
 
     @Bean Assistant assistant(BM25Index index, Llm llm, @Value("${assistant.topK}") int topK) {
         return new Assistant(index, llm, topK);
