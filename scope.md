@@ -90,7 +90,7 @@ Described in the pattern document and scale plan, not coded in v1 (D22, D54).
 |---|---|
 | Risk tiers with a mandatory check set, and the sign-off rule for removing a check | Only needed with more than one app. The per-app `checks` list, `appType` and `addChecks` are built (D54); the tiers and the rule around them are not |
 | Platform-owned `judgeModel` and minimum pass floor | Enforcement is a later platform decision (D42) |
-| Nightly scheduled runs, majority-of-N runs | A scale-plan topic. Temperature 0 does not make runs identical (the scale plan, section 5); today the single re-run of a suspected regression is the only guard (D14) |
+| Nightly scheduled runs, majority-of-N runs | A scale-plan topic. Temperature 0 does not make runs identical; today the single re-run of a suspected regression is the only guard (D14) |
 | Severity-tiered pass/fail (CRITICAL / ERROR / WARNING) | Better design, but new rules plus code; the gating/advisory flag is the small step toward it |
 | `http` and `manifest` knowledge sources | Placeholders; the `docs` source covers the one app |
 
