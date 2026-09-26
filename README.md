@@ -30,7 +30,7 @@ java -jar eval/target/eval.jar
 
 You get a summary on the terminal and a full JSON report in `caseResults/`. If the stub is not running, the harness stops at once and tells you how to start it.
 
-A full run of the 28 cases takes about 6 minutes and costs about $0.21 in judge calls (the calibration is about $0.04 of that). The calibration runs on every run by default. To try it fast, run a few cases and skip it:
+A full run of the 28 cases takes about 3 to 6 minutes and costs about $0.21 in judge calls (the calibration is about $0.04 of that). The calibration runs on every run by default. To try it fast, run a few cases and skip it:
 
 ```bash
 java -jar eval/target/eval.jar --case ss-safari-bundle,oos-pricing --skip-calibration
