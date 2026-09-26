@@ -65,7 +65,7 @@ A **baseline** is a previous run's report that later runs are compared against. 
 java -jar eval/target/eval.jar --config my-team/eval.yaml
 ```
 
-The Quickstart in `PATTERN.md` walks through this with a small team folder, and the rest of `PATTERN.md` explains how to write the config and the cases.
+`PATTERN.md` explains how to write the config (section 2) and the cases (section 3), how to run it (section 4), and ends with a checklist for a first run.
 
 ## What is where
 
