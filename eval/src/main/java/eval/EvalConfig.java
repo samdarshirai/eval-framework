@@ -49,6 +49,7 @@ final class EvalConfig {
           "endpoint",
           "passFloor",
           "judgeModel",
+          "llmBaseUrl",
           "assistantVersion",
           "judgePricing",
           "categories",
@@ -264,10 +265,15 @@ final class EvalConfig {
     return raw;
   }
 
+  /** The OpenAI-compatible API root for the judge, or null for OpenRouter. */
+  String llmBaseUrl() {
+    return raw.get("llmBaseUrl") instanceof String url && !url.isBlank() ? url : null;
+  }
+
   String requireJudgeModel() {
     if (!(raw.get("judgeModel") instanceof String judgeModel) || judgeModel.isBlank()) {
       throw new IllegalArgumentException(
-          fileName + ": 'judgeModel' is required (an OpenRouter model slug)");
+          fileName + ": 'judgeModel' is required (a model id your provider accepts)");
     }
     return judgeModel;
   }

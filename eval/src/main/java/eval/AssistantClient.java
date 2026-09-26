@@ -32,7 +32,7 @@ public final class AssistantClient implements Assistant {
           "cannot reach the assistant at "
               + endpoint
               + "\nStart the stub in another terminal first:"
-              + "\n  export OPENROUTER_API_KEY=..."
+              + "\n  export LLM_API_KEY=..."
               + "\n  mvn -q -DskipTests package"
               + "\n  java -jar assistant/target/assistant.jar");
     }

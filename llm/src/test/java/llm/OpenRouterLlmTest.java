@@ -33,6 +33,9 @@ class OpenRouterLlmTest {
     assertEquals(
         "https://llm.internal/v1/chat/completions",
         OpenRouterLlm.chatCompletionsUrl("https://llm.internal/v1/").toString());
+    assertEquals(
+        "http://localhost:11434/v1/chat/completions",
+        OpenRouterLlm.chatCompletionsUrl("http://localhost:11434/v1").toString());
   }
 
   @Test
@@ -53,9 +56,9 @@ class OpenRouterLlmTest {
   @Test
   void fromEnvWithoutKeyExplainsWhatToDo() {
     // only meaningful when the key is unset; skip otherwise
-    org.junit.jupiter.api.Assumptions.assumeTrue(System.getenv("OPENROUTER_API_KEY") == null);
+    org.junit.jupiter.api.Assumptions.assumeTrue(System.getenv("LLM_API_KEY") == null);
     var error = assertThrows(IllegalStateException.class, () -> OpenRouterLlm.fromEnv("m"));
-    assertTrue(error.getMessage().contains("OPENROUTER_API_KEY"));
+    assertTrue(error.getMessage().contains("LLM_API_KEY"));
   }
 
   @Test

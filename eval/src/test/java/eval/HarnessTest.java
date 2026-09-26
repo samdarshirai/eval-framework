@@ -415,10 +415,10 @@ class HarnessTest {
             new PrintStream(buf),
             model -> {
               throw new IllegalStateException(
-                  "OPENROUTER_API_KEY is not set. Run: export OPENROUTER_API_KEY=...");
+                  "LLM_API_KEY is not set. Run: export LLM_API_KEY=...");
             });
     assertEquals(2, code, buf.toString());
-    assertTrue(buf.toString().contains("OPENROUTER_API_KEY"), buf.toString());
+    assertTrue(buf.toString().contains("LLM_API_KEY"), buf.toString());
     assertFalse(buf.toString().contains("\tat "), buf.toString());
     assertEquals(0, requests.get());
   }

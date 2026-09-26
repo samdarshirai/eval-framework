@@ -1,17 +1,16 @@
 # How To: evaluating an AI Hub application
 
-## Start here: does this fit your application?
+## Does this fit your application?
 
-| Application shape | Example (department) | What your endpoint returns | Checks (`appType`) | Your first ~10 cases | Status |
-|---|---|---|---|---|---|
-| Answers questions from documents, with citations | The Implementation Assistant (CS), an HR policy assistant | Claims with citations (section 1) | `cited` | 4 single-source, 2 multi-source, 2 out-of-scope, 2 false-premise | Built |
-| Answers questions from documents, in prose | A Legal or Finance FAQ assistant | Prose plus sources, through the prose adapter (section 10) | `cited` once the adapter exists; until then, wrap the app so it returns claims | As the row above | Adapter designed, not built |
-| Generates text without sources | Marketing copy drafts, meeting summaries | Claims without citations | `uncited`, `addChecks: [Relevance]` | Expected facts the output must contain, plus out-of-scope requests it must refuse | Built (Refusal, Coverage, Relevance) |
-| Extracts fields or classifies | Contract clause extraction (Legal), ticket routing (CS), invoice fields (Finance) | Not a fit: it needs field-level exact match or label accuracy, not claims | None | None | Not supported, talk to the platform team |
+| Application shape | What your endpoint returns | Checks (`appType`) | Your first ~10 cases | Status |
+|---|---|---|---|---|
+| Answers questions from documents, with citations | Claims with citations (section 1) | `cited` | 4 single-source, 2 multi-source, 2 out-of-scope, 2 false-premise | Built |
+| Generates text without sources | Claims without citations | `uncited`, `addChecks: [Relevance]` | Expected facts the output must contain, plus out-of-scope requests it must refuse | Built (Refusal, Coverage, Relevance); needs a config update to set `appType`/`addChecks` |
+| Answers questions from documents, in prose | Prose plus sources, through the prose adapter (section 10) | `cited` once the adapter exists; until then, wrap the app so it returns claims | As the first row | Adapter designed, not built |
+| Extracts fields or classifies | Not a fit: it needs field-level exact match or label accuracy, not claims | None | None | Not supported, talk to the platform team |
 
 - Find your row, then continue below.
 - The first row is the only fully built path. The others need a wrapper, a config choice, or the platform team.
-- When in doubt, start in the top risk tier (`CONTEXT.md`). Lowering it needs a written reason and sign-off.
 
 ## What you get
 
@@ -21,7 +20,7 @@ One command runs your application against a set of test cases and prints a pass/
 java -jar eval/target/eval.jar --config my-team/eval.yaml
 ```
 
-The harness does not care what your application is built on. It only needs the contract in section 1. What it checks is not string matching: it checks whether each fact is covered, whether each claim is supported by the source it cites, whether the application refuses what it should not answer, and whether a change made a previously passing case fail.
+The harness does not care what your application is built on. It only needs the contract in section 1. It doesn't just do a string matching: it checks whether each fact is covered, whether each claim is supported by the source it cites, whether the application refuses what it should not answer, and whether a change made a previously passing case fail.
 
 ## 1. Build your endpoint: the contract
 
@@ -47,15 +46,11 @@ Your application exposes one HTTP endpoint.
 
 Rules that the checks depend on:
 
-- **There is no free-text answer field.** Everything the application asserts is a **claim**: one atomic factual statement plus the citations that support it. If your application produces prose today, your endpoint has to split it into claims. This is the main integration cost, and it is what makes every assertion checkable.
-- A **citation** is a chunk ID: the document name plus the section heading (`consent-mode#default-consent-states`). IDs use the heading, never a position number, so they survive re-chunking. Duplicate headings in one document get `-1`, `-2` suffixes.
+- **There is no free-text answer field.** Everything the application asserts is a **claim**: one atomic factual statement plus the citations that support it.
+- A **citation** is a chunk ID: the document name plus the section heading (`consent-mode#default-consent-states`). 
 - A refusal is `{"refused": true, "claims": []}`. `refused: true` together with claims is a contract violation and fails the case.
 - Any status other than 200, or a body that is not this shape, fails that case with the error text. A slow call fails after 60 seconds.
 - The harness sends an `X-Eval-Run: <run id>` header on every request so your gateway can exclude eval traffic from analytics.
-
-**Point the harness at an instance started for testing, never at live production**. Production would mix eval traffic into real usage and cost figures, may have side effects (logging, connectors that write), can change in the middle of a run, and may not allow temperature 0. Use a candidate build for CI, or a dedicated instance with production's exact prompt, model and config for drift checks. The harness only knows a URL, so this is a deployment choice, not a code change.
-
-Before it runs any case, the harness sends a GET to the endpoint. Any HTTP response counts as reachable, and a failed connection stops the run with a message.
 
 If your application returns free text instead of structured claims, splitting it into cited claims is the main integration work — see the prose adapter design in section 10 (Designed for onboarding, not built in v1) before you build against this contract.
 
@@ -72,7 +67,7 @@ A minimal team config, `my-team/eval.yaml`:
 ```yaml
 endpoint: http://localhost:9000/answer      # your application, started for testing
 passFloor: 0.90
-judgeModel: anthropic/claude-opus-4.8       # OpenRouter slug, stronger than your app's model
+judgeModel: anthropic/claude-opus-4.8       # model id your provider accepts (OpenRouter slug by default), stronger than your app's model
 categories: [single-source, multi-source, false-premise, out-of-scope]
 knowledgeBase:
   type: docs
@@ -82,7 +77,7 @@ knowledgeBase:
 # baseline: caseResults/baseline.json
 ```
 
-Run it from anywhere with `--config my-team/eval.yaml`. Every relative path in the file resolves against the file's folder. The judge needs `OPENROUTER_API_KEY` in the environment and calls OpenRouter by default; set the optional `LLM_BASE_URL` (for example `https://llm-gateway.example.com/v1`) to route it through an internal OpenAI-compatible gateway, and the harness appends `/chat/completions`. Your own application can use any model provider.
+Run it from anywhere with `--config my-team/eval.yaml`. Every relative path in the file resolves against the file's folder. The judge needs `LLM_API_KEY` in the environment and calls OpenRouter by default. To use another OpenAI-compatible provider or an internal gateway, set `llmBaseUrl` in the config (or `--llmBaseUrl`, for example `https://llm-gateway.example.com/v1`), put that provider's key in `LLM_API_KEY`, and set `judgeModel` to a model id it accepts; the harness appends `/chat/completions`. **Untested with non-OpenRouter endpoints:** the request also carries OpenRouter-specific fields (`provider.require_parameters`, `reasoning.effort`) that a strict gateway may reject with a 400, so try one run against your gateway before relying on it. Your own application can use any model provider.
 
 Useful overrides: `--case id1,id2` runs only those cases, `--appType uncited` picks the check set, `--skip-calibration` skips the judge calibration, `--debug` prints one `[debug]` line per config, case, check, assistant call and judge call, and `--baseline ""` switches a configured baseline off for one run. Keep `out-of-scope` in `categories`, because the exit rule depends on it (section 7).
 
@@ -92,11 +87,11 @@ This minimal config doesn't set `appType`, so it defaults to `cited` (five check
 
 The harness needs the same chunk IDs and text your application has. `knowledgeBase.type` chooses the source:
 
-- **`docs`** (built, the default): a folder of markdown files, chunked by heading. `browser-support.md` with a `## Browser Support` section gives the ID `browser-support#browser-support`. This works if your citations use the same `document#heading-slug` scheme.
+- **`docs`** (built, the default): a folder of markdown files, chunked by heading. `browser-support.md` with a `## Browser Support` section gives the ID `browser-support#browser-support`. It splits at `#` to `###` headings, skips headings that appear inside code fences, and strips frontmatter; IDs are always `filename#heading-slug`. This works if your citations use the same `document#heading-slug` scheme — if your application chunks differently, its citations won't resolve, so use `http`/`manifest` (or your own `KnowledgeSource`) and export your own chunks instead.
 - **`http`** and **`manifest`** (placeholders, selecting one exits with "not implemented yet"): the application serves, or exports at build time, a list of `{id, text}`. This is the better fit for an application in any language, because the harness sees exactly what the application indexed.
 - **Your own source**: implement the one-method `KnowledgeSource` interface and add one line in `KnowledgeSources` (Java).
 
-Whatever the source, the application and the harness must see the **same version** of the documents. A case that names gold chunks whose text changed since it was confirmed produces a warning that names the case, and it still runs.
+Whatever the source, the application and the harness must see the **same version** of the documents. A case that names gold chunks whose text changed since it was confirmed produces a warning that names the case, and it still runs — this only fires for cases that have `confirmed_hash` set (section 3).
 
 ## 3. Writing test cases
 
@@ -112,6 +107,7 @@ A case is a YAML entry. Cases live in `*.yaml` files in one folder, with any num
   facts:
     - fact: "bundle.js supports Safari starting from version 14"
       chunks: [browser-support#browser-support]   # gold chunks: citing any ONE is enough
+      confirmed_hash: <hash>                       # hash of the gold chunks' text, set when confirmed — see below
       keywords: ["Safari", "14"]                  # optional, see below
   source: authored                   # or e.g. support-ticket-1234
   owner: platform                    # who to ask when the case looks stale
@@ -120,6 +116,7 @@ A case is a YAML entry. Cases live in `*.yaml` files in one folder, with any num
 
 - **`facts`** are plain-language key points the answer must contain. They are not tied to a sentence count or wording, because the application may split one fact across several claims.
 - **`chunks`** are the **gold chunks**: chunks a human has verified support the fact. They are alternatives, so citing any one of them is enough. Citing another chunk is not automatically wrong. It is just not pre-verified. Gold chunks are used by Coverage and Source, not to skip Groundedness.
+- **`confirmed_hash`** is a hash of the gold chunks' text, recorded when a human confirmed the case. If a document changes afterwards, the loader warns and names the case, but only for cases that have this field. Stamp it after you confirm a case, and re-stamp after a deliberate doc change.
 - **`keywords`** are optional, and allowed only for an exact value or identifier that any correct answer must contain verbatim: a version number (`14`, `0.11.4`), an API, variable, event or attribute name (`getTCData`, `UC_AB_VARIANT`, `data-tcf-enabled`), a literal config value (`denied`) or a product acronym (`TCF`). A claim must contain all of them before it can count as covering the fact. They are a cheap filter that catches near-misses ("Safari 13" for "Safari 14") without a model call. They are never sufficient on their own, because they cannot detect negation ("all Safari versions except 14"), so a judge confirms every keyword hit.
 - **Never use an ordinary word or phrase** ("invalid", "delete", "default", "before", "all users", "v2"). A correct answer can paraphrase it ("no longer valid", "version 2"). When a claim lacks a keyword, no judge is called and the fact counts as missed, so the paraphrase is a false negative. All keywords must also appear in one claim, so a fact the application splits across two claims fails too. For a value a miss is a real miss; for a word it is not.
 - Leave `keywords` out when there is no such value or identifier. A judge then decides which claims cover the fact. If a fact mixes both, keep the values and drop the words.
@@ -156,7 +153,7 @@ Build once from the repo root:
 mvn -q -DskipTests package
 ```
 
-Then run, with `OPENROUTER_API_KEY` set in your environment:
+Then run, with `LLM_API_KEY` set in your environment:
 
 ```
 java -jar eval/target/eval.jar --config my-team/eval.yaml
@@ -185,7 +182,7 @@ The principle is to use a deterministic check whenever the property is determini
 
 The fit table at the top of this document says which checks fit which application shape. For a customer-facing or high-stakes application such as the Implementation Assistant, run all of them: Groundedness and Refusal matter most, because a wrong answer that sounds right reaches a customer. An application that cannot cite cannot use Citation integrity, Groundedness or Source.
 
-**App types and turning checks off.** Set `appType` in the config: `cited` (Refusal, Citation integrity, Coverage, Groundedness, Source), `uncited` (Refusal, Coverage; for an application that cannot cite) or `smoke` (Refusal, Citation integrity; no judge calls). The type is the least an application of that kind must run. The application can add with `addChecks: [Relevance]` but cannot remove; lowering a type's floor is a change in `Checks.java`, so it goes through the platform team. Without `appType` the default is `cited`, so Relevance runs only when added. There is no `checks` list; a `checks:` key in the config is an error. Names are as in the table, any case. Order is always the table's order. A check that needs another pulls it in (Source needs Coverage), and the console says `Checks added because another check needs them`. Startup fails with exit 2, before any call, on an unknown name or app type, or `Refusal` off while the cases include out-of-scope ones. The calibration for a check that is off is skipped, the console prints `Checks off: ...`, and a baseline that ran a different set gets a warning.
+**App types and turning checks off.** Set `appType` in the config: `cited` (Refusal, Citation integrity, Coverage, Groundedness, Source), `uncited` (Refusal, Coverage; for an application that cannot cite) or `smoke` (Refusal, Citation integrity; no judge calls). The type is the least an application of that kind must run. The application can add with `addChecks: [Relevance]` but cannot remove; lowering a type's floor is a change in `Checks.java`, so it goes through the platform team. Without `appType`, `checks: [Refusal, Coverage]` (or `--checks "Refusal,Coverage"`) names an explicit list, and with neither all six run. Setting `appType` and `checks` together is an error. Names are as in the table, any case. Order is always the table's order. A check that needs another pulls it in (Source needs Coverage), and the console says `Checks added because another check needs them`. Startup fails with exit 2, before any call, on an unknown name or app type, an empty list, `addChecks` without `appType`, a list with no gating check, or `Refusal` off while the cases include out-of-scope ones. The calibration for a check that is off is skipped, the console prints `Checks off: ...`, and a baseline that ran a different set gets a warning.
 
 ### The judge, and why you should measure it
 
@@ -287,7 +284,7 @@ The stub's failures are kept as evidence and not tuned away.
 
 These are described here and in `SCALE-PLAN.md`, and none of them exists as code:
 
-- **Risk tiers and a sign-off rule for removing a check.** (App types are built; the tier rule around them is not.) The platform defines 2 or 3 tiers, each with a pass floor and mandatory checks. Every application starts in the top tier. Lowering a tier or removing a check needs a written reason and platform sign-off, and a change of audience (internal to customer-facing) triggers a re-review. Departments can only raise the floor. There is no per-release approval queue.
+- **Risk tiers and a sign-off rule for removing a check.** (The `checks` list itself is built; the rule around it is not.) The platform defines 2 or 3 tiers, each with a pass floor and mandatory checks. Every application starts in the top tier. Lowering a tier or removing a check needs a written reason and platform sign-off, and a change of audience (internal to customer-facing) triggers a re-review. Departments can only raise the floor. There is no per-release approval queue.
 - **Severity-tiered pass/fail** (critical, error, warning), a better rule than "every gating check must pass".
 - **The `http` and `manifest` knowledge sources**, **the replay-file fallback**, **majority-of-N runs** and **scheduled runs**.
 - **Cases for partially answerable and under-specified questions**, which need a contract field for what the application could not answer.
@@ -316,6 +313,6 @@ For an application that produces free text, the application would return `{"answ
 - [ ] The endpoint returns the contract for an answer and for a refusal, from an instance started for testing.
 - [ ] Every cited chunk ID exists in the knowledge base the harness loads.
 - [ ] 10 cases: 4 single-source, 2 multi-source, 2 out-of-scope, 2 false-premise, each fully answerable or fully out-of-scope.
-- [ ] `OPENROUTER_API_KEY` is set, and `judgeModel` is stronger than your application's model.
+- [ ] `LLM_API_KEY` is set, and `judgeModel` is stronger than your application's model.
 - [ ] `out-of-scope` is in `categories`.
 - [ ] The first report is read, the case mistakes fixed, and a report you trust promoted to `baseline.json`.

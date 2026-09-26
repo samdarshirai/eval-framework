@@ -5,8 +5,8 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-  echo "OPENROUTER_API_KEY is not set. Run: export OPENROUTER_API_KEY=..." >&2
+if [ -z "${LLM_API_KEY:-}" ]; then
+  echo "LLM_API_KEY is not set. Run: export LLM_API_KEY=..." >&2
   exit 2
 fi
 
