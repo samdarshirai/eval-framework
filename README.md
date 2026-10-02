@@ -1,4 +1,4 @@
-# Evaluation harness for the Usercentrics Implementation Assistant
+# Evaluation harness for an Implementation Assistant
 
 A small evaluation layer for an AI Hub application, and the pattern for evaluating thirty more. It runs test cases against an assistant over HTTP and checks the answers: whether each expected fact is covered, whether each claim is supported by the source it cites, whether the assistant refuses what it should not answer, and whether a change broke a case that used to pass.
 
